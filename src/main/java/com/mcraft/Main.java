@@ -1,29 +1,34 @@
 package com.mcraft;
 
-import com.mcraft.render.Camera;
+import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.glClear;
+
+import com.mcraft.core.Window;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        Camera camera = new Camera(0, 80, 0);
-
-        camera.rotate(
-                (float)Math.toRadians(45),
-                (float)Math.toRadians(-20)
+        Window window = new Window(
+                1280,
+                720,
+                "Minecraft Clássico"
         );
 
-        float[] view = camera.getViewMatrix();
+        window.init();
 
-        System.out.println("View Matrix:");
+        while (!window.shouldClose()) {
 
-        for (int i = 0; i < 16; i++) {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            System.out.printf("%8.3f ", view[i]);
+            /*
+             * Próxima etapa:
+             * shader.use();
+             * renderer.render();
+             */
 
-            if ((i + 1) % 4 == 0) {
-                System.out.println();
-            }
+            window.update();
         }
     }
 }

@@ -15,11 +15,10 @@ public enum Block {
 
     public final int id;
     public final String name;
-    public final int texCol;   // Coluna no atlas de texturas
-    public final int texRow;   // Linha no atlas de texturas
+    public final int texCol;  
+    public final int texRow;  
     public final boolean solid;
 
-    // Mapa de ID → Block para lookup rápido O(1)
     private static final Block[] BY_ID = new Block[256];
 
     static {
@@ -42,21 +41,14 @@ public enum Block {
         return b != null ? b : AIR;
     }
 
-    /**
-     * Retorna as coordenadas UV (0.0–1.0) para uma dada face.
-     * O atlas tem 16x16 tiles, cada tile = 1/16 do total.
-     *
-     * Face: 0=top, 1=bottom, 2=front, 3=back, 4=left, 5=right
-     */
     public float[] getUVs(int face) {
         int col = texCol;
         int row = texRow;
 
-        // Grass tem top diferente (grama verde) e sides especiais
         if (this == GRASS) {
-            if (face == 0) { col = 0; row = 0; }       // top: grama
-            else if (face == 1) { col = 2; row = 0; }  // bottom: dirt
-            else { col = 3; row = 0; }                  // sides: grass-side
+            if (face == 0) { col = 0; row = 0; }       
+            else if (face == 1) { col = 2; row = 0; } 
+            else { col = 3; row = 0; }                  
         }
 
         float tileSize = 1.0f / 16.0f;
@@ -65,12 +57,11 @@ public enum Block {
         float u1 = u0 + tileSize;
         float v1 = v0 + tileSize;
 
-        // Retorna 4 pares UV para os 4 vértices do quad
         return new float[] {
-            u0, v1,  // bottom-left
-            u1, v1,  // bottom-right
-            u1, v0,  // top-right
-            u0, v0   // top-left
+            u0, v1,  
+            u1, v1,  
+            u1, v0,  
+            u0, v0   
         };
     }
 }

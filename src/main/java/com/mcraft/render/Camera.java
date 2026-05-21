@@ -6,7 +6,6 @@ public class Camera {
     private float yaw   = 0f;   // radianos
     private float pitch = 0f;   // radianos
 
-    // Vetores da câmera
     private float[] front = {0, 0, -1};
     private float[] right = {1, 0,  0};
     private float[] up    = {0, 1,  0};
@@ -35,18 +34,12 @@ public class Camera {
         front[1] = sp;
         front[2] = sy * cp;
 
-        // right = normalize(cross(front, worldUp))
         float[] worldUp = {0, 1, 0};
         right = normalize(cross(front, worldUp));
 
-        // up = cross(right, front)
         up = cross(right, front);
     }
 
-    /**
-     * Gera a View Matrix usando o algoritmo lookAt.
-     * Retorna um array float[16] em column-major order (padrão OpenGL).
-     */
     public float[] getViewMatrix() {
         float[] f = normalize(front);
         float[] r = normalize(right);
@@ -63,16 +56,12 @@ public class Camera {
         };
     }
 
-    /**
-     * Matriz de projeção perspectiva.
-     * fovDeg: campo de visão em graus
-     */
     public static float[] perspectiveMatrix(float fovDeg, float aspect,
                                              float near, float far) {
         float f = (float)(1.0 / Math.tan(Math.toRadians(fovDeg) / 2.0));
         float nf = 1.0f / (near - far);
 
-        float[] m = new float[16]; // Todos zeros
+        float[] m = new float[16]; 
 
         m[0]  = f / aspect;
         m[5]  = f;
@@ -83,7 +72,6 @@ public class Camera {
         return m;
     }
 
-    // --- Utilitários de vetores ---
 
     private static float[] cross(float[] a, float[] b) {
         return new float[]{
@@ -103,7 +91,6 @@ public class Camera {
         return new float[]{ v[0]/len, v[1]/len, v[2]/len };
     }
 
-    // Getters de posição e direção
     public float getX() { return x; }
     public float getY() { return y; }
     public float getZ() { return z; }
