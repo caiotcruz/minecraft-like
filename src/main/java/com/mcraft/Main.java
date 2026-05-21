@@ -1,28 +1,29 @@
 package com.mcraft;
 
-import com.mcraft.core.Window;
-
-import static org.lwjgl.opengl.GL11.*;
+import com.mcraft.render.Camera;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        Window window = new Window(
-                854,
-                480,
-                "Minecraft Clássico - Etapa 2"
+        Camera camera = new Camera(0, 80, 0);
+
+        camera.rotate(
+                (float)Math.toRadians(45),
+                (float)Math.toRadians(-20)
         );
 
-        window.init();
+        float[] view = camera.getViewMatrix();
 
-        while (!window.shouldClose()) {
+        System.out.println("View Matrix:");
 
-            // Limpa a tela
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        for (int i = 0; i < 16; i++) {
 
-            // Atualiza janela/input
-            window.update();
+            System.out.printf("%8.3f ", view[i]);
+
+            if ((i + 1) % 4 == 0) {
+                System.out.println();
+            }
         }
     }
 }
