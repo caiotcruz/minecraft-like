@@ -4,11 +4,11 @@ import java.util.Random;
 
 public class WorldGen {
 
-    private final int[] permutation = new int[512];
+    private final int[] perm = new int[512];
 
     private static final int[][] GRAD2 = {
-        {1,1}, {-1,1}, {1,-1}, {-1,-1},
-        {1,0}, {-1,0}, {0,1},  {0,-1}
+        {1, 1}, {-1, 1}, {1, -1}, {-1, -1},
+        {1, 0}, {-1, 0}, { 0, 1}, { 0, -1}
     };
 
     public WorldGen(long seed) {
@@ -16,86 +16,90 @@ public class WorldGen {
         int[] p = new int[256];
         for (int i = 0; i < 256; i++) p[i] = i;
 
+        // Fisher-Yates shuffle
         for (int i = 255; i > 0; i--) {
             int j = rng.nextInt(i + 1);
             int tmp = p[i]; p[i] = p[j]; p[j] = tmp;
         }
-
-        for (int i = 0; i < 512; i++) {
-            permutation[i] = p[i & 255];
-        }
+        for (int i = 0; i < 512; i++) perm[i] = p[i & 255];
     }
 
-    private double fade(double t) {
-        return t * t * t * (t * (t * 6 - 15) + 10);
-    }
+    // ── Perlin Noise 2D ──────────────────────────────────────────────────────
 
-    private double lerp(double t, double a, double b) {
-        return a + t * (b - a);
-    }
+    /** Suavização cúbica de Perlin: 6t⁵ − 15t⁴ + 10t³ */
+    private double fade(double t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+
+    private double lerp(double t, double a, double b) { return a + t * (b - a); }
 
     private double grad(int hash, double x, double y) {
         int[] g = GRAD2[hash & 7];
         return g[0] * x + g[1] * y;
     }
 
+    /** Ruído de Perlin 2D normalizado em [−1, 1]. */
     public double noise(double x, double y) {
         int xi = (int) Math.floor(x) & 255;
         int yi = (int) Math.floor(y) & 255;
-
         double xf = x - Math.floor(x);
         double yf = y - Math.floor(y);
+        double u  = fade(xf);
+        double v  = fade(yf);
 
-        double u = fade(xf);
-        double v = fade(yf);
-
-        int aa = permutation[permutation[xi    ] + yi    ];
-        int ab = permutation[permutation[xi    ] + yi + 1];
-        int ba = permutation[permutation[xi + 1] + yi    ];
-        int bb = permutation[permutation[xi + 1] + yi + 1];
+        int aa = perm[perm[xi    ] + yi    ];
+        int ab = perm[perm[xi    ] + yi + 1];
+        int ba = perm[perm[xi + 1] + yi    ];
+        int bb = perm[perm[xi + 1] + yi + 1];
 
         return lerp(v,
-            lerp(u, grad(aa, xf,   yf  ), grad(ba, xf-1, yf  )),
-            lerp(u, grad(ab, xf,   yf-1), grad(bb, xf-1, yf-1))
+            lerp(u, grad(aa, xf,     yf    ), grad(ba, xf - 1, yf    )),
+            lerp(u, grad(ab, xf,     yf - 1), grad(bb, xf - 1, yf - 1))
         );
     }
 
     /**
-     * @param octaves   
-     * @param scale     
-     * @param persistence 
+     * Fractal Brownian Motion: soma N oitavas de noise com frequência dobrada
+     * e amplitude reduzida à metade a cada camada.
+     *
+     * Resultado em [−1, 1], normalizado pela soma das amplitudes.
      */
     public double fbm(double x, double z, int octaves, double scale, double persistence) {
-        double total = 0;
+        double total     = 0;
         double amplitude = 1.0;
         double frequency = 1.0 / scale;
-        double maxValue = 0;
+        double maxVal    = 0;
 
         for (int i = 0; i < octaves; i++) {
-            total += noise(x * frequency, z * frequency) * amplitude;
-            maxValue += amplitude;
+            total    += noise(x * frequency, z * frequency) * amplitude;
+            maxVal   += amplitude;
             amplitude *= persistence;
-            frequency *= 2;
+            frequency *= 2.0;
         }
-
-        return total / maxValue; 
+        return total / maxVal;
     }
 
+    // ── Geração de chunk ─────────────────────────────────────────────────────
+
+    /**
+     * Gera o array de blocos para um chunk inteiro.
+     * Retorna byte[SIZE × HEIGHT × SIZE] com o mesmo layout de Chunk.java:
+     * índice = y × SIZE² + z × SIZE + x
+     */
     public byte[] generateChunk(int chunkX, int chunkZ,
-                                  int chunkSize, int chunkHeight) {
-        byte[] blocks = new byte[chunkSize * chunkHeight * chunkSize];
+                                  int size, int height) {
+        byte[] blocks = new byte[size * height * size];
 
-        for (int x = 0; x < chunkSize; x++) {
-            for (int z = 0; z < chunkSize; z++) {
+        for (int x = 0; x < size; x++) {
+            for (int z = 0; z < size; z++) {
+                double wx = chunkX * size + x;  // Coordenada global
+                double wz = chunkZ * size + z;
 
-                double worldX = chunkX * chunkSize + x;
-                double worldZ = chunkZ * chunkSize + z;
+                // Altura da superfície: fBm mapeado para [SEA - 20, SEA + 32]
+                double n       = fbm(wx, wz, 5, 120.0, 0.5);
+                int surfaceY   = (int) (64 + n * 28);
+                surfaceY       = Math.max(1, Math.min(height - 2, surfaceY));
 
-                double noiseVal = fbm(worldX, worldZ, 5, 150.0, 0.5);
-                int surfaceY = (int) (64 + noiseVal * 32); 
-
-                for (int y = 0; y < chunkHeight; y++) {
-                    int idx = x + (y * chunkSize) + (z * chunkSize * chunkHeight);
+                for (int y = 0; y < height; y++) {
+                    int idx = y * size * size + z * size + x; // ← índice corrigido
 
                     if (y == 0) {
                         blocks[idx] = (byte) Block.BEDROCK.id;
@@ -108,6 +112,7 @@ public class WorldGen {
                             ? (byte) Block.SAND.id
                             : (byte) Block.GRASS.id;
                     } else {
+                        // Água preenche vales abaixo do nível do mar
                         blocks[idx] = (y <= 64)
                             ? (byte) Block.WATER.id
                             : (byte) Block.AIR.id;
@@ -116,48 +121,60 @@ public class WorldGen {
             }
         }
 
-        generateTrees(blocks, chunkX, chunkZ, chunkSize, chunkHeight);
+        generateTrees(blocks, chunkX, chunkZ, size, height);
 
         return blocks;
     }
 
+    // ── Geração de árvores ───────────────────────────────────────────────────
+
     private void generateTrees(byte[] blocks, int chunkX, int chunkZ,
-                                int chunkSize, int chunkHeight) {
-        Random rng = new Random((long) chunkX * 341873128712L + (long) chunkZ * 132897987541L);
+                                int size, int height) {
+        // Seed determinístico por chunk: mesma seed → mesmas árvores sempre
+        Random rng = new Random(
+            (long) chunkX * 341_873_128_712L + (long) chunkZ * 132_897_987_541L
+        );
 
-        int treeCount = rng.nextInt(4) + 1; 
-        for (int t = 0; t < treeCount; t++) {
-            int tx = rng.nextInt(chunkSize - 4) + 2;
-            int tz = rng.nextInt(chunkSize - 4) + 2;
+        int count = rng.nextInt(4) + 1; // 1–4 árvores por chunk
 
-            int ty = chunkHeight - 1;
-            while (ty > 0 && blocks[tx + (ty * chunkSize) + (tz * chunkSize * chunkHeight)] == Block.AIR.id) {
+        for (int t = 0; t < count; t++) {
+            // Margem de 2 blocos para que a copa caiba dentro do chunk
+            int tx = rng.nextInt(size - 4) + 2;
+            int tz = rng.nextInt(size - 4) + 2;
+
+            // Encontra a superfície nessa coluna
+            int ty = height - 1;
+            while (ty > 0) {
+                int idx = ty * size * size + tz * size + tx;
+                if (blocks[idx] != Block.AIR.id) break;
                 ty--;
             }
 
-            if (ty <= 0 || ty >= chunkHeight - 8) continue;
-            if (blocks[tx + (ty * chunkSize) + (tz * chunkSize * chunkHeight)] != Block.GRASS.id) continue;
+            // Planta árvore apenas em grama, longe do teto
+            int surfIdx = ty * size * size + tz * size + tx;
+            if (ty <= 0 || ty >= height - 8) continue;
+            if (blocks[surfIdx] != (byte) Block.GRASS.id) continue;
 
-            int trunkHeight = 4 + rng.nextInt(2);
+            int trunkH = 4 + rng.nextInt(2); // 4 ou 5 blocos de tronco
 
-            for (int dy = 1; dy <= trunkHeight; dy++) {
-                int idx = tx + ((ty + dy) * chunkSize) + (tz * chunkSize * chunkHeight);
-                blocks[idx] = (byte) Block.WOOD_LOG.id;
+            // Tronco
+            for (int dy = 1; dy <= trunkH; dy++) {
+                int idx = (ty + dy) * size * size + tz * size + tx;
+                if ((ty + dy) < height) blocks[idx] = (byte) Block.WOOD_LOG.id;
             }
 
-            int leafTop = ty + trunkHeight;
+            // Copa esférica de folhas (raio 2 blocos)
+            int leafBase = ty + trunkH;
             for (int dx = -2; dx <= 2; dx++) {
                 for (int dz = -2; dz <= 2; dz++) {
                     for (int dy = -1; dy <= 2; dy++) {
-                        int lx = tx + dx;
-                        int ly = leafTop + dy;
-                        int lz = tz + dz;
+                        int lx = tx + dx, ly = leafBase + dy, lz = tz + dz;
+                        if (lx < 0 || lx >= size || lz < 0 || lz >= size) continue;
+                        if (ly < 0 || ly >= height) continue;
 
-                        if (lx < 0 || lx >= chunkSize || lz < 0 || lz >= chunkSize) continue;
-                        if (ly < 0 || ly >= chunkHeight) continue;
-
-                        if (Math.abs(dx) + Math.abs(dz) + Math.abs(dy) <= 3) {
-                            int idx = lx + (ly * chunkSize) + (lz * chunkSize * chunkHeight);
+                        // Esfera por distância de Chebyshev ≤ 2
+                        if (Math.max(Math.abs(dx), Math.max(Math.abs(dz), Math.abs(dy))) <= 2) {
+                            int idx = ly * size * size + lz * size + lx;
                             if (blocks[idx] == Block.AIR.id) {
                                 blocks[idx] = (byte) Block.LEAVES.id;
                             }

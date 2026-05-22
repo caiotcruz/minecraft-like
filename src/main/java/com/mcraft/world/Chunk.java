@@ -1,102 +1,91 @@
 package com.mcraft.world;
 
+import com.mcraft.render.ChunkRenderer;
+import com.mcraft.render.Shader;
+
 public class Chunk {
 
     public static final int SIZE   = 16;
-    public static final int HEIGHT = 256;
+    public static final int HEIGHT = 128;
 
-    private final int chunkX;
-    private final int chunkZ;
+    // Array compacto: 16 × 128 × 16 = 32.768 bytes ≈ 32 KB por chunk
+    private final byte[] blocks = new byte[SIZE * HEIGHT * SIZE];
 
-    private final byte[] blocks;
+    private final int chunkX, chunkZ;   // Posição em coordenadas de chunk
+    private boolean dirty = true;        // Mesh precisa ser reconstruída?
+
+    private final ChunkRenderer renderer = new ChunkRenderer();
 
     public Chunk(int chunkX, int chunkZ) {
-
         this.chunkX = chunkX;
         this.chunkZ = chunkZ;
-
-        this.blocks = new byte[SIZE * HEIGHT * SIZE];
     }
 
-    public Chunk(int chunkX, int chunkZ, byte[] blocks) {
+    // ── Índice ───────────────────────────────────────────────────────────────
 
-        this.chunkX = chunkX;
-        this.chunkZ = chunkZ;
-
-        if (blocks == null || blocks.length != SIZE * HEIGHT * SIZE) {
-            throw new IllegalArgumentException(
-                    "Array de blocos inválido para chunk."
-            );
-        }
-
-        this.blocks = blocks;
+    /** Converte coordenadas locais (x,y,z) para índice no array. */
+    private static int idx(int x, int y, int z) {
+        return y * SIZE * SIZE + z * SIZE + x;
     }
 
-    private int index(int x, int y, int z) {
+    // ── Acesso a blocos ──────────────────────────────────────────────────────
 
-        return x
-                + (y * SIZE)
-                + (z * SIZE * HEIGHT);
-    }
-
-    public boolean isInside(int x, int y, int z) {
-
-        return x >= 0 && x < SIZE
-                && y >= 0 && y < HEIGHT
-                && z >= 0 && z < SIZE;
-    }
-
+    /**
+     * Retorna o bloco em coordenadas locais (0…SIZE-1, 0…HEIGHT-1, 0…SIZE-1).
+     * Retorna AIR para coordenadas fora dos limites (sem exceção).
+     */
     public Block getBlock(int x, int y, int z) {
-
-        if (!isInside(x, y, z)) {
+        if (x < 0 || x >= SIZE || y < 0 || y >= HEIGHT || z < 0 || z >= SIZE) {
             return Block.AIR;
         }
-
-        int idx = index(x, y, z);
-
-        return Block.fromId(blocks[idx] & 0xFF);
+        return Block.fromId(blocks[idx(x, y, z)] & 0xFF); // & 0xFF: byte → int sem sinal
     }
 
-    public Block getBlockSafe(int x, int y, int z) {
-
-        if (!isInside(x, y, z)) {
-            return Block.AIR;
-        }
-
-        return getBlock(x, y, z);
-    }
-
+    /**
+     * Define um bloco em coordenadas locais e marca a mesh como suja.
+     */
     public void setBlock(int x, int y, int z, int blockId) {
+        if (x < 0 || x >= SIZE || y < 0 || y >= HEIGHT || z < 0 || z >= SIZE) return;
+        blocks[idx(x, y, z)] = (byte) blockId;
+        dirty = true;
+    }
 
-        if (!isInside(x, y, z)) {
-            return;
+    /**
+     * Copia um array de dados gerados pelo WorldGen para este chunk.
+     */
+    public void setBlocks(byte[] data) {
+        int len = Math.min(data.length, blocks.length);
+        System.arraycopy(data, 0, blocks, 0, len);
+        dirty = true;
+    }
+
+    // ── Renderização ─────────────────────────────────────────────────────────
+
+    /**
+     * Renderiza o chunk. Se a mesh estiver suja, reconstrói antes de desenhar.
+     *
+     * @param shader  Shader com uniform uModel já ativo
+     * @param world   Necessário para consultar blocos vizinhos de outros chunks
+     */
+    public void render(Shader shader, World world) {
+        if (dirty) {
+            renderer.buildMesh(this, world);
+            dirty = false;
         }
 
-        blocks[index(x, y, z)] = (byte) blockId;
+        // Model matrix: identidade com translação para a posição do chunk no mundo
+        float[] model = {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            chunkX * (float) SIZE, 0, chunkZ * (float) SIZE, 1  // translação
+        };
+        shader.setMatrix4("uModel", model);
+
+        renderer.render();
     }
 
-    public byte[] getBlocks() {
-
-        return blocks;
-    }
-
-    public int getChunkX() {
-
-        return chunkX;
-    }
-
-    public int getChunkZ() {
-
-        return chunkZ;
-    }
-
-    public int getWorldX() {
-
-        return chunkX * SIZE;
-    }
-
-    public int getWorldZ() {
-
-        return chunkZ * SIZE;
-    }
+    public void markDirty() { dirty = true; }
+    public int  getChunkX() { return chunkX; }
+    public int  getChunkZ() { return chunkZ; }
 }

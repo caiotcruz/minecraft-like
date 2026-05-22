@@ -3,14 +3,14 @@ package com.mcraft.render;
 public class Camera {
 
     private float x, y, z;
-    private float yaw   = 0f;   // radianos
-    private float pitch = 0f;   // radianos
+    private float yaw   = 0f;   
+    private float pitch = 0f;   
 
     private float[] front = {0, 0, -1};
     private float[] right = {1, 0,  0};
     private float[] up    = {0, 1,  0};
 
-    private static final float MAX_PITCH = (float) Math.toRadians(89);
+    private static final float MAX_PITCH = (float) Math.toRadians(89.0);
 
     public Camera(float x, float y, float z) {
         this.x = x; this.y = y; this.z = z;
@@ -19,8 +19,7 @@ public class Camera {
 
     public void rotate(float deltaYaw, float deltaPitch) {
         yaw   += deltaYaw;
-        pitch += deltaPitch;
-        pitch  = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch));
+        pitch  = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch + deltaPitch));
         updateVectors();
     }
 
@@ -41,37 +40,64 @@ public class Camera {
     }
 
     public float[] getViewMatrix() {
-        float[] f = normalize(front);
-        float[] r = normalize(right);
-        float[] u = up;
+        float rx = right[0], ry = right[1], rz = right[2];
+        float ux = up[0],    uy = up[1],    uz = up[2];
+        float fx = front[0], fy = front[1], fz = front[2];
+
+        float tx = -(rx*x + ry*y + rz*z);
+        float ty = -(ux*x + uy*y + uz*z);
+        float tz =  (fx*x + fy*y + fz*z); 
 
         return new float[] {
-             r[0],  u[0], -f[0], 0,
-             r[1],  u[1], -f[1], 0,
-             r[2],  u[2], -f[2], 0,
-            -dot(r, new float[]{x,y,z}),
-            -dot(u, new float[]{x,y,z}),
-             dot(f, new float[]{x,y,z}),
-            1
+             rx,  ux, -fx, 0,   
+             ry,  uy, -fy, 0,  
+             rz,  uz, -fz, 0,   
+             tx,  ty,  tz, 1  
         };
     }
 
-    public static float[] perspectiveMatrix(float fovDeg, float aspect,
-                                             float near, float far) {
-        float f = (float)(1.0 / Math.tan(Math.toRadians(fovDeg) / 2.0));
+    /**
+     * @param fovDeg  
+     * @param aspect 
+     * @param near    
+     * @param far   
+     */
+    public static float[] perspective(float fovDeg, float aspect, float near, float far) {
+        float f  = (float)(1.0 / Math.tan(Math.toRadians(fovDeg) / 2.0));
         float nf = 1.0f / (near - far);
 
-        float[] m = new float[16]; 
-
+        float[] m = new float[16];
         m[0]  = f / aspect;
         m[5]  = f;
         m[10] = (far + near) * nf;
         m[11] = -1f;
-        m[14] = 2 * far * near * nf;
-
+        m[14] = 2f * far * near * nf;
         return m;
     }
 
+    public static float[] ortho(float w, float h) {
+        float[] m = new float[16];
+        m[0]  =  2f / w;
+        m[5]  = -2f / h;  
+        m[10] = -1f;
+        m[12] = -1f;      
+        m[13] =  1f;       
+        m[15] =  1f;
+        return m;
+    }
+
+    public float   getX()     { return x; }
+    public float   getY()     { return y; }
+    public float   getZ()     { return z; }
+    public float   getYaw()   { return yaw; }     
+    public float   getPitch() { return pitch; }
+    public float[] getFront() { return front; }
+    public float[] getRight() { return right; }
+    public float[] getUp()    { return up; }
+
+    public void setPosition(float x, float y, float z) {
+        this.x = x; this.y = y; this.z = z;
+    }
 
     private static float[] cross(float[] a, float[] b) {
         return new float[]{
@@ -87,14 +113,7 @@ public class Camera {
 
     private static float[] normalize(float[] v) {
         float len = (float) Math.sqrt(dot(v, v));
-        if (len < 0.00001f) return v;
+        if (len < 1e-6f) return new float[]{0, 1, 0};
         return new float[]{ v[0]/len, v[1]/len, v[2]/len };
     }
-
-    public float getX() { return x; }
-    public float getY() { return y; }
-    public float getZ() { return z; }
-    public void setPos(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
-    public float[] getFront() { return front; }
-    public float[] getRight() { return right; }
 }

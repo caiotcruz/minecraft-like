@@ -31,9 +31,9 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window {
 
-    private long windowHandle;
-    private int width, height;
-    private String title;
+    private long handle;
+    private final int width, height;
+    private final String title;
 
     public Window(int width, int height, String title) {
         this.width = width;
@@ -51,44 +51,39 @@ public class Window {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-        windowHandle = glfwCreateWindow(width, height, title, NULL, NULL);
-        if (windowHandle == NULL) {
+        handle = glfwCreateWindow(width, height, title, NULL, NULL);
+        if (handle == NULL) {
             throw new RuntimeException("Falha ao criar janela GLFW");
         }
 
-        GLFWVidMode vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-        glfwSetWindowPos(
-            windowHandle,
-            (vidMode.width() - width) / 2,
-            (vidMode.height() - height) / 2
-        );
+        GLFWVidMode vid = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        glfwSetWindowPos(handle,
+            (vid.width()  - width)  / 2,
+            (vid.height() - height) / 2);
 
-        glfwMakeContextCurrent(windowHandle);
-        GL.createCapabilities(); // Inicializa bindings OpenGL
+        glfwMakeContextCurrent(handle);
+        GL.createCapabilities();    
 
-        glfwSwapInterval(1);
+        glfwSwapInterval(1);     
 
         glViewport(0, 0, width, height);
         glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
 
-        glEnable(GL_DEPTH_TEST);
-
-        glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST);    
+        glEnable(GL_CULL_FACE);    
         glCullFace(GL_BACK);
 
-        glfwShowWindow(windowHandle);
+        glfwShowWindow(handle);
     }
 
-    public void update() {
-        glfwSwapBuffers(windowHandle); // Troca front/back buffer
-        glfwPollEvents();              // Processa eventos de input
+    public void swapAndPoll() {
+        glfwSwapBuffers(handle);  
+        glfwPollEvents();          
     }
 
-    public boolean shouldClose() {
-        return glfwWindowShouldClose(windowHandle);
-    }
+    public boolean shouldClose() { return glfwWindowShouldClose(handle); }
 
-    public long getHandle() { return windowHandle; }
-    public int getWidth()   { return width; }
-    public int getHeight()  { return height; }
+    public long getHandle()  { return handle; }
+    public int  getWidth()   { return width;  }
+    public int  getHeight()  { return height; }
 }
