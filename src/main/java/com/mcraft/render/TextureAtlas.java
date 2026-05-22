@@ -31,19 +31,13 @@ public class TextureAtlas {
 
     private final int textureId;
 
-    /**
-     * @param classPath Caminho relativo ao classpath, ex: "/textures/terrain.png"
-     */
     public TextureAtlas(String classPath) {
-        // 1. Lê o arquivo para um ByteBuffer direto (STBImage precisa de buffer nativo)
         ByteBuffer raw = loadToBuffer(classPath);
 
-        // 2. Decodifica com STBImage
         IntBuffer width    = BufferUtils.createIntBuffer(1);
         IntBuffer height   = BufferUtils.createIntBuffer(1);
         IntBuffer channels = BufferUtils.createIntBuffer(1);
 
-        // Flip vertical: PNG tem Y=0 no topo, OpenGL quer Y=0 na base
         stbi_set_flip_vertically_on_load(true);
 
         ByteBuffer pixels = stbi_load_from_memory(raw, width, height, channels, 4);
@@ -52,11 +46,9 @@ public class TextureAtlas {
                 + stbi_failure_reason() + " ← " + classPath);
         }
 
-        // 3. Cria textura OpenGL e faz upload
         textureId = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, textureId);
 
-        // Nearest-neighbor: sem suavização (visual pixelado original)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -66,15 +58,11 @@ public class TextureAtlas {
             width.get(0), height.get(0),
             0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-        stbi_image_free(pixels); // Libera memória da CPU após upload para a GPU
+        stbi_image_free(pixels); 
 
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    /**
-     * Ativa a textura na unidade de textura `slot` (0, 1, 2…).
-     * Depois use shader.setInt("uTexture", slot).
-     */
     public void bind(int slot) {
         glActiveTexture(GL_TEXTURE0 + slot);
         glBindTexture(GL_TEXTURE_2D, textureId);
@@ -88,7 +76,6 @@ public class TextureAtlas {
         glDeleteTextures(textureId);
     }
 
-    // ── Utilitário ───────────────────────────────────────────────────────────
 
     private ByteBuffer loadToBuffer(String classPath) {
         try (InputStream is = getClass().getResourceAsStream(classPath)) {
@@ -96,7 +83,6 @@ public class TextureAtlas {
                 throw new RuntimeException("Textura não encontrada no classpath: " + classPath);
             }
             byte[] bytes = is.readAllBytes();
-            // STBImage exige ByteBuffer direto (fora do heap gerenciado da JVM)
             ByteBuffer buffer = BufferUtils.createByteBuffer(bytes.length);
             buffer.put(bytes).flip();
             return buffer;

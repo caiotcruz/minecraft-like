@@ -11,11 +11,6 @@ public class Raycast {
         public int prevX,  prevY,  prevZ;   
     }
 
-    /**
-     * @param ox,oy,oz  
-     * @param dx,dy,dz  
-     * @param maxDist  
-     */
     public static HitResult cast(float ox, float oy, float oz,
                                   float dx, float dy, float dz,
                                   float maxDist, World world) {

@@ -3,15 +3,13 @@ package com.mcraft.ui;
 public class Inventory {
 
     public static final int HOTBAR_SIZE = 9;
-    public static final int TOTAL_SLOTS = 36; // 4 linhas × 9 colunas + hotbar
+    public static final int TOTAL_SLOTS = 36;
 
     private final int[] itemId  = new int[TOTAL_SLOTS];
     private final int[] itemQty = new int[TOTAL_SLOTS];
     private int selectedSlot = 0;
 
-    /** Tenta empilhar o item em um slot existente; depois ocupa slot vazio. */
     public void addItem(int blockId, int qty) {
-        // 1. Tenta empilhar
         for (int i = 0; i < TOTAL_SLOTS; i++) {
             if (itemId[i] == blockId && itemQty[i] < 64) {
                 int add = Math.min(qty, 64 - itemQty[i]);
@@ -20,7 +18,6 @@ public class Inventory {
                 if (qty <= 0) return;
             }
         }
-        // 2. Slot vazio
         for (int i = 0; i < TOTAL_SLOTS; i++) {
             if (itemId[i] == 0) {
                 itemId[i]  = blockId;
@@ -28,7 +25,6 @@ public class Inventory {
                 return;
             }
         }
-        // Inventário cheio — descarta o excesso
     }
 
     public void removeItem(int blockId, int qty) {

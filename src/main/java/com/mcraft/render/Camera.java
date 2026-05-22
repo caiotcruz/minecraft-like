@@ -56,12 +56,6 @@ public class Camera {
         };
     }
 
-    /**
-     * @param fovDeg  
-     * @param aspect 
-     * @param near    
-     * @param far   
-     */
     public static float[] perspective(float fovDeg, float aspect, float near, float far) {
         float f  = (float)(1.0 / Math.tan(Math.toRadians(fovDeg) / 2.0));
         float nf = 1.0f / (near - far);

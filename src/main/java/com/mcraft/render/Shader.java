@@ -30,10 +30,6 @@ public class Shader {
 
     private final int programId;
 
-    /**
-     * @param vertResource Caminho relativo em resources/shaders/, ex: "block.vert"
-     * @param fragResource Caminho relativo em resources/shaders/, ex: "block.frag"
-     */
     public Shader(String vertResource, String fragResource) {
         int vert = compile(GL_VERTEX_SHADER,   loadText("/shaders/" + vertResource));
         int frag = compile(GL_FRAGMENT_SHADER, loadText("/shaders/" + fragResource));
@@ -49,12 +45,10 @@ public class Shader {
             throw new RuntimeException("Erro ao linkar shader:\n" + log);
         }
 
-        // Após linkar, os objetos de shader individuais podem ser apagados
         glDeleteShader(vert);
         glDeleteShader(frag);
     }
 
-    // ── Compilação ───────────────────────────────────────────────────────────
 
     private int compile(int type, String src) {
         int id = glCreateShader(type);
@@ -81,17 +75,11 @@ public class Shader {
         }
     }
 
-    // ── API pública ──────────────────────────────────────────────────────────
 
     public void use() {
         glUseProgram(programId);
     }
 
-    /**
-     * Envia uma matriz 4×4 em column-major order (padrão OpenGL).
-     * @param name  Nome do uniform no shader
-     * @param mat   Array float[16] em column-major
-     */
     public void setMatrix4(String name, float[] mat) {
         int loc = glGetUniformLocation(programId, name);
         glUniformMatrix4fv(loc, false, mat);

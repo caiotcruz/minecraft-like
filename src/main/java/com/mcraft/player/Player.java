@@ -35,13 +35,6 @@ public class Player {
         inventory.addItem(Block.PLANKS.id,  32);
     }
 
-
-    /**
-     * @param dx    
-     * @param dz   
-     * @param jump  
-     * @param dt   
-     */
     public void update(float dx, float dz, boolean jump, float dt) {
         float yaw  = camera.getYaw();   
         float cos  = (float) Math.cos(yaw);
