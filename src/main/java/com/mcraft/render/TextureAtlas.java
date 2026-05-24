@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 import org.lwjgl.BufferUtils;
+
 import static org.lwjgl.opengl.GL11.GL_NEAREST;
 import static org.lwjgl.opengl.GL11.GL_REPEAT;
 import static org.lwjgl.opengl.GL11.GL_RGBA;
@@ -22,6 +23,7 @@ import static org.lwjgl.opengl.GL11.glTexImage2D;
 import static org.lwjgl.opengl.GL11.glTexParameteri;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
+
 import static org.lwjgl.stb.STBImage.stbi_failure_reason;
 import static org.lwjgl.stb.STBImage.stbi_image_free;
 import static org.lwjgl.stb.STBImage.stbi_load_from_memory;
@@ -31,7 +33,9 @@ public class TextureAtlas {
 
     private final int textureId;
 
+
     public TextureAtlas(String classPath) {
+
         ByteBuffer raw = loadToBuffer(classPath);
 
         IntBuffer width    = BufferUtils.createIntBuffer(1);
@@ -40,10 +44,15 @@ public class TextureAtlas {
 
         stbi_set_flip_vertically_on_load(true);
 
-        ByteBuffer pixels = stbi_load_from_memory(raw, width, height, channels, 4);
+        ByteBuffer pixels =
+            stbi_load_from_memory(raw, width, height, channels, 4);
+
         if (pixels == null) {
-            throw new RuntimeException("Falha ao decodificar textura: "
-                + stbi_failure_reason() + " ← " + classPath);
+            throw new RuntimeException(
+                "Falha ao decodificar textura: "
+                + stbi_failure_reason()
+                + " ← " + classPath
+            );
         }
 
         textureId = glGenTextures();
@@ -54,13 +63,323 @@ public class TextureAtlas {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-            width.get(0), height.get(0),
-            0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA,
+            width.get(0),
+            height.get(0),
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            pixels
+        );
 
-        stbi_image_free(pixels); 
+        stbi_image_free(pixels);
 
         glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    public TextureAtlas(ByteBuffer pixels, int width, int height) {
+
+        textureId = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, textureId);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA,
+            width,
+            height,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            pixels
+        );
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    public static TextureAtlas generateProcedural() {
+
+        final int ATLAS = 256;
+        final int TILE  = 16;
+        final int GRID  = 16;
+
+        ByteBuffer buf =
+            BufferUtils.createByteBuffer(ATLAS * ATLAS * 4);
+
+        for (int row = 0; row < GRID; row++) {
+            for (int col = 0; col < GRID; col++) {
+
+                for (int py = 0; py < TILE; py++) {
+                    for (int px = 0; px < TILE; px++) {
+
+                        int imgX = col * TILE + px;
+                        int imgY = row * TILE + py;
+
+                        int idx = (imgY * ATLAS + imgX) * 4;
+
+                        int[] rgba = tilePixel(col, row, px, py);
+
+                        buf.put(idx,     (byte) rgba[0]);
+                        buf.put(idx + 1, (byte) rgba[1]);
+                        buf.put(idx + 2, (byte) rgba[2]);
+                        buf.put(idx + 3, (byte) rgba[3]);
+                    }
+                }
+            }
+        }
+
+        return new TextureAtlas(buf, ATLAS, ATLAS);
+    }
+
+    private static int[] tilePixel(
+        int col,
+        int row,
+        int px,
+        int py
+    ) {
+
+        int h =
+            (col * 31 + row * 17)
+            ^ (px * 7 + py * 13);
+
+        int n =
+            ((h * 1664525 + 1013904223) >> 16) & 0xF;
+
+
+        if (col == 0 && row == 0) {
+
+            int g = 110 + n * 3;
+            int r = g - 30 - (n & 3);
+
+            return new int[]{
+                clamp(r),
+                clamp(g),
+                clamp(r - 20),
+                255
+            };
+        }
+
+        if (col == 1 && row == 0) {
+
+            int v = 118 + n * 4;
+
+            return new int[]{
+                v,
+                v,
+                v + (n & 3),
+                255
+            };
+        }
+
+        if (col == 2 && row == 0) {
+
+            int r = 134 + (n > 8 ? 1 : -1) * (n & 7);
+            int g = 90  + (n & 5);
+            int b = 50  + (n & 3);
+
+            return new int[]{
+                clamp(r),
+                clamp(g),
+                clamp(b),
+                255
+            };
+        }
+
+        if (col == 3 && row == 0) {
+
+            if (py < 4) {
+
+                int g = 120 + n * 3;
+
+                return new int[]{
+                    clamp(g - 40),
+                    clamp(g),
+                    clamp(g - 60),
+                    255
+                };
+
+            } else {
+                return tilePixel(2, 0, px, py);
+            }
+        }
+
+        if (col == 4 && row == 0) {
+
+            boolean grain =
+                ((py % 4) == 0)
+                || (px == 0 || px == 15);
+
+            int r = grain ? 178 : 197 + (n & 7);
+            int g = grain ? 120 : 140 + (n & 5);
+            int b = grain ? 60  : 80  + (n & 3);
+
+            return new int[]{ r, g, b, 255 };
+        }
+
+        if (col == 1 && row == 1) {
+
+            int v = 32 + (n < 4 ? 0 : n * 2);
+
+            return new int[]{ v, v, v, 255 };
+        }
+
+        if (col == 2 && row == 1) {
+
+            int r = 218 + (n & 7) - 4;
+            int g = 204 + (n & 5) - 2;
+            int b = 112 + (n & 3);
+
+            return new int[]{
+                clamp(r),
+                clamp(g),
+                clamp(b),
+                255
+            };
+        }
+
+        if (col == 4 && row == 1) {
+
+            boolean ring =
+                (px % 5 < 2)
+                || (py % 8 == 0);
+
+            int r = ring ? 88 : 108 + (n & 7);
+            int g = ring ? 60 : 76  + (n & 5);
+            int b = ring ? 32 : 46  + (n & 3);
+
+            return new int[]{ r, g, b, 255 };
+        }
+
+        if (col == 4 && row == 3) {
+
+            boolean hole =
+                (n == 0 || n == 15)
+                && (px % 3 == 0)
+                && (py % 3 == 0);
+
+            if (hole) {
+                return new int[]{ 0, 0, 0, 0 };
+            }
+
+            int g = 78 + n * 3;
+            int r = clamp(g - 50);
+
+            return new int[]{ r, g, 20, 220 };
+        }
+
+        if (col == 13 && row == 12) {
+
+            boolean wave =
+                ((px + py) % 4 == 0);
+
+            int b = wave ? 220 : 170 + n * 4;
+            int g = wave ? 130 : 100 + n * 2;
+
+            return new int[]{
+                20,
+                clamp(g),
+                clamp(b),
+                180
+            };
+        }
+
+        if (col == 11 && row == 2) {
+
+            boolean grid =
+                (px % 7 == 0)
+                || (py % 7 == 0);
+
+            int r = grid ? 80 : 120 + (n & 7);
+            int g = grid ? 50 : 80  + (n & 5);
+            int b = grid ? 25 : 42  + (n & 3);
+
+            return new int[]{ r, g, b, 255 };
+        }
+
+        float hue =
+            (col * 16 + row) / 256.0f;
+
+        int[] rgb =
+            hsvToRgb(hue, 0.6f, 0.7f + n * 0.01f);
+
+        return new int[]{
+            rgb[0],
+            rgb[1],
+            rgb[2],
+            255
+        };
+    }
+
+    private static int clamp(int v) {
+        return Math.max(0, Math.min(255, v));
+    }
+
+    private static int[] hsvToRgb(float h, float s, float v) {
+
+        float r = 0;
+        float g = 0;
+        float b = 0;
+
+        int i = (int)(h * 6);
+
+        float f = h * 6 - i;
+
+        float p = v * (1 - s);
+        float q = v * (1 - f * s);
+        float t = v * (1 - (1 - f) * s);
+
+        switch (i % 6) {
+
+            case 0 -> {
+                r = v;
+                g = t;
+                b = p;
+            }
+
+            case 1 -> {
+                r = q;
+                g = v;
+                b = p;
+            }
+
+            case 2 -> {
+                r = p;
+                g = v;
+                b = t;
+            }
+
+            case 3 -> {
+                r = p;
+                g = q;
+                b = v;
+            }
+
+            case 4 -> {
+                r = t;
+                g = p;
+                b = v;
+            }
+
+            case 5 -> {
+                r = v;
+                g = p;
+                b = q;
+            }
+        }
+
+        return new int[]{
+            (int)(r * 255),
+            (int)(g * 255),
+            (int)(b * 255)
+        };
     }
 
     public void bind(int slot) {
@@ -76,18 +395,34 @@ public class TextureAtlas {
         glDeleteTextures(textureId);
     }
 
-
     private ByteBuffer loadToBuffer(String classPath) {
-        try (InputStream is = getClass().getResourceAsStream(classPath)) {
+
+        try (InputStream is =
+                 getClass().getResourceAsStream(classPath)) {
+
             if (is == null) {
-                throw new RuntimeException("Textura não encontrada no classpath: " + classPath);
+                throw new RuntimeException(
+                    "Textura não encontrada no classpath: "
+                    + classPath
+                );
             }
+
             byte[] bytes = is.readAllBytes();
-            ByteBuffer buffer = BufferUtils.createByteBuffer(bytes.length);
+
+            ByteBuffer buffer =
+                BufferUtils.createByteBuffer(bytes.length);
+
             buffer.put(bytes).flip();
+
             return buffer;
+
         } catch (IOException e) {
-            throw new RuntimeException("Falha ao ler textura: " + classPath, e);
+
+            throw new RuntimeException(
+                "Falha ao ler textura: "
+                + classPath,
+                e
+            );
         }
     }
 }

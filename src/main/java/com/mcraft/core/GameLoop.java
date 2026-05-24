@@ -82,7 +82,7 @@ public class GameLoop {
         blockShader = new Shader("block.vert", "block.frag");
         hudShader   = new Shader("hud.vert",   "hud.frag");
 
-        atlas = new TextureAtlas("/textures/terrain.png");
+        atlas = TextureAtlas.generateProcedural();
 
         hud = new com.mcraft.ui.HUD(
             window.getWidth(), window.getHeight(),
