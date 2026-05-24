@@ -5,6 +5,8 @@ import java.util.Random;
 public class WorldGen {
 
     private final int[] perm = new int[512];
+    private final int[] permTemp; 
+    private final int[] permHumid;
 
     private static final int[][] GRAD2 = {
         {1, 1}, {-1, 1}, {1, -1}, {-1, -1},
@@ -21,6 +23,9 @@ public class WorldGen {
             int tmp = p[i]; p[i] = p[j]; p[j] = tmp;
         }
         for (int i = 0; i < 512; i++) perm[i] = p[i & 255];
+        permTemp  = buildPerm(new Random(seed ^ 0xDEADBEEFL));
+        permHumid = buildPerm(new Random(seed ^ 0xCAFEBABEL));
+
     }
 
 
@@ -73,28 +78,32 @@ public class WorldGen {
 
         for (int x = 0; x < size; x++) {
             for (int z = 0; z < size; z++) {
-                double wx = chunkX * size + x;  
+                double wx = chunkX * size + x;
                 double wz = chunkZ * size + z;
 
-                double n       = fbm(wx, wz, 5, 120.0, 0.5);
-                int surfaceY   = (int) (64 + n * 28);
-                surfaceY       = Math.max(1, Math.min(height - 2, surfaceY));
+                Biome biome = getBiome(wx, wz);
+
+                double n = fbm(wx, wz, 5, 120.0, 0.5);
+                int surfaceY = biome.baseHeight + (int)(n * biome.heightVar);
+                surfaceY = Math.max(1, Math.min(height - 2, surfaceY));
+
+                int seaLevel = biome.seaLevel;
 
                 for (int y = 0; y < height; y++) {
-                    int idx = y * size * size + z * size + x; 
+                    int idx = y * size * size + z * size + x;
 
                     if (y == 0) {
                         blocks[idx] = (byte) Block.BEDROCK.id;
                     } else if (y < surfaceY - 4) {
                         blocks[idx] = (byte) Block.STONE.id;
                     } else if (y < surfaceY) {
-                        blocks[idx] = (byte) Block.DIRT.id;
+                        blocks[idx] = (byte) biome.subsoilBlock.id;
                     } else if (y == surfaceY) {
-                        blocks[idx] = (y <= 64)
+                        blocks[idx] = (y <= seaLevel)
                             ? (byte) Block.SAND.id
-                            : (byte) Block.GRASS.id;
+                            : (byte) biome.surfaceBlock.id;
                     } else {
-                        blocks[idx] = (y <= 64)
+                        blocks[idx] = (y <= seaLevel)
                             ? (byte) Block.WATER.id
                             : (byte) Block.AIR.id;
                     }
@@ -102,18 +111,20 @@ public class WorldGen {
             }
         }
 
-        generateTrees(blocks, chunkX, chunkZ, size, height);
+       generateTreesForBiome(blocks, chunkX, chunkZ, size, height);
 
         return blocks;
     }
 
-    private void generateTrees(byte[] blocks, int chunkX, int chunkZ,
-                                int size, int height) {
+    private void generateTreesForBiome(byte[] blocks, int chunkX, int chunkZ,
+                                     int size, int height) {
         Random rng = new Random(
-            (long) chunkX * 341_873_128_712L + (long) chunkZ * 132_897_987_541L
-        );
+            (long) chunkX * 341_873_128_712L + (long) chunkZ * 132_897_987_541L);
 
-        int count = rng.nextInt(4) + 1; 
+        double cx = (chunkX + 0.5) * size, cz = (chunkZ + 0.5) * size;
+        Biome biome = getBiome(cx, cz);
+        int count = (int)(biome.treesPerChunk * (0.5 + rng.nextDouble() * 0.5));
+    
 
         for (int t = 0; t < count; t++) {
             int tx = rng.nextInt(size - 4) + 2;
@@ -155,5 +166,34 @@ public class WorldGen {
                 }
             }
         }
+    }
+
+    private int[] buildPerm(Random rng) {
+        int[] p = new int[512];
+        int[] base = new int[256];
+        for (int i = 0; i < 256; i++) base[i] = i;
+        for (int i = 255; i > 0; i--) {
+            int j = rng.nextInt(i + 1);
+            int t = base[i]; base[i] = base[j]; base[j] = t;
+        }
+        for (int i = 0; i < 512; i++) p[i] = base[i & 255];
+        return p;
+    }
+
+    public double noiseWith(double x, double y, int[] p) {
+        int xi = (int) Math.floor(x) & 255, yi = (int) Math.floor(y) & 255;
+        double xf = x - Math.floor(x), yf = y - Math.floor(y);
+        double u  = fade(xf), v = fade(yf);
+        int aa = p[p[xi]+yi], ab = p[p[xi]+yi+1],
+            ba = p[p[xi+1]+yi], bb = p[p[xi+1]+yi+1];
+        return lerp(v,
+            lerp(u, grad(aa, xf, yf),     grad(ba, xf-1, yf)),
+            lerp(u, grad(ab, xf, yf-1),   grad(bb, xf-1, yf-1)));
+    }
+
+    public Biome getBiome(double wx, double wz) {
+        double temp     = (noiseWith(wx / 512.0, wz / 512.0, permTemp)  + 1) * 0.5;
+        double humidity = (noiseWith(wx / 512.0, wz / 512.0, permHumid) + 1) * 0.5;
+        return Biome.fromClimate(temp, humidity);
     }
 }
