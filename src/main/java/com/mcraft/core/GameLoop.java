@@ -18,12 +18,20 @@ import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_NORMAL;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
+import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
+import static org.lwjgl.glfw.GLFW.glfwGetCursorPos;
+import static org.lwjgl.glfw.GLFW.glfwSetCursorPosCallback;
+import static org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback;
+import static org.lwjgl.glfw.GLFW.glfwSetCursorPos;
 
 import com.mcraft.player.Player;
 import com.mcraft.player.Raycast;
 import com.mcraft.render.Camera;
 import com.mcraft.render.Shader;
 import com.mcraft.render.TextureAtlas;
+import com.mcraft.ui.InventoryScreen;
 import com.mcraft.world.World;
 
 public class GameLoop {
@@ -45,11 +53,17 @@ public class GameLoop {
     private float  accumulator = 0f;
     private double lastTime;
 
-    private boolean leftWasDown  = false;
-    private boolean rightWasDown = false;
+    private InventoryScreen inventoryScreen;
+    private boolean         inventoryOpen   = false;
+    private boolean         prevEKeyDown    = false;
+    private boolean         leftWasDown     = false;
+    private boolean         rightWasDown    = false;
+    private float[]         ortho2D;
+
 
     public GameLoop(Window window) {
         this.window = window;
+        ortho2D = Camera.ortho(window.getWidth(), window.getHeight());
 
         input = new Input(window.getHandle());
 
@@ -75,7 +89,44 @@ public class GameLoop {
             player.getInventory(), hudShader, atlas
         );
 
+        inventoryScreen = new InventoryScreen(
+            window.getWidth(), window.getHeight(),
+            player.getInventory(),
+            hudShader,    
+            atlas,
+            ortho2D
+        );
+
+        glfwSetMouseButtonCallback(window.getHandle(), (win, button, action, mods) -> {
+            if (!inventoryOpen) return;
+            if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+                double[] cx = new double[1], cy = new double[1];
+                glfwGetCursorPos(win, cx, cy);
+                boolean consumed = inventoryScreen.onClick((int) cx[0], (int) cy[0]);
+                if (!consumed) {
+                    closeInventory();
+                }
+            }
+        });
         lastTime = glfwGetTime();
+    }
+
+    private void openInventory() {
+        inventoryOpen = true;
+        glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+        int cx = window.getWidth()  / 2;
+        int cy = window.getHeight() / 2;
+        glfwSetCursorPos(window.getHandle(), cx, cy);
+        inventoryScreen.updateMouse(cx, cy);
+    }
+
+    private void closeInventory() {
+        inventoryOpen = false;
+        inventoryScreen.onClose();
+        glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+        input.resetFirstMouse();
     }
 
 
@@ -100,6 +151,7 @@ public class GameLoop {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             render3D();
             hud.render();
+            if (inventoryOpen) inventoryScreen.render();
         }
 
         cleanup();
@@ -107,6 +159,26 @@ public class GameLoop {
 
     private void update(float dt) {
 
+        boolean eDown = input.isKeyDown(GLFW_KEY_E);
+        if (eDown && !prevEKeyDown) {             
+            if (inventoryOpen) {
+                closeInventory();
+            } else {
+                openInventory();
+            }
+        }
+        
+        prevEKeyDown = eDown;
+
+        if (inventoryOpen) {
+            double[] cx = new double[1];
+            double[] cy = new double[1];
+            glfwGetCursorPos(window.getHandle(), cx, cy);
+
+            inventoryScreen.updateMouse((int) cx[0], (int) cy[0]);
+            return;
+        }
+        
         float dx = 0, dz = 0;
         if (input.isKeyDown(GLFW_KEY_W)) dz -= 1;
         if (input.isKeyDown(GLFW_KEY_S)) dz += 1;
@@ -175,6 +247,9 @@ public class GameLoop {
     }
 
     private void cleanup() {
+        if (inventoryOpen) {
+            inventoryScreen.onClose();
+        }
         blockShader.delete();
         hudShader.delete();
         atlas.delete();

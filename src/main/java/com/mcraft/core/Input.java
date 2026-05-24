@@ -68,4 +68,10 @@ public class Input {
         mouseDY = 0;
         return v;
     }
+
+    public void resetFirstMouse() {
+        firstMouse = true;
+        mouseDX    = 0f;
+        mouseDY    = 0f;
+    }
 }
