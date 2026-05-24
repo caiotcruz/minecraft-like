@@ -25,6 +25,7 @@ import static org.lwjgl.opengl.GL20.glUniform1f;
 import static org.lwjgl.opengl.GL20.glUniform1i;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 import static org.lwjgl.opengl.GL20.glUseProgram;
+import static org.lwjgl.opengl.GL20.glUniform3f;
 
 public class Shader {
 
@@ -95,5 +96,9 @@ public class Shader {
 
     public void delete() {
         glDeleteProgram(programId);
+    }
+
+    public void setVec3(String name, float x, float y, float z) {
+        glUniform3f(glGetUniformLocation(programId, name), x, y, z);
     }
 }

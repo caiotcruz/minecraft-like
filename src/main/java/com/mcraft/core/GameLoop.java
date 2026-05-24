@@ -22,9 +22,9 @@ import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_NORMAL;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.glfwGetCursorPos;
-import static org.lwjgl.glfw.GLFW.glfwSetCursorPosCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetCursorPos;
+import static org.lwjgl.opengl.GL11.glClearColor;
 
 import com.mcraft.player.Player;
 import com.mcraft.player.Raycast;
@@ -32,6 +32,7 @@ import com.mcraft.render.Camera;
 import com.mcraft.render.Shader;
 import com.mcraft.render.TextureAtlas;
 import com.mcraft.ui.InventoryScreen;
+import com.mcraft.world.DayNightCycle;
 import com.mcraft.world.World;
 
 public class GameLoop {
@@ -60,6 +61,7 @@ public class GameLoop {
     private boolean         rightWasDown    = false;
     private float[]         ortho2D;
 
+    private final DayNightCycle dayNight = new DayNightCycle();
 
     public GameLoop(Window window) {
         this.window = window;
@@ -178,6 +180,8 @@ public class GameLoop {
             inventoryScreen.updateMouse((int) cx[0], (int) cy[0]);
             return;
         }
+
+        dayNight.update(dt);
         
         float dx = 0, dz = 0;
         if (input.isKeyDown(GLFW_KEY_W)) dz -= 1;
@@ -233,6 +237,18 @@ public class GameLoop {
 
     private void render3D() {
         blockShader.use();
+
+        float[] fog = dayNight.getFogColor();
+        float[] sky = dayNight.getSkyColor();
+
+        glClearColor(sky[0], sky[1], sky[2], 1.0f);
+
+        blockShader.setFloat("uAmbientLight", dayNight.getAmbientLight());
+        blockShader.setFloat("uFogColor[0]", fog[0]); 
+        blockShader.setFloat("uFogColor[1]", fog[1]);
+        blockShader.setFloat("uFogColor[2]", fog[2]);
+
+        blockShader.setVec3("uFogColor", fog[0], fog[1], fog[2]);
 
         float[] proj = Camera.perspective(70f,
             (float) window.getWidth() / window.getHeight(), 0.05f, 500f);
