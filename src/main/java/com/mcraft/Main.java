@@ -63,8 +63,8 @@ public class Main {
         }
 
         Window window = new Window(
-            854,
-            480,
+            1920,
+            1000,
             "Minecraft Clássico — " + worldName
         );
 

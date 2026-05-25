@@ -75,4 +75,8 @@ public class DayNightCycle {
     public void setTime(float t) {
         this.t = t % 1.0f;
     }
+
+    public boolean isNight() {
+        return t < 0.20f || t > 0.80f;
+    }
 }

@@ -28,6 +28,7 @@ import static org.lwjgl.opengl.GL11.glClearColor;
 
 import com.mcraft.audio.SoundEvent;
 import com.mcraft.audio.SoundManager;
+import com.mcraft.entity.MobManager;
 import com.mcraft.player.Player;
 import com.mcraft.player.Raycast;
 import com.mcraft.render.Camera;
@@ -72,6 +73,9 @@ public class GameLoop {
     private static final float STEP_INTERVAL = 0.45f;
 
     private final DayNightCycle dayNight = new DayNightCycle();
+
+    private final MobManager mobs = new MobManager();
+
 
     public GameLoop( Window window, WorldIO worldIO, long seed, float spawnX, float spawnY, float spawnZ) {
         this.window = window;
@@ -285,6 +289,8 @@ public class GameLoop {
             rightWasDown = false;
         }
 
+        mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
+
         if (input.isKeyDown(GLFW_KEY_ESCAPE)) {
             glfwSetWindowShouldClose(window.getHandle(), true);
         }
@@ -312,6 +318,9 @@ public class GameLoop {
         blockShader.setInt("uTexture", 0);
 
         world.render(blockShader, camera);
+        blockShader.setInt("uUseTexture", 0);
+        mobs.render(blockShader, camera.getX(), camera.getY(), camera.getZ());
+        blockShader.setInt("uUseTexture", 1);
     }
 
     private void cleanup() {
