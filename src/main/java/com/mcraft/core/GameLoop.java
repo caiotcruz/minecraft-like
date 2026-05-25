@@ -6,6 +6,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_1;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
@@ -33,6 +34,7 @@ import com.mcraft.player.Player;
 import com.mcraft.player.Raycast;
 import com.mcraft.render.Camera;
 import com.mcraft.render.Shader;
+import com.mcraft.render.SkyRenderer;
 import com.mcraft.render.TextureAtlas;
 import com.mcraft.ui.InventoryScreen;
 import com.mcraft.world.Block;
@@ -53,6 +55,9 @@ public class GameLoop {
     private final Camera       camera;
     private final Shader       blockShader;
     private final Shader       hudShader;
+    private final Shader       mobShader;
+    private final SkyRenderer skyRenderer;
+    private final Shader      skyShader;
     private final TextureAtlas atlas;
     private final SoundManager sound = new SoundManager();
 
@@ -61,12 +66,20 @@ public class GameLoop {
     private float  accumulator = 0f;
     private double lastTime;
 
+    private float worldGenTimer    = 0f;
+    private static final float WORLD_GEN_INTERVAL = 0.35f;
+
     private InventoryScreen inventoryScreen;
     private boolean         inventoryOpen   = false;
     private boolean         prevEKeyDown    = false;
     private boolean         leftWasDown     = false;
     private boolean         rightWasDown    = false;
     private float[]         ortho2D;
+
+    private int   breakX = -1, breakY = -1, breakZ = -1;
+    private float breakElapsed  = 0f;
+    private float breakDuration = 0f;
+
     private int musicSource = -1;
 
     private float stepTimer = 0f;
@@ -104,6 +117,9 @@ public class GameLoop {
 
         blockShader = new Shader("block.vert", "block.frag");
         hudShader   = new Shader("hud.vert",   "hud.frag");
+        skyShader   = new Shader("sky.vert", "sky.frag");
+        mobShader = new Shader("mob.vert", "mob.frag");
+        skyRenderer = new SkyRenderer();
 
         atlas = TextureAtlas.generateProcedural();
 
@@ -203,9 +219,10 @@ public class GameLoop {
             inventoryScreen.updateMouse((int) cx[0], (int) cy[0]);
             return;
         }
-
-        dayNight.update(dt);
         
+        dayNight.update(dt);
+        skyRenderer.update(dt);
+
         float dx = 0, dz = 0;
         if (input.isKeyDown(GLFW_KEY_W)) dz -= 1;
         if (input.isKeyDown(GLFW_KEY_S)) dz += 1;
@@ -213,11 +230,21 @@ public class GameLoop {
         if (input.isKeyDown(GLFW_KEY_D)) dx += 1;
         boolean jump = input.isKeyDown(GLFW_KEY_SPACE);
 
+        if (input.isKeyDown(GLFW_KEY_F2)) dayNight.setTime(0.8f); ;
+
         float mdx = input.consumeMouseDX();
         float mdy = input.consumeMouseDY();
         camera.rotate(mdx * MOUSE_SENS, mdy * MOUSE_SENS);
 
         player.update(dx, dz, jump, dt);
+
+        
+        worldGenTimer += dt;
+        if (worldGenTimer >= WORLD_GEN_INTERVAL) {
+            worldGenTimer = 0f;
+            world.generateAround(player.getX(), player.getZ());
+        }
+
         boolean moving = dx != 0 || dz != 0;
 
         if (moving) {
@@ -266,13 +293,30 @@ public class GameLoop {
         );
 
         if (hit.hit) {
+            Block target = world.getBlock(hit.blockX, hit.blockY, hit.blockZ);
             boolean leftDown = input.isMouseDown(GLFW_MOUSE_BUTTON_LEFT);
-            if (leftDown && !leftWasDown) {
-                Block broken = world.getBlock(hit.blockX, hit.blockY, hit.blockZ);
-                world.setBlock(hit.blockX, hit.blockY, hit.blockZ, 0);
-                sound.playRandom(sound.breakSound(broken), hit.blockX + 0.5f, hit.blockY + 0.5f, hit.blockZ + 0.5f, 0.8f);
+
+            if (leftDown && target.breakTime > 0f) {
+                if (hit.blockX != breakX || hit.blockY != breakY || hit.blockZ != breakZ) {
+                    breakX        = hit.blockX;
+                    breakY        = hit.blockY;
+                    breakZ        = hit.blockZ;
+                    breakElapsed  = 0f;
+                    breakDuration = target.breakTime;
+                }
+
+                breakElapsed += dt;
+
+                if (breakElapsed >= breakDuration) {
+                    world.setBlock(breakX, breakY, breakZ, 0);
+                    player.getInventory().addItem(target.id, 1);
+                    breakElapsed = 0f; breakDuration = 0f;
+                    breakX = breakY = breakZ = -1;
+                }
+            } else {
+                breakElapsed = 0f;
+                if (!leftDown) breakX = breakY = breakZ = -1;
             }
-            leftWasDown = leftDown;
 
             boolean rightDown = input.isMouseDown(GLFW_MOUSE_BUTTON_RIGHT);
             if (rightDown && !rightWasDown) {
@@ -281,13 +325,19 @@ public class GameLoop {
                     world.setBlock(hit.prevX, hit.prevY, hit.prevZ, blockId);
                     player.getInventory().consumeSelected(1);
                 }
-                sound.playRandom(SoundEvent.BLOCK_PLACE_WOOD,hit.prevX + 0.5f, hit.prevY + 0.5f, hit.prevZ + 0.5f, 0.7f);
             }
             rightWasDown = rightDown;
+            leftWasDown  = leftDown;
         } else {
-            leftWasDown  = false;
-            rightWasDown = false;
+            breakElapsed = 0f; breakDuration = 0f;
+            breakX = breakY = breakZ = -1;
+            leftWasDown = rightWasDown = false;
         }
+
+        float breakProgress = (breakDuration > 0f)
+            ? Math.min(1f, breakElapsed / breakDuration)
+            : 0f;
+        hud.setBreakProgress(breakProgress);
 
         mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
 
@@ -297,30 +347,26 @@ public class GameLoop {
     }
 
     private void render3D() {
-        blockShader.use();
-
-        float[] fog = dayNight.getFogColor();
         float[] sky = dayNight.getSkyColor();
-
-        glClearColor(sky[0], sky[1], sky[2], 1.0f);
-
-        blockShader.setFloat("uAmbientLight", dayNight.getAmbientLight());
-        
-        blockShader.setVec3("uFogColor", fog[0], fog[1], fog[2]);
+        float[] fog = dayNight.getFogColor();
+        glClearColor(sky[0], sky[1], sky[2], 1f);
 
         float[] proj = Camera.perspective(70f,
-            (float) window.getWidth() / window.getHeight(), 0.05f, 500f);
+            (float)window.getWidth() / window.getHeight(), 0.05f, 900f);
+        float[] view = camera.getViewMatrix();
 
+        skyRenderer.render(camera, dayNight, skyShader, proj, view);
+
+        blockShader.use();
         blockShader.setMatrix4("uProjection", proj);
-        blockShader.setMatrix4("uView",       camera.getViewMatrix());
-
+        blockShader.setMatrix4("uView",       view);
+        blockShader.setFloat  ("uAmbientLight", dayNight.getAmbientLight());
+        blockShader.setVec3   ("uFogColor", fog[0], fog[1], fog[2]);
         atlas.bind(0);
         blockShader.setInt("uTexture", 0);
-
         world.render(blockShader, camera);
-        blockShader.setInt("uUseTexture", 0);
-        mobs.render(blockShader, camera.getX(), camera.getY(), camera.getZ());
-        blockShader.setInt("uUseTexture", 1);
+
+        mobs.render( mobShader, proj, view, dayNight.getAmbientLight(), fog);
     }
 
     private void cleanup() {
@@ -329,6 +375,9 @@ public class GameLoop {
         }
         blockShader.delete();
         hudShader.delete();
+        skyRenderer.delete();
+        skyShader.delete();
+        mobShader.delete();
         atlas.delete();
         sound.cleanup();
     }

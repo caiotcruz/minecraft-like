@@ -2,23 +2,24 @@ package com.mcraft.world;
 
 public enum Block {
 
-    AIR            ( 0, "air",              0,   0,  false),
-    GRASS          ( 1, "grass",            0,   0,  true),
-    DIRT           ( 2, "dirt",             2,   0,  true),
-    STONE          ( 3, "stone",            1,   0,  true),
-    SAND           ( 4, "sand",             2,   1,  true),
-    WOOD_LOG       ( 5, "wood_log",         4,   1,  true),
-    LEAVES         ( 6, "leaves",           4,   3,  true),
-    WATER          ( 7, "water",           13,  12,  false),
-    BEDROCK        ( 8, "bedrock",          1,   1,  true),
-    PLANKS         ( 9, "planks",           4,   0,  true),
-    CRAFTING_TABLE (10, "crafting_table",   11,  2,  true); 
+    AIR            ( 0, "air",              0,   0,  false,  0f   ),
+    GRASS          ( 1, "grass",            0,   0,  true,   0.90f),
+    DIRT           ( 2, "dirt",             2,   0,  true,   0.75f),
+    STONE          ( 3, "stone",            1,   0,  true,   3.00f),
+    SAND           ( 4, "sand",             2,   1,  true,   0.75f),
+    WOOD_LOG       ( 5, "wood_log",         4,   1,  true,   2.00f),
+    LEAVES         ( 6, "leaves",           4,   3,  true,   0.35f),
+    WATER          ( 7, "water",           13,  12,  false,  0f   ),
+    BEDROCK        ( 8, "bedrock",          1,   1,  true,   0f   ),
+    PLANKS         ( 9, "planks",           4,   0,  true,   1.50f),
+    CRAFTING_TABLE (10, "crafting_table",  11,   2,  true,   1.50f);
 
     public final int     id;
     public final String  name;
     public final int     texCol;
     public final int     texRow;  
     public final boolean solid;
+    public final float breakTime;
 
     private static final Block[] BY_ID = new Block[256];
 
@@ -28,12 +29,13 @@ public enum Block {
         }
     }
 
-    Block(int id, String name, int texCol, int texRow, boolean solid) {
+    Block(int id, String name, int texCol, int texRow, boolean solid, float breakTime) {
         this.id     = id;
         this.name   = name;
         this.texCol = texCol;
         this.texRow = texRow;
         this.solid  = solid;
+        this.breakTime = breakTime;
     }
 
     public static Block fromId(int id) {

@@ -1,5 +1,6 @@
 package com.mcraft.entity;
 
+import com.mcraft.render.Shader;
 import com.mcraft.world.Chunk;
 import com.mcraft.world.World;
 
@@ -62,9 +63,8 @@ public class MobManager {
         mobs.add(new Mob(type, sx + 0.5f, sy + 1, sz + 0.5f));
     }
 
-    public void render(com.mcraft.render.Shader shader,
-                        float camX, float camY, float camZ) {
-        renderer.renderAll(mobs, shader, camX, camY, camZ);
+    public void render(Shader mobShader, float[] proj, float[] view, float ambient, float[] fogColor) {
+        renderer.renderAll(mobs, mobShader, proj, view, ambient, fogColor);
     }
 
     public List<Mob> getMobs() { return mobs; }

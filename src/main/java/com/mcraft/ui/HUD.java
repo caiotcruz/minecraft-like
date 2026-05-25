@@ -38,8 +38,10 @@ public class HUD {
     private static final int SLOT_SIZE = 40;
     private static final int PADDING   = 4;
 
-    private static final int MAX_QUADS = 64;
+    private static final int MAX_QUADS = 8192;
     private static final int VERT_FLOATS = 8;
+
+    private float breakProgress = 0f;
 
     private final int     screenW, screenH;
     private final Inventory inventory;
@@ -92,6 +94,15 @@ public class HUD {
 
 
     public void render() {
+
+        quadCount = 0;
+
+        vBuf.clear();
+        iBuf.clear();
+
+        if (vBuf.remaining() < 32 || iBuf.remaining() < 6)
+            return;
+
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
 
@@ -105,11 +116,16 @@ public class HUD {
         beginBatch();
         drawCrosshair();
         drawHotbar();
+        if (breakProgress > 0.01f) renderBreakProgress();
         flushBatch(false);
 
         beginBatch();
         drawHotbarIcons();
         flushBatch(true);
+        
+        beginBatch();
+        drawHotbarCounts();
+        flushBatch(false);
 
         glDisable(GL_BLEND);
 
@@ -170,6 +186,35 @@ public class HUD {
         }
     }
 
+    private void drawHotbarCounts() {
+        int total  = Inventory.HOTBAR_SIZE * (SLOT_SIZE + PADDING) - PADDING;
+        int startX = (screenW - total) / 2;
+        int startY = screenH - SLOT_SIZE - 10;
+
+        for (int i = 0; i < Inventory.HOTBAR_SIZE; i++) {
+
+            int qty = inventory.getItemQty(i);
+
+            if (qty <= 1) continue;
+
+            int sx = startX + i * (SLOT_SIZE + PADDING);
+
+            int numW = PixelFont.measureWidth(qty) * 2 + 2;
+
+            int qx = sx + SLOT_SIZE - numW - 3;
+            int qy = startY + SLOT_SIZE - 13;
+
+            PixelFont.drawIntShadow(
+                this::addRect,
+                qx,
+                qy,
+                2,
+                qty,
+                1f, 1f, 1f
+            );
+        }
+    }
+
     private void drawRect(int x, int y, int w, int h,
                            float r, float g, float b, float a) {
         float x0 = x, y0 = y, x1 = x + w, y1 = y + h;
@@ -184,22 +229,32 @@ public class HUD {
     }
 
     private void addQuad(float x0, float y0, float x1, float y1,
-                          float u0, float v0, float u1, float v1,
-                          float r, float g, float b, float a) {
-        if (quadCount >= MAX_QUADS) return;
+                     float u0, float v0, float u1, float v1,
+                     float r, float g, float b, float a) {
 
-        float[] verts = {
-            x0, y0,  u0, v0,  r, g, b, a,
-            x1, y0,  u1, v0,  r, g, b, a,
+        if (vBuf.remaining() < 32 || iBuf.remaining() < 6) {
+            return;
+        }
+
+        vBuf.put(new float[]{
+            x0, y1,  u0, v1,  r, g, b, a,
             x1, y1,  u1, v1,  r, g, b, a,
-            x0, y1,  u0, v1,  r, g, b, a
-        };
-        vBuf.put(verts);
+            x1, y0,  u1, v0,  r, g, b, a,
+            x0, y0,  u0, v0,  r, g, b, a
+        });
 
         int base = quadCount * 4;
-        iBuf.put(new int[]{ base, base+1, base+2, base+2, base+3, base });
+
+        iBuf.put(new int[]{
+            base, base+1, base+2,
+            base+2, base+3, base
+        });
 
         quadCount++;
+    }
+
+    private void addRect(int x, int y, int w, int h, float r, float g, float b, float a) {
+        addQuad(x, y, x + w, y + h, 0, 0, 1, 1, r, g, b, a);
     }
 
     private void beginBatch() {
@@ -232,5 +287,24 @@ public class HUD {
         glDrawElements(GL_TRIANGLES, quadCount * 6, GL_UNSIGNED_INT, 0L);
 
         glBindVertexArray(0);
+    }
+
+    private void renderBreakProgress() {
+        int barW = 84, barH = 7;
+        int bx = screenW / 2 - barW / 2;
+        int by = screenH / 2 + 16; 
+
+        addRect(bx - 1, by - 1, barW + 2, barH + 2, 0f, 0f, 0f, 0.9f);
+        addRect(bx, by, barW, barH, 0.18f, 0.18f, 0.18f, 0.85f);
+
+        int fillW = Math.max(1, (int)(barW * breakProgress));
+        float t = breakProgress;
+        float r = (t < 0.5f) ? t * 2f : 1f;
+        float g = (t < 0.5f) ? 1f    : 1f - (t - 0.5f) * 2f;
+        addRect(bx, by, fillW, barH, r, g, 0.05f, 1f);
+    }
+
+    public void setBreakProgress(float p) {
+        this.breakProgress = Math.max(0f, Math.min(1f, p));
     }
 }

@@ -32,7 +32,7 @@ public class InventoryScreen {
     private int mouseX;
     private int mouseY;
 
-    private static final int MAX_QUADS   = 256;
+    private static final int MAX_QUADS   = 8192;
     private static final int VERT_FLOATS = 8;   
 
     private int vao, vbo, ebo;
@@ -127,6 +127,8 @@ public class InventoryScreen {
                     mouseY - SLOT_PX / 2 + 2,
                     SLOT_PX - 4);
         }
+
+        drawSlotCounts();
         flushBatch(true);
 
         glEnable(GL_CULL_FACE);
@@ -210,6 +212,31 @@ public class InventoryScreen {
         if (result != null && result[0] != 0) {
             drawBlockIcon(Block.fromId(result[0]),
                     resultX() + 2, resultY() + 2, SLOT_PX - 4);
+        }
+    }
+
+    private void drawSlotCounts() {
+
+        for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
+
+            int qty = inventory.getItemQty(i);
+
+            if (qty <= 1) continue;
+
+            int qx = slotX(i) + SLOT_PX - (
+                PixelFont.measureWidth(qty) * 2 + 2
+            ) - 3;
+
+            int qy = slotY(i) + SLOT_PX - 13;
+
+            PixelFont.drawIntShadow(
+                this::addRect,
+                qx,
+                qy,
+                2,
+                qty,
+                1f, 1f, 1f
+            );
         }
     }
 
@@ -349,10 +376,10 @@ public class InventoryScreen {
         addQuad(x, y, x + size, y + size, u0, v0, u0 + ts, v0 + ts, 1, 1, 1, 1);
     }
 
-    private void addQuad(float x0, float y0, float x1, float y1,
-                          float u0, float v0, float u1, float v1,
-                          float r, float g, float b, float a) {
-        if (quadCount >= MAX_QUADS) return;
+    private void addQuad(float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float r, float g, float b, float a) {
+
+        if (vBuf.remaining() < 32 || iBuf.remaining() < 6)
+            return;
 
         vBuf.put(new float[]{
             x0, y1,  u0, v1,  r, g, b, a,
@@ -362,9 +389,19 @@ public class InventoryScreen {
         });
 
         int base = quadCount * 4;
-        iBuf.put(new int[]{ base, base+1, base+2,  base+2, base+3, base });
+
+        iBuf.put(new int[]{
+            base, base+1, base+2,
+            base+2, base+3, base
+        });
+
         quadCount++;
     }
+
+    private void addRect(int x, int y, int w, int h, float r, float g, float b, float a) {
+        addQuad(x, y, x + w, y + h, 0, 0, 1, 1, r, g, b, a);
+    }
+
 
     private void initGPU() {
         vao = glGenVertexArrays();
