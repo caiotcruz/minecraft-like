@@ -26,12 +26,15 @@ import static org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetCursorPos;
 import static org.lwjgl.opengl.GL11.glClearColor;
 
+import com.mcraft.audio.SoundEvent;
+import com.mcraft.audio.SoundManager;
 import com.mcraft.player.Player;
 import com.mcraft.player.Raycast;
 import com.mcraft.render.Camera;
 import com.mcraft.render.Shader;
 import com.mcraft.render.TextureAtlas;
 import com.mcraft.ui.InventoryScreen;
+import com.mcraft.world.Block;
 import com.mcraft.world.DayNightCycle;
 import com.mcraft.world.World;
 
@@ -49,6 +52,8 @@ public class GameLoop {
     private final Shader       blockShader;
     private final Shader       hudShader;
     private final TextureAtlas atlas;
+    private final SoundManager sound = new SoundManager();
+
     private final com.mcraft.ui.HUD hud;
 
     private float  accumulator = 0f;
@@ -60,6 +65,10 @@ public class GameLoop {
     private boolean         leftWasDown     = false;
     private boolean         rightWasDown    = false;
     private float[]         ortho2D;
+    private int musicSource = -1;
+
+    private float stepTimer = 0f;
+    private static final float STEP_INTERVAL = 0.45f;
 
     private final DayNightCycle dayNight = new DayNightCycle();
 
@@ -111,6 +120,8 @@ public class GameLoop {
             }
         });
         lastTime = glfwGetTime();
+        sound.init();
+        musicSource = sound.playLoop(SoundEvent.MUSIC_DAY, 0.75f);
     }
 
     private void openInventory() {
@@ -195,6 +206,31 @@ public class GameLoop {
         camera.rotate(mdx * MOUSE_SENS, mdy * MOUSE_SENS);
 
         player.update(dx, dz, jump, dt);
+        boolean moving = dx != 0 || dz != 0;
+
+        if (moving) {
+            stepTimer -= dt;
+
+            if (stepTimer <= 0f) {
+
+                int bx = (int)Math.floor(player.getX());
+                int by = (int)Math.floor(player.getY() - 1);
+                int bz = (int)Math.floor(player.getZ());
+
+                Block ground = world.getBlock(bx, by, bz);
+
+                sound.playRandom(
+                    sound.stepSound(ground),
+                    player.getX(),
+                    player.getY(),
+                    player.getZ(),
+                    0.35f
+                );
+
+                stepTimer = STEP_INTERVAL;
+            }
+        }
+
 
         for (int k = 0; k < 9; k++) {
             if (input.isKeyDown(GLFW_KEY_1 + k)) {
@@ -203,6 +239,14 @@ public class GameLoop {
         }
 
         float[] front = camera.getFront();
+        float[] up    = camera.getUp();
+
+        sound.updateListener(
+            camera.getX(), camera.getY(), camera.getZ(),
+            front[0], front[1], front[2],
+            up[0],    up[1],    up[2]
+        );
+
         Raycast.HitResult hit = Raycast.cast(
             camera.getX(), camera.getY(), camera.getZ(),
             front[0], front[1], front[2],
@@ -212,7 +256,9 @@ public class GameLoop {
         if (hit.hit) {
             boolean leftDown = input.isMouseDown(GLFW_MOUSE_BUTTON_LEFT);
             if (leftDown && !leftWasDown) {
+                Block broken = world.getBlock(hit.blockX, hit.blockY, hit.blockZ);
                 world.setBlock(hit.blockX, hit.blockY, hit.blockZ, 0);
+                sound.playRandom(sound.breakSound(broken), hit.blockX + 0.5f, hit.blockY + 0.5f, hit.blockZ + 0.5f, 0.8f);
             }
             leftWasDown = leftDown;
 
@@ -223,6 +269,7 @@ public class GameLoop {
                     world.setBlock(hit.prevX, hit.prevY, hit.prevZ, blockId);
                     player.getInventory().consumeSelected(1);
                 }
+                sound.playRandom(SoundEvent.BLOCK_PLACE_WOOD,hit.prevX + 0.5f, hit.prevY + 0.5f, hit.prevZ + 0.5f, 0.7f);
             }
             rightWasDown = rightDown;
         } else {
@@ -244,10 +291,7 @@ public class GameLoop {
         glClearColor(sky[0], sky[1], sky[2], 1.0f);
 
         blockShader.setFloat("uAmbientLight", dayNight.getAmbientLight());
-        blockShader.setFloat("uFogColor[0]", fog[0]); 
-        blockShader.setFloat("uFogColor[1]", fog[1]);
-        blockShader.setFloat("uFogColor[2]", fog[2]);
-
+        
         blockShader.setVec3("uFogColor", fog[0], fog[1], fog[2]);
 
         float[] proj = Camera.perspective(70f,
@@ -269,5 +313,6 @@ public class GameLoop {
         blockShader.delete();
         hudShader.delete();
         atlas.delete();
+        sound.cleanup();
     }
 }

@@ -67,7 +67,6 @@ public class Player {
         x += velX * dt;
         if (checkCollision()) { x -= velX * dt; velX = 0; }
 
-        boolean wasOnGround = onGround;
         onGround = false;
         y += velY * dt;
         if (checkCollision()) {
@@ -111,4 +110,5 @@ public class Player {
     public float     getX()         { return x; }
     public float     getY()         { return y; }
     public float     getZ()         { return z; }
+    public boolean   isGrounded()   {return onGround;}
 }

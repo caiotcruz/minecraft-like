@@ -160,7 +160,6 @@ public class InventoryScreen {
         drawRect(ax + 14, ay,     6,  10, 0.85f, 0.85f, 0.1f, 1f);  
 
         int[] result = craft.getResult();
-        float rBrightness = (result != null) ? 0.55f : 0.28f;
         drawSlotBg(resultX(), resultY(), false);
         if (result != null) {
             drawRect(resultX(), resultY(), SLOT_PX, SLOT_PX,
