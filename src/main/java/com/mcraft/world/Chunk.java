@@ -65,4 +65,6 @@ public class Chunk {
     public void markDirty() { dirty = true; }
     public int  getChunkX() { return chunkX; }
     public int  getChunkZ() { return chunkZ; }
+    public byte[] getRawBlocks() { return blocks; }
+
 }

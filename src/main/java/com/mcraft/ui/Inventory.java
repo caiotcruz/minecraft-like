@@ -65,4 +65,20 @@ public class Inventory {
             }
         }
     }
+
+    public void load(int[] items, int[] counts, int selectedSlot) {
+
+        System.arraycopy(items, 0, this.getItems(), 0, items.length);
+        System.arraycopy(counts, 0, this.getCounts(), 0, counts.length);
+
+        this.selectedSlot = selectedSlot;
+    }
+
+    public int[] getItems() {
+        return itemId;
+    }
+
+    public int[] getCounts() {
+        return itemQty;
+    }
 }

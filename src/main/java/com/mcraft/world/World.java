@@ -1,5 +1,6 @@
 package com.mcraft.world;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,8 +13,13 @@ public class World {
 
     private final Map<Long, Chunk> chunks = new HashMap<>();
     private final WorldGen gen;
+    private WorldIO worldIO; 
+    private long seed;
 
-    public World(long seed) {
+    
+    public World(long seed, WorldIO worldIO) {
+        this.seed = seed;
+        this.worldIO = worldIO;
         this.gen = new WorldGen(seed);
     }
 
@@ -24,8 +30,19 @@ public class World {
     public Chunk getOrCreate(int cx, int cz) {
         return chunks.computeIfAbsent(key(cx, cz), k -> {
             Chunk c = new Chunk(cx, cz);
-            byte[] data = gen.generateChunk(cx, cz, Chunk.SIZE, Chunk.HEIGHT);
-            c.setBlocks(data);
+
+            if (worldIO != null) {
+                worldIO.loadChunkBlocks(cx, cz).ifPresentOrElse(
+                    c::setBlocks,
+                    () -> {
+                        byte[] data = gen.generateChunk(cx, cz, Chunk.SIZE, Chunk.HEIGHT);
+                        c.setBlocks(data);
+                    }
+                );
+            } else {
+                byte[] data = gen.generateChunk(cx, cz, Chunk.SIZE, Chunk.HEIGHT);
+                c.setBlocks(data);
+            }
             return c;
         });
     }
@@ -88,4 +105,10 @@ public class World {
             }
         }
     }
+
+    public Map<Long, Chunk> getLoadedChunks() {
+    return Collections.unmodifiableMap(chunks);
+}
+
+    public long getSeed() { return seed; }
 }

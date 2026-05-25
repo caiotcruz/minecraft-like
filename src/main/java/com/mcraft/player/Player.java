@@ -111,4 +111,5 @@ public class Player {
     public float     getY()         { return y; }
     public float     getZ()         { return z; }
     public boolean   isGrounded()   {return onGround;}
+    public Inventory geInventory()  {return inventory;}
 }

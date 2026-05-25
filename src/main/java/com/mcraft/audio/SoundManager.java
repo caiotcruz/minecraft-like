@@ -16,7 +16,6 @@ import java.util.*;
 
 import static org.lwjgl.openal.AL10.*;
 import static org.lwjgl.openal.ALC10.*;
-import static org.lwjgl.openal.EXTThreadLocalContext.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
 public class SoundManager {
@@ -80,7 +79,7 @@ public class SoundManager {
     }
 
     public void playRandom(SoundEvent event, float x, float y, float z, float volume) {
-        float pitchVar = 0.9f + (float)Math.random() * 0.2f; // ±10%
+        float pitchVar = 0.9f + (float)Math.random() * 0.2f;
         play(event, x, y, z, volume, pitchVar);
     }
 

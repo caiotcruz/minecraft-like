@@ -37,6 +37,7 @@ import com.mcraft.ui.InventoryScreen;
 import com.mcraft.world.Block;
 import com.mcraft.world.DayNightCycle;
 import com.mcraft.world.World;
+import com.mcraft.world.WorldIO;
 
 public class GameLoop {
 
@@ -72,16 +73,23 @@ public class GameLoop {
 
     private final DayNightCycle dayNight = new DayNightCycle();
 
-    public GameLoop(Window window) {
+    public GameLoop( Window window, WorldIO worldIO, long seed, float spawnX, float spawnY, float spawnZ) {
         this.window = window;
         ortho2D = Camera.ortho(window.getWidth(), window.getHeight());
 
         input = new Input(window.getHandle());
 
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        
+        world  = new World(seed, worldIO);
 
-        world  = new World(42L);
-        player = new Player(8, 90, 8, world);
+        player = new Player(
+            spawnX,
+            spawnY,
+            spawnZ,
+            world
+        );
+
         camera = player.getCamera();
 
         glfwSetScrollCallback(window.getHandle(), (win, xOff, yOff) ->
@@ -314,5 +322,17 @@ public class GameLoop {
         hudShader.delete();
         atlas.delete();
         sound.cleanup();
+    }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public DayNightCycle getDayNight() {
+        return dayNight;
     }
 }

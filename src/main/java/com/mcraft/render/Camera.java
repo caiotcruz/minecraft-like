@@ -110,4 +110,9 @@ public class Camera {
         if (len < 1e-6f) return new float[]{0, 1, 0};
         return new float[]{ v[0]/len, v[1]/len, v[2]/len };
     }
+
+    public void setRotation(float yaw, float pitch) {
+        this.yaw = yaw;
+        this.pitch = pitch;
+    }
 }
