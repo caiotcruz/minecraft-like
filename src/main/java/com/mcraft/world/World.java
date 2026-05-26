@@ -8,12 +8,15 @@ import java.util.List;
 import java.util.Map;
 
 import com.mcraft.render.Camera;
+import com.mcraft.render.Frustum;
 import com.mcraft.render.Shader;
 
 public class World {
 
     public static final int RENDER_DISTANCE = 4;
     private static final int UNLOAD_DISTANCE = RENDER_DISTANCE + 3;
+
+    private final Frustum frustum = new Frustum();
 
     private final Map<Long, Chunk> chunks = new HashMap<>();
     private final WorldGen gen;
@@ -96,18 +99,42 @@ public class World {
         }
     }
 
-    public void render(Shader shader, Camera camera) {
+    public void render(Shader shader, Camera camera, float[] proj, float[] view) {
+        float[] pv = multiply4x4(proj, view);
+        frustum.update(pv);
+
         int cx = Math.floorDiv((int) camera.getX(), Chunk.SIZE);
         int cz = Math.floorDiv((int) camera.getZ(), Chunk.SIZE);
 
         for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
             for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
-                Chunk chunk = chunks.get(key(cx + dx, cz + dz));
-                if (chunk != null) {
-                    chunk.render(shader, this);
+                Chunk chunk = chunks.get(key(cx+dx, cz+dz));
+                if (chunk == null) continue;
+
+                float wx0 = chunk.getChunkX() * Chunk.SIZE;
+                float wz0 = chunk.getChunkZ() * Chunk.SIZE;
+
+                if (!frustum.isVisible(wx0, 0, wz0,
+                                        wx0 + Chunk.SIZE, Chunk.HEIGHT,
+                                        wz0 + Chunk.SIZE)) {
+                    continue; 
+                }
+
+                chunk.render(shader, this);
+            }
+        }
+    }
+
+    private static float[] multiply4x4(float[] a, float[] b) {
+        float[] r = new float[16];
+        for (int col = 0; col < 4; col++) {
+            for (int row = 0; row < 4; row++) {
+                for (int k = 0; k < 4; k++) {
+                    r[col*4+row] += a[k*4+row] * b[col*4+k];
                 }
             }
         }
+        return r;
     }
 
     public int unloadDistant(float playerX, float playerZ, WorldIO worldIO) {

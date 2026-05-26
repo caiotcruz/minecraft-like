@@ -278,7 +278,7 @@ public class GameLoop {
         blockShader.setVec3   ("uFogColor", fog[0], fog[1], fog[2]);
         atlas.bind(0);
         blockShader.setInt("uTexture", 0);
-        world.render(blockShader, camera);
+        world.render(blockShader, camera, proj, view);
         if (breakX != -1 && hud.getBreakProgress() > 0.01f) {
             breakOverlay.render(breakX, breakY, breakZ, hud.getBreakProgress(), proj, view);
         }
