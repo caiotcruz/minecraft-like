@@ -1,6 +1,5 @@
 package com.mcraft.entity;
 
-import com.mcraft.world.Block;
 import com.mcraft.world.World;
 
 public abstract class Entity {

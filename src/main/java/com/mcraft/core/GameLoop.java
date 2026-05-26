@@ -44,9 +44,17 @@ import com.mcraft.world.WorldIO;
 
 public class GameLoop {
 
-    private static final float FIXED_STEP = 1.0f / 60.0f;
     private static final float REACH      = 5.0f;
     private static final float MOUSE_SENS = 0.0015f;
+
+    private static final float PHYSICS_HZ   = 60f;
+    private static final float PHYSICS_STEP = 1f / PHYSICS_HZ;
+
+    private static final float TICK_HZ   = 20f;
+    private static final float TICK_STEP = 1f / TICK_HZ;
+
+    private float physicsAccumulator = 0f;
+    private float tickAccumulator    = 0f;
 
     private final Window       window;
     private final Input        input;
@@ -68,7 +76,6 @@ public class GameLoop {
 
     private final com.mcraft.ui.HUD hud;
 
-    private float  accumulator = 0f;
     private double lastTime;
 
     private float worldGenTimer    = 0f;
@@ -190,29 +197,97 @@ public class GameLoop {
             float  dt  = (float)(now - lastTime);
             lastTime   = now;
 
-            if (dt > 0.25f) dt = 0.25f;
+            if (dt > 0.1f) dt = 0.1f;
 
             input.prepareFrame();
-            window.swapAndPoll();  
+            window.swapAndPoll();
             input.endFrame();
 
-            accumulator += dt;
-            while (accumulator >= FIXED_STEP) {
-                update(FIXED_STEP);
-                accumulator -= FIXED_STEP;
+            handleCameraInput();
+
+            physicsAccumulator += dt;
+            while (physicsAccumulator >= PHYSICS_STEP) {
+                updatePhysics(PHYSICS_STEP);
+                physicsAccumulator -= PHYSICS_STEP;
+            }
+
+            tickAccumulator += dt;
+            while (tickAccumulator >= TICK_STEP) {
+                gameTick(TICK_STEP);
+                tickAccumulator -= TICK_STEP;
             }
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             render3D();
             hud.render();
-            if (inventoryOpen) inventoryScreen.render();
+
+            if (inventoryOpen) {
+                inventoryScreen.render();
+            }
         }
 
         cleanup();
     }
 
-    private void update(float dt) {
+    private void gameTick(float dt) {
+        dayNight.update(dt);
+        skyRenderer.update(dt);
 
+        mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
+
+        worldGenTimer += dt;
+        if (worldGenTimer >= WORLD_GEN_INTERVAL) {
+            worldGenTimer = 0f;
+            world.generateAround(player.getX(), player.getZ());
+        }
+
+        unloadTimer += dt;
+        if (unloadTimer >= UNLOAD_INTERVAL) {
+            unloadTimer = 0f;
+            world.unloadDistant(player.getX(), player.getZ(), world.getWorldIO());
+        }
+
+        handleBlockBreaking(dt);
+
+        for (int k = 0; k < 9; k++) {
+            if (input.isKeyDown(GLFW_KEY_1 + k)) {
+                player.getInventory().setSelectedSlot(k);
+            }
+        }
+
+        if (input.isKeyDown(GLFW_KEY_ESCAPE)) {
+            glfwSetWindowShouldClose(window.getHandle(), true);
+        }
+    }
+
+    private void render3D() {
+        float[] sky = dayNight.getSkyColor();
+        float[] fog = dayNight.getFogColor();
+        glClearColor(sky[0], sky[1], sky[2], 1f);
+
+        float[] proj = Camera.perspective(70f,
+            (float)window.getWidth() / window.getHeight(), 0.05f, 900f);
+        float[] view = camera.getViewMatrix();
+
+        skyRenderer.render(camera, dayNight, skyShader, proj, view);
+
+        blockShader.use();
+        blockShader.setMatrix4("uProjection", proj);
+        blockShader.setMatrix4("uView",       view);
+        blockShader.setFloat  ("uAmbientLight", dayNight.getAmbientLight());
+        blockShader.setVec3   ("uFogColor", fog[0], fog[1], fog[2]);
+        atlas.bind(0);
+        blockShader.setInt("uTexture", 0);
+        world.render(blockShader, camera);
+        if (breakX != -1 && hud.getBreakProgress() > 0.01f) {
+            breakOverlay.render(breakX, breakY, breakZ, hud.getBreakProgress(), proj, view);
+        }
+
+        mobs.render( mobShader, proj, view, dayNight.getAmbientLight(), fog);
+    }
+
+    private void updatePhysics(float dt) {
+        
         boolean eDown = input.isKeyDown(GLFW_KEY_E);
         if (eDown && !prevEKeyDown) {             
             if (inventoryOpen) {
@@ -232,36 +307,17 @@ public class GameLoop {
             inventoryScreen.updateMouse((int) cx[0], (int) cy[0]);
             return;
         }
-        
-        dayNight.update(dt);
-        skyRenderer.update(dt);
 
+        
         float dx = 0, dz = 0;
         if (input.isKeyDown(GLFW_KEY_W)) dz -= 1;
         if (input.isKeyDown(GLFW_KEY_S)) dz += 1;
         if (input.isKeyDown(GLFW_KEY_A)) dx -= 1;
         if (input.isKeyDown(GLFW_KEY_D)) dx += 1;
-
+        
         boolean jump = input.isKeyDown(GLFW_KEY_SPACE);
 
-        float mdx = input.consumeMouseDX();
-        float mdy = input.consumeMouseDY();
-        camera.rotate(mdx * MOUSE_SENS, mdy * MOUSE_SENS);
-
         player.update(dx, dz, jump, dt);
-
-        
-        worldGenTimer += dt;
-        if (worldGenTimer >= WORLD_GEN_INTERVAL) {
-            worldGenTimer = 0f;
-            world.generateAround(player.getX(), player.getZ());
-        }
-
-        unloadTimer += dt;
-        if (unloadTimer >= UNLOAD_INTERVAL) {
-            unloadTimer = 0f;
-            world.unloadDistant(player.getX(), player.getZ(), world.getWorldIO());
-        }
 
         boolean moving = dx != 0 || dz != 0;
 
@@ -288,21 +344,36 @@ public class GameLoop {
             }
         }
 
+    }
 
-        for (int k = 0; k < 9; k++) {
-            if (input.isKeyDown(GLFW_KEY_1 + k)) {
-                player.getInventory().setSelectedSlot(k);
-            }
+    private void handleCameraInput() {
+
+        if (inventoryOpen) {
+
+            double[] cx = new double[1];
+            double[] cy = new double[1];
+
+            glfwGetCursorPos(window.getHandle(), cx, cy);
+
+            inventoryScreen.updateMouse( (int) cx[0], (int) cy[0] );
+
+            return;
         }
+
+        float mdx = input.consumeMouseDX();
+        float mdy = input.consumeMouseDY();
+
+        camera.rotate( mdx * MOUSE_SENS, mdy * MOUSE_SENS);
 
         float[] front = camera.getFront();
         float[] up    = camera.getUp();
 
-        sound.updateListener(
-            camera.getX(), camera.getY(), camera.getZ(),
-            front[0], front[1], front[2],
-            up[0],    up[1],    up[2]
-        );
+        sound.updateListener( camera.getX(), camera.getY(), camera.getZ(), front[0], front[1], front[2], up[0], up[1], up[2] );
+    }
+
+    private void handleBlockBreaking(float dt){
+
+        float[] front = camera.getFront();
 
         Raycast.HitResult hit = Raycast.cast(
             camera.getX(), camera.getY(), camera.getZ(),
@@ -370,38 +441,6 @@ public class GameLoop {
             ? Math.min(1f, breakElapsed / breakDuration)
             : 0f;
         hud.setBreakProgress(breakProgress);
-
-        mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
-
-        if (input.isKeyDown(GLFW_KEY_ESCAPE)) {
-            glfwSetWindowShouldClose(window.getHandle(), true);
-        }
-    }
-
-    private void render3D() {
-        float[] sky = dayNight.getSkyColor();
-        float[] fog = dayNight.getFogColor();
-        glClearColor(sky[0], sky[1], sky[2], 1f);
-
-        float[] proj = Camera.perspective(70f,
-            (float)window.getWidth() / window.getHeight(), 0.05f, 900f);
-        float[] view = camera.getViewMatrix();
-
-        skyRenderer.render(camera, dayNight, skyShader, proj, view);
-
-        blockShader.use();
-        blockShader.setMatrix4("uProjection", proj);
-        blockShader.setMatrix4("uView",       view);
-        blockShader.setFloat  ("uAmbientLight", dayNight.getAmbientLight());
-        blockShader.setVec3   ("uFogColor", fog[0], fog[1], fog[2]);
-        atlas.bind(0);
-        blockShader.setInt("uTexture", 0);
-        world.render(blockShader, camera);
-        if (breakX != -1 && hud.getBreakProgress() > 0.01f) {
-            breakOverlay.render(breakX, breakY, breakZ, hud.getBreakProgress(), proj, view);
-        }
-
-        mobs.render( mobShader, proj, view, dayNight.getAmbientLight(), fog);
     }
 
     private void cleanup() {
