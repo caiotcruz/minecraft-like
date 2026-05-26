@@ -12,15 +12,19 @@ public class Camera {
 
     private static final float MAX_PITCH = (float) Math.toRadians(89.0);
 
+    private float[] cachedView = null;
+    private boolean viewDirty  = true;
+
     public Camera(float x, float y, float z) {
         this.x = x; this.y = y; this.z = z;
         updateVectors();
     }
 
     public void rotate(float deltaYaw, float deltaPitch) {
-        yaw   += deltaYaw;
-        pitch  = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch + deltaPitch));
+        yaw += deltaYaw;
+        pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch + deltaPitch));
         updateVectors();
+        viewDirty = true;
     }
 
     private void updateVectors() {
@@ -34,26 +38,35 @@ public class Camera {
         front[2] = sy * cp;
 
         float[] worldUp = {0, 1, 0};
-        right = normalize(cross(front, worldUp));
 
+        right = normalize(cross(front, worldUp));
         up = cross(right, front);
     }
 
     public float[] getViewMatrix() {
+
+        if (!viewDirty && cachedView != null) {
+            return cachedView;
+        }
+
         float rx = right[0], ry = right[1], rz = right[2];
         float ux = up[0],    uy = up[1],    uz = up[2];
         float fx = front[0], fy = front[1], fz = front[2];
 
         float tx = -(rx*x + ry*y + rz*z);
         float ty = -(ux*x + uy*y + uz*z);
-        float tz =  (fx*x + fy*y + fz*z); 
+        float tz =  (fx*x + fy*y + fz*z);
 
-        return new float[] {
-             rx,  ux, -fx, 0,   
-             ry,  uy, -fy, 0,  
-             rz,  uz, -fz, 0,   
-             tx,  ty,  tz, 1  
+        cachedView = new float[] {
+             rx,  ux, -fx, 0,
+             ry,  uy, -fy, 0,
+             rz,  uz, -fz, 0, 
+             tx,  ty,  tz, 1
         };
+
+        viewDirty = false;
+
+        return cachedView;
     }
 
     public static float[] perspective(float fovDeg, float aspect, float near, float far) {
@@ -72,10 +85,10 @@ public class Camera {
     public static float[] ortho(float w, float h) {
         float[] m = new float[16];
         m[0]  =  2f / w;
-        m[5]  = -2f / h;  
+        m[5]  = -2f / h;
         m[10] = -1f;
-        m[12] = -1f;      
-        m[13] =  1f;       
+        m[12] = -1f;
+        m[13] =  1f;
         m[15] =  1f;
         return m;
     }
@@ -83,14 +96,18 @@ public class Camera {
     public float   getX()     { return x; }
     public float   getY()     { return y; }
     public float   getZ()     { return z; }
-    public float   getYaw()   { return yaw; }     
+    public float   getYaw()   { return yaw; }
     public float   getPitch() { return pitch; }
     public float[] getFront() { return front; }
     public float[] getRight() { return right; }
     public float[] getUp()    { return up; }
 
     public void setPosition(float x, float y, float z) {
-        this.x = x; this.y = y; this.z = z;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+
+        viewDirty = true;
     }
 
     private static float[] cross(float[] a, float[] b) {
@@ -107,8 +124,16 @@ public class Camera {
 
     private static float[] normalize(float[] v) {
         float len = (float) Math.sqrt(dot(v, v));
-        if (len < 1e-6f) return new float[]{0, 1, 0};
-        return new float[]{ v[0]/len, v[1]/len, v[2]/len };
+
+        if (len < 1e-6f) {
+            return new float[]{0, 1, 0};
+        }
+
+        return new float[]{
+            v[0]/len,
+            v[1]/len,
+            v[2]/len
+        };
     }
 
     public void setRotation(float yaw, float pitch) {
