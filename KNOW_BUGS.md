@@ -1,16 +1,20 @@
-# Known Bugs
+# Bugs Conhecidos
 
-## Audio
+## Áudio
 
-- Step sounds can trigger while jumping due to unstable grounded state.
-- Footstep timing is currently tied only to movement input.
-- Physics/collision system still needs grounding stabilization.
+- Sons de passos podem tocar durante pulos devido à instabilidade na detecção de chão.
+- O timing dos passos atualmente depende apenas do input de movimento.
+- O sistema de física/colisão ainda precisa de estabilização do estado grounded.
 
-## Physics
+## Física
 
-- Minor collision jitter on block edges.
-- Vertical grounding detection may oscillate on slopes/block transitions.
+- Pequeno jitter de colisão nas bordas dos blocos.
+- A detecção vertical de chão pode oscilar em transições de blocos/declives.
 
-## Rendering
+## Renderização
 
-- Water transparency ordering is not fully correct yet.
+- A ordenação de transparência da água ainda não está totalmente correta.
+
+## Mobs
+
+- Atualmente a funcionalidade de pulo dos mobs não está funcionando.

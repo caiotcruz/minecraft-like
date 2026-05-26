@@ -31,6 +31,7 @@ import com.mcraft.audio.SoundManager;
 import com.mcraft.entity.MobManager;
 import com.mcraft.player.Player;
 import com.mcraft.player.Raycast;
+import com.mcraft.render.BreakOverlay;
 import com.mcraft.render.Camera;
 import com.mcraft.render.Shader;
 import com.mcraft.render.SkyRenderer;
@@ -55,8 +56,10 @@ public class GameLoop {
     private final Shader       blockShader;
     private final Shader       hudShader;
     private final Shader       mobShader;
-    private final SkyRenderer skyRenderer;
     private final Shader      skyShader;
+    private final SkyRenderer skyRenderer;
+    private BreakOverlay breakOverlay;
+
     private final TextureAtlas atlas;
     private final SoundManager sound = new SoundManager();
 
@@ -126,6 +129,7 @@ public class GameLoop {
         skyShader   = new Shader("sky.vert", "sky.frag");
         mobShader = new Shader("mob.vert", "mob.frag");
         skyRenderer = new SkyRenderer();
+        breakOverlay = new BreakOverlay();
 
         atlas = TextureAtlas.generateProcedural();
 
@@ -376,6 +380,9 @@ public class GameLoop {
         atlas.bind(0);
         blockShader.setInt("uTexture", 0);
         world.render(blockShader, camera);
+        if (breakX != -1 && hud.getBreakProgress() > 0.01f) {
+            breakOverlay.render(breakX, breakY, breakZ, hud.getBreakProgress(), proj, view);
+        }
 
         mobs.render( mobShader, proj, view, dayNight.getAmbientLight(), fog);
     }
@@ -391,6 +398,7 @@ public class GameLoop {
         skyRenderer.delete();
         skyShader.delete();
         mobShader.delete();
+        breakOverlay.delete();
         atlas.delete();
         sound.cleanup();
     }

@@ -116,7 +116,6 @@ public class HUD {
         beginBatch();
         drawCrosshair();
         drawHotbar();
-        if (breakProgress > 0.01f) renderBreakProgress();
         flushBatch(false);
 
         beginBatch();
@@ -289,22 +288,11 @@ public class HUD {
         glBindVertexArray(0);
     }
 
-    private void renderBreakProgress() {
-        int barW = 84, barH = 7;
-        int bx = screenW / 2 - barW / 2;
-        int by = screenH / 2 + 16; 
-
-        addRect(bx - 1, by - 1, barW + 2, barH + 2, 0f, 0f, 0f, 0.9f);
-        addRect(bx, by, barW, barH, 0.18f, 0.18f, 0.18f, 0.85f);
-
-        int fillW = Math.max(1, (int)(barW * breakProgress));
-        float t = breakProgress;
-        float r = (t < 0.5f) ? t * 2f : 1f;
-        float g = (t < 0.5f) ? 1f    : 1f - (t - 0.5f) * 2f;
-        addRect(bx, by, fillW, barH, r, g, 0.05f, 1f);
-    }
-
     public void setBreakProgress(float p) {
         this.breakProgress = Math.max(0f, Math.min(1f, p));
+    }
+
+    public float getBreakProgress(){
+        return this.breakProgress;
     }
 }
