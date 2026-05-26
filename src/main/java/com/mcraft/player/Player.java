@@ -3,6 +3,7 @@ package com.mcraft.player;
 import com.mcraft.render.Camera;
 import com.mcraft.ui.Inventory;
 import com.mcraft.world.Block;
+import com.mcraft.world.Chunk;
 import com.mcraft.world.World;
 
 public class Player {
@@ -65,40 +66,45 @@ public class Player {
 
     private void moveAndCollide(float dt) {
         x += velX * dt;
-        if (checkCollision()) { x -= velX * dt; velX = 0; }
+        if (checkCollision(world)) { x -= velX * dt; velX = 0; }
 
         onGround = false;
         y += velY * dt;
-        if (checkCollision()) {
+        if (checkCollision(world)) {
             if (velY < 0) onGround = true;
             y -= velY * dt;
             velY = 0;
         }
 
         z += velZ * dt;
-        if (checkCollision()) { z -= velZ * dt; velZ = 0; }
+        if (checkCollision(world)) { z -= velZ * dt; velZ = 0; }
     }
 
-    private boolean checkCollision() {
+    private boolean checkCollision(World world) {
         float hw = WIDTH / 2f;
 
-        int minX = (int) Math.floor(x - hw);
-        int maxX = (int) Math.floor(x + hw);
-        int minY = (int) Math.floor(y);
-        int maxY = (int) Math.floor(y + HEIGHT);
-        int minZ = (int) Math.floor(z - hw);
-        int maxZ = (int) Math.floor(z + hw);
+        int minX = (int) Math.floor(x - hw),  maxX = (int) Math.floor(x + hw);
+        int minY = (int) Math.floor(y),        maxY = (int) Math.floor(y + HEIGHT);
+        int minZ = (int) Math.floor(z - hw),  maxZ = (int) Math.floor(z + hw);
+
+        if (minY >= Chunk.HEIGHT || maxY < 0) return false;
+        minY = Math.max(0, minY);
+        maxY = Math.min(Chunk.HEIGHT - 1, maxY);
+
+        if (minX == maxX && minY == maxY && minZ == maxZ) {
+            return world.getBlock(minX, minY, minZ).solid;
+        }
 
         for (int bx = minX; bx <= maxX; bx++) {
-            for (int by = minY; by <= maxY; by++) {
+            for (int bz = minZ; bz <= maxZ; bz++) {
+                if (world.getBlock(bx, minY, bz).solid) return true;
+            }
+        }
+
+        for (int bx = minX; bx <= maxX; bx++) {
+            for (int by = minY + 1; by <= maxY; by++) { 
                 for (int bz = minZ; bz <= maxZ; bz++) {
-                    if (!world.getBlock(bx, by, bz).solid) continue;
-
-                    boolean ox = (x - hw) < (bx + 1) && (x + hw) > bx;
-                    boolean oy = y        < (by + 1) && (y + HEIGHT) > by;
-                    boolean oz = (z - hw) < (bz + 1) && (z + hw) > bz;
-
-                    if (ox && oy && oz) return true;
+                    if (world.getBlock(bx, by, bz).solid) return true;
                 }
             }
         }
