@@ -286,6 +286,10 @@ public class World {
         }
     }
 
+    public Chunk getChunkIfLoaded(int cx, int cz) {
+        return chunks.get(key(cx, cz));
+    }
+
     public Map<Long, Chunk> getLoadedChunks() {
         return Collections.unmodifiableMap(chunks);
     }

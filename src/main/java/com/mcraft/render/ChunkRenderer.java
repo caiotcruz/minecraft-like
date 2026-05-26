@@ -95,6 +95,11 @@ public class ChunkRenderer {
 
 
     public void buildMesh(Chunk chunk, World world) {
+        int cx = chunk.getChunkX(), cz = chunk.getChunkZ();
+        Chunk nNorth = world.getChunkIfLoaded(cx,     cz - 1); 
+        Chunk nSouth = world.getChunkIfLoaded(cx,     cz + 1); 
+        Chunk nWest  = world.getChunkIfLoaded(cx - 1, cz    ); 
+        Chunk nEast  = world.getChunkIfLoaded(cx + 1, cz    );
         int cs = Chunk.SIZE;
         int ch = Chunk.HEIGHT;
 
@@ -107,17 +112,20 @@ public class ChunkRenderer {
         for (int y = 0; y < ch; y++) {
             for (int z = 0; z < cs; z++) {
                 for (int x = 0; x < cs; x++) {
-
                     Block block = chunk.getBlock(x, y, z);
                     if (!block.solid) continue;
 
-                    int wx = chunk.getChunkX() * cs + x;
-                    int wz = chunk.getChunkZ() * cs + z;
-
+                    // Coordenadas globais (para contexto, mas não usadas no lookup)
                     for (int face = 0; face < 6; face++) {
                         int[] dir = FACE_DIR[face];
+                        int nx = x + dir[0];
+                        int ny = y + dir[1];
+                        int nz = z + dir[2];
 
-                        Block neighbor = world.getBlock(wx + dir[0], y + dir[1], wz + dir[2]);
+                        Block neighbor = getNeighborFast(
+                            chunk, nNorth, nSouth, nWest, nEast,
+                            nx, ny, nz
+                        );
                         if (neighbor.solid) continue;
 
                         float[] uvs   = block.getUVs(face);
@@ -150,6 +158,26 @@ public class ChunkRenderer {
         uploadToGPU(vBuf, iBuf);
     }
 
+    private Block getNeighborFast(Chunk self, Chunk nNorth, Chunk nSouth, Chunk nWest,  Chunk nEast, int lx, int ly, int lz) {
+
+        if (ly < 0 || ly >= Chunk.HEIGHT) return Block.AIR;
+
+        if (lx >= 0 && lx < Chunk.SIZE && lz >= 0 && lz < Chunk.SIZE) {
+            return self.getBlock(lx, ly, lz);
+        }
+
+        if (lz < 0) { 
+            return (nNorth != null) ? nNorth.getBlock(lx, ly, Chunk.SIZE - 1) : Block.AIR;
+        }
+        if (lz >= Chunk.SIZE) { 
+            return (nSouth != null) ? nSouth.getBlock(lx, ly, 0) : Block.AIR;
+        }
+        if (lx < 0) {
+            return (nWest != null) ? nWest.getBlock(Chunk.SIZE - 1, ly, lz) : Block.AIR;
+        }
+        //  (X+)
+        return (nEast != null) ? nEast.getBlock(0, ly, lz) : Block.AIR;
+    }
 
     private void uploadToGPU(FloatBuffer vBuf, IntBuffer iBuf) {
         if (vao != 0) {
