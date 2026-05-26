@@ -355,6 +355,7 @@ public class GameLoop {
                 if (blockId != 0) {
                     world.setBlock(hit.prevX, hit.prevY, hit.prevZ, blockId);
                     player.getInventory().consumeSelected(1);
+                    sound.playRandom(sound.placeSound(target), hit.prevX + 0.5f, hit.prevY + 0.5f, hit.prevZ + 0.5f, 0.6f);
                 }
             }
             rightWasDown = rightDown;

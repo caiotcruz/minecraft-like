@@ -18,3 +18,4 @@
 ## Mobs
 
 - Atualmente a funcionalidade de pulo dos mobs não está funcionando.
+- Mobs não são salvos ao fechar o jogo

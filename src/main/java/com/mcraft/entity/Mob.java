@@ -31,7 +31,6 @@ public class Mob extends Entity {
     private float    wanderTimer = 0;
     private float    wanderDirX  = 0;
     private float    wanderDirZ  = 0;
-    private float    stuckTimer  = 0;
 
     public Mob(Type type, float x, float y, float z) {
         super(x, y, z, type.w, type.h);
@@ -40,8 +39,8 @@ public class Mob extends Entity {
     }
 
 
-    @Override
-    public void update(float dt, World world, float playerX, float playerY, float playerZ) {
+    public void update(float dt, World world,
+                        float playerX, float playerY, float playerZ) {
         float dx = playerX - x;
         float dz = playerZ - z;
         float distToPlayer = (float) Math.sqrt(dx*dx + dz*dz);
@@ -53,15 +52,10 @@ public class Mob extends Entity {
             case SEEK   -> updateSeek(dx, dz, distToPlayer);
         }
 
-        if (onGround && (Math.abs(velX) < 0.1f && Math.abs(velZ) < 0.1f)
-                     && (wanderDirX != 0 || wanderDirZ != 0)) {
-            stuckTimer += dt;
-            if (stuckTimer > 0.4f) {
-                velY = 7f; 
-                stuckTimer = 0;
+        if (onGround && isMoving()) {
+            if (hasBlockAhead(world) && hasClearanceAbove(world) &&hasGroundAhead(world)) {
+                velY = 7.5f; 
             }
-        } else {
-            stuckTimer = 0;
         }
 
         applyPhysics(dt, world);
@@ -71,8 +65,11 @@ public class Mob extends Entity {
         wanderTimer -= dt;
         if (wanderTimer <= 0) {
             pickNewWanderDir();
-            wanderTimer = 3f + rng.nextFloat() * 4f; 
+            wanderTimer = (wanderDirX == 0 && wanderDirZ == 0)
+                ? 1f + rng.nextFloat() * 2f
+                : 2f + rng.nextFloat() * 3f;
         }
+
         velX = wanderDirX * type.speed * 0.5f;
         velZ = wanderDirZ * type.speed * 0.5f;
     }
@@ -95,9 +92,6 @@ public class Mob extends Entity {
         }
     }
 
-    public Type   getType()  { return type; }
-    public AIState getState() { return state; }
-
     public boolean isHostile() {
         return type.category == MobCategory.HOSTILE;
     }
@@ -105,4 +99,68 @@ public class Mob extends Entity {
     public boolean isPassive() {
         return type.category == MobCategory.PASSIVE;
     }
+
+    private boolean hasGroundAhead(World world) {
+        float speed = (float)Math.sqrt(velX * velX + velZ * velZ);
+        if (speed < 0.5f) return false;
+
+        float nx = velX / speed;
+        float nz = velZ / speed;
+
+        float dist = width / 2f + 0.25f;
+
+        int bx = (int)Math.floor(x + nx * dist);
+        int bz = (int)Math.floor(z + nz * dist);
+
+        int by = (int)Math.floor(y - 0.2f);
+
+        return world.getBlock(bx, by, bz).solid;
+    }
+
+    private boolean hasBlockAhead(World world) {
+        float speed = (float) Math.sqrt(velX * velX + velZ * velZ);
+        if (speed < 0.5f) return false;
+
+        float nx = velX / speed;
+        float nz = velZ / speed;
+        float hw = width / 2f + 0.05f; 
+
+        int checkX = (int) Math.floor(x + nx * hw);
+        int checkZ = (int) Math.floor(z + nz * hw);
+        int checkY = (int) Math.floor(y + 0.1f); 
+
+        return world.getBlock(checkX, checkY,     checkZ).solid
+            || world.getBlock(checkX, checkY + 1, checkZ).solid;
+    }
+
+    private boolean hasClearanceAbove(World world) {
+        int topY = (int) Math.floor(y + height + 0.1f);
+        float hw = width / 2f - 0.05f;
+        float[] xs = { x - hw, x + hw };
+        float[] zs = { z - hw, z + hw};
+
+        for (float cx : xs) {
+            for (float cz : zs) {
+
+                int bx = (int)Math.floor(cx);
+                int bz = (int)Math.floor(cz);
+
+                if (world.getBlock(bx, topY, bz).solid ||
+                    world.getBlock(bx, topY + 1, bz).solid) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean isMoving() {
+        return (float) Math.sqrt(velX*velX + velZ*velZ) > 0.4f;
+    }
+
+    
+    public Type   getType()  { return type; }
+    public AIState getState() { return state; }
+
 }
