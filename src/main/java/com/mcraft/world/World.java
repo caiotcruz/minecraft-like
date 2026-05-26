@@ -6,6 +6,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.mcraft.render.Camera;
 import com.mcraft.render.Frustum;
@@ -22,6 +28,14 @@ public class World {
     private final WorldGen gen;
     private WorldIO worldIO; 
     private long seed;
+
+    private final Set<Long> pendingGeneration = ConcurrentHashMap.newKeySet();
+    private final ConcurrentLinkedQueue<Chunk> readyChunks = new ConcurrentLinkedQueue<>();
+
+
+    private final ExecutorService chunkGenPool = Executors.newFixedThreadPool(
+        Math.max(1, Runtime.getRuntime().availableProcessors() - 1)
+    );
 
     
     public World(long seed, WorldIO worldIO) {
@@ -87,6 +101,39 @@ public class World {
         Chunk c = chunks.get(key(cx, cz));
         if (c != null) c.markDirty();
     }
+    public void generateInitialArea(float worldX, float worldZ) {
+        int cx = Math.floorDiv((int) worldX, Chunk.SIZE);
+        int cz = Math.floorDiv((int) worldZ, Chunk.SIZE);
+
+        for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
+            for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
+
+                int tcx = cx + dx;
+                int tcz = cz + dz;
+
+                long k = key(tcx, tcz);
+
+                if (chunks.containsKey(k)) continue;
+
+                Chunk c = new Chunk(tcx, tcz);
+
+                if (worldIO != null) {
+                    worldIO.loadChunkBlocks(tcx, tcz).ifPresentOrElse(
+                        c::setBlocks,
+                        () -> c.setBlocks(
+                            gen.generateChunk(tcx, tcz, Chunk.SIZE, Chunk.HEIGHT)
+                        )
+                    );
+                } else {
+                    c.setBlocks(
+                        gen.generateChunk(tcx, tcz, Chunk.SIZE, Chunk.HEIGHT)
+                    );
+                }
+
+                chunks.put(k, c);
+            }
+        }
+    }
 
     public void generateAround(float worldX, float worldZ) {
         int cx = Math.floorDiv((int) worldX, Chunk.SIZE);
@@ -94,8 +141,51 @@ public class World {
 
         for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
             for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
-                getOrCreate(cx + dx, cz + dz);
+                int tcx = cx + dx, tcz = cz + dz;
+                long k  = key(tcx, tcz);
+
+                if (chunks.containsKey(k) || pendingGeneration.contains(k)) continue;
+
+                pendingGeneration.add(k);
+                int fcx = tcx, fcz = tcz; 
+                chunkGenPool.submit(() -> {
+                    Chunk c = new Chunk(fcx, fcz);
+
+                    if (worldIO != null) {
+                        worldIO.loadChunkBlocks(fcx, fcz).ifPresentOrElse(
+                            c::setBlocks,
+                            () -> c.setBlocks(gen.generateChunk(fcx, fcz, Chunk.SIZE, Chunk.HEIGHT))
+                        );
+                    } else {
+                        c.setBlocks(gen.generateChunk(fcx, fcz, Chunk.SIZE, Chunk.HEIGHT));
+                    }
+
+                    readyChunks.add(c); 
+                });
             }
+        }
+    }
+
+    public void integrateReady() {
+        Chunk c;
+        int maxPerFrame = 4; 
+        while (maxPerFrame-- > 0 && (c = readyChunks.poll()) != null) {
+            long k = key(c.getChunkX(), c.getChunkZ());
+            chunks.put(k, c);
+            pendingGeneration.remove(k);
+        }
+    }
+
+    public void shutdown() {
+        chunkGenPool.shutdown();
+
+        try {
+            if (!chunkGenPool.awaitTermination(3, TimeUnit.SECONDS)) {
+                chunkGenPool.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            chunkGenPool.shutdownNow();
+            Thread.currentThread().interrupt();
         }
     }
 

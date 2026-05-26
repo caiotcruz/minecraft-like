@@ -121,7 +121,7 @@ public class GameLoop {
 
         player = new Player(
             spawnX,
-            spawnY,
+            spawnY +1,
             spawnZ,
             world
         );
@@ -132,7 +132,7 @@ public class GameLoop {
             player.getInventory().scrollHotbar((int) -yOff)
         );
 
-        world.generateAround(player.getX(), player.getZ());
+        world.generateInitialArea(player.getX(), player.getZ());
 
         blockShader = new Shader("block.vert", "block.frag");
         hudShader   = new Shader("hud.vert",   "hud.frag");
@@ -240,6 +240,8 @@ public class GameLoop {
             worldGenTimer = 0f;
             world.generateAround(player.getX(), player.getZ());
         }
+
+        world.integrateReady();
 
         unloadTimer += dt;
         if (unloadTimer >= UNLOAD_INTERVAL) {
@@ -444,6 +446,7 @@ public class GameLoop {
     }
 
     private void cleanup() {
+        world.shutdown();
         if (inventoryOpen) {
             inventoryScreen.onClose();
         }
