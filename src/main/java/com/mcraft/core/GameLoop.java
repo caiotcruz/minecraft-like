@@ -60,6 +60,9 @@ public class GameLoop {
     private final SkyRenderer skyRenderer;
     private BreakOverlay breakOverlay;
 
+    private float hitSoundTimer    = 0f;
+    private static final float HIT_SOUND_INTERVAL = 0.30f;
+
     private final TextureAtlas atlas;
     private final SoundManager sound = new SoundManager();
 
@@ -278,7 +281,7 @@ public class GameLoop {
                     player.getX(),
                     player.getY(),
                     player.getZ(),
-                    0.35f
+                    0.15f
                 );
 
                 stepTimer = STEP_INTERVAL;
@@ -318,6 +321,10 @@ public class GameLoop {
                     breakZ        = hit.blockZ;
                     breakElapsed  = 0f;
                     breakDuration = target.breakTime;
+
+                    sound.playRandom(sound.hitSound(target), breakX + 0.5f, breakY + 0.5f, breakZ + 0.5f, 0.4f);
+                    hitSoundTimer = 0f;
+
                 }
 
                 breakElapsed += dt;
@@ -327,9 +334,18 @@ public class GameLoop {
                     player.getInventory().addItem(target.id, 1);
                     breakElapsed = 0f; breakDuration = 0f;
                     breakX = breakY = breakZ = -1;
+                    sound.playRandom(sound.breakSound(target), breakX + 0.5f, breakY + 0.5f, breakZ + 0.5f, 1f);
                 }
+
+                hitSoundTimer += dt;
+                if (hitSoundTimer >= HIT_SOUND_INTERVAL) {
+                    hitSoundTimer = 0f;
+                    sound.playRandom(sound.hitSound(target), breakX + 0.5f, breakY + 0.5f, breakZ + 0.5f, 0.4f);
+                }
+
             } else {
                 breakElapsed = 0f;
+                hitSoundTimer = 0f; 
                 if (!leftDown) breakX = breakY = breakZ = -1;
             }
 

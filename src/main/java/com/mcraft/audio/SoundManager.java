@@ -139,6 +139,17 @@ public class SoundManager {
     }
 
 
+    public SoundEvent hitSound(Block block) {
+        return switch (block) {
+            case GRASS, DIRT, SAND, LEAVES -> SoundEvent.BLOCK_HIT_GRASS;
+            case STONE, BEDROCK             -> SoundEvent.BLOCK_HIT_STONE;
+            case WOOD_LOG, PLANKS,
+                CRAFTING_TABLE             -> SoundEvent.BLOCK_HIT_WOOD;
+            default                          -> SoundEvent.BLOCK_HIT_STONE;
+        };
+    }
+
+
     private int loadOgg(String classPath) {
         try (InputStream is = getClass().getResourceAsStream(classPath)) {
             if (is == null) return -1;

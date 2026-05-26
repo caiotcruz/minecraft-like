@@ -9,6 +9,11 @@ public enum SoundEvent {
     BLOCK_BREAK_SAND("sounds/block/sand/break1.ogg"),
     BLOCK_BREAK_STONE ("sounds/block/stone/break1.ogg"),
     BLOCK_BREAK_WOOD  ("sounds/block/wood/break1.ogg"),
+
+    //Hit
+    BLOCK_HIT_GRASS   ("sounds/block/grass/hit1.ogg"),
+    BLOCK_HIT_STONE   ("sounds/block/stone/hit1.ogg"),
+    BLOCK_HIT_WOOD    ("sounds/block/wood/hit1.ogg"),
     
     //Place
     BLOCK_PLACE_WOOD       ("sounds/block/wood/place1.ogg"),
