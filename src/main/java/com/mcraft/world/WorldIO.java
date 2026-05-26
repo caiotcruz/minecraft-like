@@ -9,38 +9,67 @@ import java.util.Optional;
 public class WorldIO {
 
     private final Path saveDir;
+    private final Path chunksDir;
 
     public WorldIO(String worldName) {
-        this.saveDir = Paths.get("saves", worldName);
+
+        this.saveDir   = Paths.get("saves", worldName);
+        this.chunksDir = saveDir.resolve("chunks");
+
+        try {
+            Files.createDirectories(chunksDir);
+        } catch (IOException e) {
+            throw new RuntimeException(
+                "[WorldIO] Não foi possível criar diretórios de save: " + saveDir,
+                e
+            );
+        }
     }
 
     public void save(World world, Player player, DayNightCycle dayNight) throws IOException {
 
-        Files.createDirectories(saveDir.resolve("chunks"));
-
         saveWorldMeta(world.getSeed(), player, dayNight);
 
-        world.getLoadedChunks().forEach((key, chunk) -> {
+        int saved = 0;
+        int failed = 0;
+
+        for (Chunk chunk : world.getLoadedChunks().values()) {
+
             try {
                 saveChunk(chunk);
-            } catch (IOException e) {
-                System.err.println("[Save] Falha ao salvar chunk " +
-                        chunk.getChunkX() + "," + chunk.getChunkZ() + ": " + e.getMessage());
-            }
-        });
+                saved++;
 
-        System.out.printf("[Save] %d chunks salvos em '%s'%n",
-                world.getLoadedChunks().size(), saveDir);
+            } catch (IOException e) {
+
+                failed++;
+
+                System.err.printf(
+                    "[Save] Falha ao salvar chunk %d,%d -> %s%n",
+                    chunk.getChunkX(),
+                    chunk.getChunkZ(),
+                    e.getMessage()
+                );
+            }
+        }
+
+        System.out.printf(
+            "[Save] %d chunks salvos, %d falhas em '%s'%n",
+            saved,
+            failed,
+            saveDir
+        );
     }
 
     private void saveWorldMeta(long seed, Player player, DayNightCycle dayNight) throws IOException {
+
+        Files.createDirectories(saveDir);
 
         Path metaPath = saveDir.resolve("world.dat");
 
         try (DataOutputStream out = new DataOutputStream(
                 new BufferedOutputStream(Files.newOutputStream(metaPath)))) {
 
-            out.writeInt(2); 
+            out.writeInt(2);
 
             out.writeLong(seed);
 
@@ -53,7 +82,7 @@ public class WorldIO {
 
             out.writeFloat(dayNight.getTime());
 
-            int[] items = player.getInventory().getItems();
+            int[] items  = player.getInventory().getItems();
             int[] counts = player.getInventory().getCounts();
 
             out.writeInt(items.length);
@@ -67,15 +96,33 @@ public class WorldIO {
         }
     }
 
-    private void saveChunk(Chunk chunk) throws IOException {
-        String name = String.format("c_%d_%d.dat", chunk.getChunkX(), chunk.getChunkZ());
-        Path path = saveDir.resolve("chunks").resolve(name);
+    public void saveChunk(Chunk chunk) throws IOException {
+
+        Files.createDirectories(chunksDir);
+
+        String name = String.format(
+            "c_%d_%d.dat",
+            chunk.getChunkX(),
+            chunk.getChunkZ()
+        );
+
+        Path path = chunksDir.resolve(name);
 
         try (DataOutputStream out = new DataOutputStream(
-                new BufferedOutputStream(Files.newOutputStream(path)))) {
+                new BufferedOutputStream(
+                    Files.newOutputStream(
+                        path,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.TRUNCATE_EXISTING,
+                        StandardOpenOption.WRITE
+                    )
+                ))) {
+
             out.writeInt(chunk.getChunkX());
             out.writeInt(chunk.getChunkZ());
-            byte[] blocks = chunk.getRawBlocks(); 
+
+            byte[] blocks = chunk.getRawBlocks();
+
             out.write(blocks);
         }
     }
@@ -120,25 +167,41 @@ public class WorldIO {
 
                 data.selectedSlot = in.readInt();
             }
-
             return data;
         }
     }
 
     public Optional<byte[]> loadChunkBlocks(int cx, int cz) {
-        String name = String.format("c_%d_%d.dat", cx, cz);
-        Path path = saveDir.resolve("chunks").resolve(name);
-        if (!Files.exists(path)) return Optional.empty();
 
-        try (DataInputStream in = new DataInputStream(
-                new BufferedInputStream(Files.newInputStream(path)))) {
-            in.readInt(); in.readInt();
-            byte[] blocks = new byte[Chunk.SIZE * Chunk.HEIGHT * Chunk.SIZE];
+        String name = String.format("c_%d_%d.dat", cx, cz);
+        Path path = chunksDir.resolve(name);
+        if (!Files.exists(path)) {
+            return Optional.empty();
+        }
+
+        try (DataInputStream in = new DataInputStream( new BufferedInputStream(Files.newInputStream(path)))) {
+
+            in.readInt();
+            in.readInt();
+
+            byte[] blocks = new byte[
+                Chunk.SIZE *
+                Chunk.HEIGHT *
+                Chunk.SIZE
+            ];
+
             int read = in.read(blocks);
-            if (read != blocks.length) throw new IOException("Chunk truncado");
+            if (read != blocks.length) {
+                throw new IOException("Chunk truncado");
+            }
             return Optional.of(blocks);
+
         } catch (IOException e) {
-            System.err.println("[Load] Chunk corrompido: " + name);
+            System.err.printf(
+                "[Load] Chunk corrompido %s -> %s%n",
+                name,
+                e.getMessage()
+            );
             return Optional.empty();
         }
     }

@@ -205,10 +205,10 @@ public class SkyRenderer {
         glBufferData(GL_ARRAY_BUFFER, (long)MAX_QUADS * 4 * VERT_FLOATS * Float.BYTES, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, (long)MAX_QUADS * 6 * Integer.BYTES, GL_DYNAMIC_DRAW);
-        int stride = VERT_FLOATS * Float.BYTES; // 28 bytes
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);  // pos
+        int stride = VERT_FLOATS * Float.BYTES; 
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 4, GL_FLOAT, false, stride, 12L); // rgba
+        glVertexAttribPointer(1, 4, GL_FLOAT, false, stride, 12L); 
         glEnableVertexAttribArray(1);
         glBindVertexArray(0);
     }

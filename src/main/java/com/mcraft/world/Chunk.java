@@ -62,6 +62,11 @@ public class Chunk {
         renderer.render();
     }
 
+    public void deleteMesh() {
+        renderer.delete(); 
+        dirty = true;     
+    }
+
     public void markDirty() { dirty = true; }
     public int  getChunkX() { return chunkX; }
     public int  getChunkZ() { return chunkZ; }

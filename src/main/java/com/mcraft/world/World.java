@@ -1,7 +1,10 @@
 package com.mcraft.world;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.mcraft.render.Camera;
@@ -10,6 +13,7 @@ import com.mcraft.render.Shader;
 public class World {
 
     public static final int RENDER_DISTANCE = 4;
+    private static final int UNLOAD_DISTANCE = RENDER_DISTANCE + 3;
 
     private final Map<Long, Chunk> chunks = new HashMap<>();
     private final WorldGen gen;
@@ -106,9 +110,69 @@ public class World {
         }
     }
 
+    public int unloadDistant(float playerX, float playerZ, WorldIO worldIO) {
+        int pcx = (int)Math.floor(playerX / Chunk.SIZE);
+        int pcz = (int)Math.floor(playerZ / Chunk.SIZE);
+
+        List<Long> toRemove = new ArrayList<>();
+
+        for (Map.Entry<Long, Chunk> entry : chunks.entrySet()) {
+            Chunk c  = entry.getValue();
+            int   dx = Math.abs(c.getChunkX() - pcx);
+            int   dz = Math.abs(c.getChunkZ() - pcz);
+
+            if (dx > UNLOAD_DISTANCE || dz > UNLOAD_DISTANCE) {
+                toRemove.add(entry.getKey());
+            }
+        }
+
+        for (long key : toRemove) {
+            Chunk chunk = chunks.get(key);
+            if (chunk == null) continue;
+
+            if (worldIO != null) {
+                try {
+                    worldIO.saveChunk(chunk);
+                } catch (IOException e) {
+                    System.err.printf("[Unload] Falha ao salvar chunk %d,%d: %s%n",
+                            chunk.getChunkX(), chunk.getChunkZ(), e.getMessage());
+                }
+            }
+
+            chunk.deleteMesh();
+
+            chunks.remove(key);
+        }
+
+        if (!toRemove.isEmpty()) {
+            System.out.printf("[Unload] %d chunks descarregados. Total: %d%n",
+                    toRemove.size(), chunks.size());
+        }
+
+        return toRemove.size();
+    }  
+
+    public void saveAll(WorldIO worldIO) {
+        for (Chunk chunk : chunks.values()) {
+            try {
+                worldIO.saveChunk(chunk);
+            } catch (IOException e) {
+                System.err.println("[Save] Falha: " + e.getMessage());
+            }
+        }
+        System.out.println("[Save] " + chunks.size() + " chunks salvos.");
+    }
+
+    public void deleteAllMeshes() {
+        for (Chunk chunk : chunks.values()) {
+            chunk.deleteMesh();
+        }
+    }
+
     public Map<Long, Chunk> getLoadedChunks() {
-    return Collections.unmodifiableMap(chunks);
-}
+        return Collections.unmodifiableMap(chunks);
+    }
 
     public long getSeed() { return seed; }
+    public WorldIO getWorldIO() {return worldIO;}
 }

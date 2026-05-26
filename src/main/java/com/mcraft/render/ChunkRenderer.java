@@ -193,11 +193,15 @@ public class ChunkRenderer {
     }
 
     public void delete() {
-        if (vao != 0) {
-            glDeleteVertexArrays(vao);
-            glDeleteBuffers(vbo);
-            glDeleteBuffers(ebo);
-            vao = vbo = ebo = 0;
-        }
+
+        if (vao != 0) glDeleteVertexArrays(vao);
+        if (vbo != 0) glDeleteBuffers(vbo);
+        if (ebo != 0) glDeleteBuffers(ebo);
+
+        vao = 0;
+        vbo = 0;
+        ebo = 0;
+
+        indexCount = 0;
     }
 }

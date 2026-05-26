@@ -6,7 +6,6 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_1;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
@@ -69,17 +68,24 @@ public class GameLoop {
     private float worldGenTimer    = 0f;
     private static final float WORLD_GEN_INTERVAL = 0.35f;
 
+    private float unloadTimer = 0f;
+    private static final float UNLOAD_INTERVAL = 8f;
+
     private InventoryScreen inventoryScreen;
     private boolean         inventoryOpen   = false;
     private boolean         prevEKeyDown    = false;
+
+    @SuppressWarnings("unused")
     private boolean         leftWasDown     = false;
-    private boolean         rightWasDown    = false;
+    
+     private boolean         rightWasDown    = false;
     private float[]         ortho2D;
 
     private int   breakX = -1, breakY = -1, breakZ = -1;
     private float breakElapsed  = 0f;
     private float breakDuration = 0f;
 
+    @SuppressWarnings("unused")
     private int musicSource = -1;
 
     private float stepTimer = 0f;
@@ -228,9 +234,8 @@ public class GameLoop {
         if (input.isKeyDown(GLFW_KEY_S)) dz += 1;
         if (input.isKeyDown(GLFW_KEY_A)) dx -= 1;
         if (input.isKeyDown(GLFW_KEY_D)) dx += 1;
-        boolean jump = input.isKeyDown(GLFW_KEY_SPACE);
 
-        if (input.isKeyDown(GLFW_KEY_F2)) dayNight.setTime(0.8f); ;
+        boolean jump = input.isKeyDown(GLFW_KEY_SPACE);
 
         float mdx = input.consumeMouseDX();
         float mdy = input.consumeMouseDY();
@@ -243,6 +248,12 @@ public class GameLoop {
         if (worldGenTimer >= WORLD_GEN_INTERVAL) {
             worldGenTimer = 0f;
             world.generateAround(player.getX(), player.getZ());
+        }
+
+        unloadTimer += dt;
+        if (unloadTimer >= UNLOAD_INTERVAL) {
+            unloadTimer = 0f;
+            world.unloadDistant(player.getX(), player.getZ(), world.getWorldIO());
         }
 
         boolean moving = dx != 0 || dz != 0;
@@ -374,6 +385,8 @@ public class GameLoop {
             inventoryScreen.onClose();
         }
         blockShader.delete();
+        world.saveAll(world.getWorldIO());
+        world.deleteAllMeshes();
         hudShader.delete();
         skyRenderer.delete();
         skyShader.delete();

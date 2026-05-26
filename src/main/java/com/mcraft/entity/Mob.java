@@ -6,7 +6,6 @@ import java.util.Random;
 public class Mob extends Entity {
 
     public enum Type {
-        //          nome       larg  alt   vel   sentido  cor RGBA
         CHICKEN    ( "Galinha", MobCategory.PASSIVE, 0.4f, 0.7f, 2.5f, 8f, new float[]{1f, 1f, 1f, 1f}),
         COW        ( "Vaca", MobCategory.PASSIVE, 0.9f, 1.4f, 2.0f, 10f, new float[]{0.3f, 0.2f, 0.1f, 1f}),
         ZOMBIE     ( "Zumbi", MobCategory.HOSTILE, 0.6f, 1.8f, 2.2f, 16f, new float[]{0.2f, 0.5f, 0.2f, 1f}),
