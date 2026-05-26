@@ -28,6 +28,7 @@ import static org.lwjgl.opengl.GL11.glClearColor;
 
 import com.mcraft.audio.SoundEvent;
 import com.mcraft.audio.SoundManager;
+import com.mcraft.entity.Mob;
 import com.mcraft.entity.MobManager;
 import com.mcraft.player.Player;
 import com.mcraft.player.Raycast;
@@ -106,7 +107,7 @@ public class GameLoop {
 
     private final DayNightCycle dayNight = new DayNightCycle();
 
-    private final MobManager mobs = new MobManager();
+    private final MobManager mobs;
 
 
     public GameLoop( Window window, WorldIO worldIO, long seed, float spawnX, float spawnY, float spawnZ) {
@@ -147,6 +148,14 @@ public class GameLoop {
             window.getWidth(), window.getHeight(),
             player.getInventory(), hudShader, atlas
         );
+
+        mobs = new MobManager(drops -> {
+            for (int[] drop : drops) {
+                if (drop[1] > 0) {
+                    player.getInventory().addItem(drop[0], drop[1]);
+                }
+            }
+        });
 
         inventoryScreen = new InventoryScreen(
             window.getWidth(), window.getHeight(),
@@ -376,6 +385,8 @@ public class GameLoop {
     private void handleBlockBreaking(float dt){
 
         float[] front = camera.getFront();
+        boolean leftDown = input.isMouseDown(GLFW_MOUSE_BUTTON_LEFT);
+        boolean leftJustPressed = leftDown && !leftWasDown;
 
         Raycast.HitResult hit = Raycast.cast(
             camera.getX(), camera.getY(), camera.getZ(),
@@ -383,9 +394,12 @@ public class GameLoop {
             REACH, world
         );
 
+        if (leftJustPressed && !hit.hit) {
+            attackNearestMob();
+        }
+
         if (hit.hit) {
             Block target = world.getBlock(hit.blockX, hit.blockY, hit.blockZ);
-            boolean leftDown = input.isMouseDown(GLFW_MOUSE_BUTTON_LEFT);
 
             if (leftDown && target.breakTime > 0f) {
                 if (hit.blockX != breakX || hit.blockY != breakY || hit.blockZ != breakZ) {
@@ -443,6 +457,29 @@ public class GameLoop {
             ? Math.min(1f, breakElapsed / breakDuration)
             : 0f;
         hud.setBreakProgress(breakProgress);
+    }
+
+    private void attackNearestMob() {
+        final float REACH = 3.5f;
+        float cx = camera.getX(), cy = camera.getY(), cz = camera.getZ();
+
+        Mob nearest = null;
+        float nearestDist = Float.MAX_VALUE;
+
+        for (Mob mob : mobs.getMobs()) {
+            float dx = mob.getX() - cx;
+            float dy = mob.getY() + mob.getHeight()/2f - cy; // centro do mob
+            float dz = mob.getZ() - cz;
+            float dist = (float) Math.sqrt(dx*dx + dy*dy + dz*dz);
+            if (dist < REACH && dist < nearestDist) {
+                nearestDist = dist;
+                nearest = mob;
+            }
+        }
+
+        if (nearest != null) {
+            nearest.damage(5); // dano por soco: 5 HP
+        }
     }
 
     private void cleanup() {

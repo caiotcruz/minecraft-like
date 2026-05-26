@@ -167,6 +167,15 @@ public class TextureAtlas {
             };
         }
 
+        if (col == 0 && row == 2) { 
+            boolean speck = (px % 5 == 1 && py % 4 == 1)
+                        || (px % 7 == 3 && py % 5 == 3)
+                        || (px % 6 == 5 && py % 7 == 5);
+            if (speck) return new int[]{ 12, 12, 14, 255 };
+            int v = 118 + n * 4;
+            return new int[]{ v, v, v + (n & 3), 255 };
+        }
+
         if (col == 1 && row == 0) {
 
             int v = 118 + n * 4;
@@ -177,6 +186,14 @@ public class TextureAtlas {
                 v + (n & 3),
                 255
             };
+        }
+
+        if (col == 1 && row == 2) { 
+            boolean speck = (px % 4 == 2 && py % 3 == 1)
+                        || (px % 6 == 4 && py % 6 == 4);
+            if (speck) return new int[]{ 192, 118, 65, 255 };  
+            int v = 118 + n * 4;
+            return new int[]{ v, v, v + (n & 3), 255 };
         }
 
         if (col == 2 && row == 0) {
@@ -191,6 +208,15 @@ public class TextureAtlas {
                 clamp(b),
                 255
             };
+        }
+
+        if (col == 2 && row == 2) { 
+            boolean speck = (px % 3 == 1 && py % 5 == 2)
+                        || (px % 7 == 5 && py % 4 == 1)
+                        || (px % 5 == 3 && py % 6 == 5);
+            if (speck) return new int[]{ 235, 188, 30, 255 };   
+            int v = 118 + n * 4;
+            return new int[]{ v, v, v + (n & 3), 255 };
         }
 
         if (col == 3 && row == 0) {
@@ -211,6 +237,15 @@ public class TextureAtlas {
             }
         }
 
+        if (col == 3 && row == 2) {
+            boolean speck = (px % 5 == 2 && py % 3 == 1)
+                        || (px % 6 == 1 && py % 7 == 4)
+                        || (px % 8 == 7 && py % 5 == 2);
+            if (speck) return new int[]{ 40, 220, 220, 255 };  
+            int v = 118 + n * 4;
+            return new int[]{ v, v, v + (n & 3), 255 };
+        }
+
         if (col == 4 && row == 0) {
 
             boolean grain =
@@ -224,6 +259,44 @@ public class TextureAtlas {
             return new int[]{ r, g, b, 255 };
         }
 
+        // Pena
+        if (col == 5 && row == 2) { 
+            boolean shaft = (px == 7 || px == 8) && py >= 2 && py <= 13;
+            boolean barb  = Math.abs(px - 7) <= (14 - py) / 2 && py >= 2 && py <= 14;
+            if (shaft) return new int[]{ 200, 200, 210, 255 };
+            if (barb)  return new int[]{ 235, 235, 245, 200 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        //Couro
+        if (col == 6 && row == 2) { 
+            if (px > 1 && px < 14 && py > 1 && py < 14) {
+                int v = 130 + n * 5;
+                return new int[]{ v, clamp(v - 40), clamp(v - 80), 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+         // Bife Cru
+        if (col == 7 && row == 2) {
+            boolean dark = ((px + py) % 4 == 0);
+            if (dark) return new int[]{ 140, 30, 30, 255 };
+            return new int[]{ 195, 60, 50, 255 };
+        }
+
+        //Carne Podre
+        if (col == 8 && row == 2) {
+            boolean vein = (px % 5 == 2) || (py % 5 == 3);
+            if (vein) return new int[]{ 40, 60, 30, 255 };
+            return new int[]{ 80, 100, 50, 255 };
+        }
+
+        //Polvora
+        if (col == 9 && row == 2) {
+            boolean grain = ((px * 13 + py * 7) % 6 == 0);
+            return grain ? new int[]{ 55, 55, 55, 255 } : new int[]{ 35, 35, 35, 255 };
+        }
+        
         if (col == 1 && row == 1) {
 
             int v = 32 + (n < 4 ? 0 : n * 2);

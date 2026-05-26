@@ -1,5 +1,6 @@
 package com.mcraft.entity;
 
+import com.mcraft.world.Block;
 import com.mcraft.world.World;
 import java.util.Random;
 
@@ -32,9 +33,18 @@ public class Mob extends Entity {
     private float    wanderDirX  = 0;
     private float    wanderDirZ  = 0;
 
+    private int     health;
+    private boolean dead   = false;
+
     public Mob(Type type, float x, float y, float z) {
         super(x, y, z, type.w, type.h);
         this.type = type;
+        this.health = switch (type) {
+            case CHICKEN -> 4;
+            case COW     -> 10;
+            case ZOMBIE  -> 20;
+            case CREEPER -> 20;
+        };
         pickNewWanderDir();
     }
 
@@ -155,10 +165,37 @@ public class Mob extends Entity {
         return true;
     }
 
+    public int[][] getDrops() {
+        java.util.Random rng = new java.util.Random();
+        return switch (type) {
+            case CHICKEN -> new int[][]{
+                { Block.FEATHER.id,  1 + rng.nextInt(2) }   
+            };
+            case COW -> new int[][]{
+                { Block.LEATHER.id,  1 + rng.nextInt(3) }, 
+                { Block.RAW_BEEF.id, 1 + rng.nextInt(3) }   
+            };
+            case ZOMBIE -> new int[][]{
+                { Block.ROTTEN_FLESH.id, rng.nextInt(3) }   
+            };
+            case CREEPER -> new int[][]{
+                { Block.GUNPOWDER.id, rng.nextInt(2) }  
+            };
+        };
+    }
+
+        public void damage(int amount) {
+        if (dead) return;
+        health -= amount;
+        if (health <= 0) dead = true;
+    }
+
+
     private boolean isMoving() {
         return (float) Math.sqrt(velX*velX + velZ*velZ) > 0.4f;
     }
 
+    public boolean isDead() { return dead; }
     
     public Type   getType()  { return type; }
     public AIState getState() { return state; }

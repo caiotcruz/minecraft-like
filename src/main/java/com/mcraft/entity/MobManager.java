@@ -18,16 +18,47 @@ public class MobManager {
     private static final float SPAWN_INTERVAL = 10f; 
     private float spawnTimer = 0;
 
+    private final java.util.function.Consumer<int[][]> dropCallback;
+
+    public MobManager(java.util.function.Consumer<int[][]> onDrop) {
+        this.dropCallback = onDrop;
+    }
+
     public void update(float dt, World world, float px, float py, float pz, boolean isNight) {
-        mobs.removeIf(m -> {
+
+        java.util.Iterator<Mob> it = mobs.iterator();
+
+        while (it.hasNext()) {
+            Mob m = it.next();
+
             m.update(dt, world, px, py, pz);
-            float dx = m.getX()-px, dz = m.getZ()-pz;
-            return (dx*dx + dz*dz) > 128*128;
-        });
+
+            if (m.isDead()) {
+
+                int[][] drops = m.getDrops();
+
+                if (dropCallback != null && drops != null) {
+                    dropCallback.accept(drops);
+                }
+
+                it.remove();
+                continue;
+            }
+
+            float dx = m.getX() - px;
+            float dz = m.getZ() - pz;
+
+            if ((dx * dx + dz * dz) > 128f * 128f) {
+                it.remove();
+            }
+        }
 
         spawnTimer -= dt;
-        if (spawnTimer <= 0 && mobs.size() < MAX_MOBS) {
+
+        if (spawnTimer <= 0f && mobs.size() < MAX_MOBS) {
+
             trySpawn(world, px, py, pz, isNight);
+
             spawnTimer = SPAWN_INTERVAL;
         }
     }

@@ -17,5 +17,10 @@
 
 ## Mobs
 
-- Atualmente a funcionalidade de pulo dos mobs não está funcionando.
-- Mobs não são salvos ao fechar o jogo
+- Mobs não são salvos ao fechar o jogo.
+- Não é possível acertar mobs corretamente quando existem blocos atrás deles.
+
+## Mundo
+
+- O sistema atual pode gerar cavernas excessivamente grandes/infindas.
+- Veios de minérios ainda podem gerar em tamanhos exagerados.

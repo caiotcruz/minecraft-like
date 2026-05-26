@@ -12,7 +12,16 @@ public enum Block {
     WATER          ( 7, "water",           13,  12,  false,  0f   ),
     BEDROCK        ( 8, "bedrock",          1,   1,  true,   0f   ),
     PLANKS         ( 9, "planks",           4,   0,  true,   1.50f),
-    CRAFTING_TABLE (10, "crafting_table",  11,   2,  true,   1.50f);
+    CRAFTING_TABLE (10, "crafting_table",  11,   2,  true,   1.50f),
+    COAL_ORE       (11, "coal_ore",     0,   2,  true,  3.0f),
+    IRON_ORE       (12, "iron_ore",     1,   2,  true,  4.5f),
+    GOLD_ORE       (13, "gold_ore",     2,   2,  true,  4.5f),
+    DIAMOND_ORE    (14, "diamond_ore",  3,   2,  true,  6.0f),
+    FEATHER        (15, "feather",      5, 2, false, 0f),
+    LEATHER        (16, "leather",      6, 2, false, 0f),
+    RAW_BEEF       (17, "raw_beef",     7, 2, false, 0f),
+    ROTTEN_FLESH   (18, "rotten_flesh", 8, 2, false, 0f),
+    GUNPOWDER      (19, "gunpowder",    9, 2, false, 0f);
 
     public final int     id;
     public final String  name;
