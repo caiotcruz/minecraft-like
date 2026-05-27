@@ -1,5 +1,14 @@
 package com.mcraft.world;
 
+import static org.lwjgl.opengl.GL11.glBlendFunc;
+import static org.lwjgl.opengl.GL11.glDepthMask;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
+import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -198,21 +207,55 @@ public class World {
 
         for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
             for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
-                Chunk chunk = chunks.get(key(cx+dx, cz+dz));
+
+                Chunk chunk = chunks.get(key(cx + dx, cz + dz));
                 if (chunk == null) continue;
 
                 float wx0 = chunk.getChunkX() * Chunk.SIZE;
                 float wz0 = chunk.getChunkZ() * Chunk.SIZE;
 
-                if (!frustum.isVisible(wx0, 0, wz0,
-                                        wx0 + Chunk.SIZE, Chunk.HEIGHT,
-                                        wz0 + Chunk.SIZE)) {
-                    continue; 
+                if (!frustum.isVisible(
+                        wx0, 0, wz0,
+                        wx0 + Chunk.SIZE, Chunk.HEIGHT,
+                        wz0 + Chunk.SIZE)) {
+                    continue;
                 }
 
                 chunk.render(shader, this);
             }
         }
+
+        glDepthMask(false);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glDisable(GL_CULL_FACE);
+
+        for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
+            for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
+
+                Chunk chunk = chunks.get(key(cx + dx, cz + dz));
+                if (chunk == null) continue;
+
+                float wx0 = chunk.getChunkX() * Chunk.SIZE;
+                float wz0 = chunk.getChunkZ() * Chunk.SIZE;
+
+                if (!frustum.isVisible(
+                        wx0, 0, wz0,
+                        wx0 + Chunk.SIZE, Chunk.HEIGHT,
+                        wz0 + Chunk.SIZE)) {
+                    continue;
+                }
+
+                chunk.renderWater(shader);
+            }
+        }
+
+        glEnable(GL_CULL_FACE);
+        glDisable(GL_BLEND);
+
+        glDepthMask(true);
     }
 
     private static float[] multiply4x4(float[] a, float[] b) {

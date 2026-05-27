@@ -10,6 +10,7 @@
 
 - Pequeno jitter de colisão nas bordas dos blocos.
 - A detecção vertical de chão pode oscilar em transições de blocos/declives.
+- Física do jogador para ao abrir o inventário (Resto do mundo continua). Futuro Fix: Bloquear inputs ao abrir o inventário ao invés de parar a física
 
 ## Renderização
 

@@ -1,215 +1,116 @@
 package com.mcraft.render;
 
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-
-import org.lwjgl.BufferUtils;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
-import static org.lwjgl.opengl.GL11.glDrawElements;
-import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW;
-import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15.glBindBuffer;
-import static org.lwjgl.opengl.GL15.glBufferData;
-import static org.lwjgl.opengl.GL15.glDeleteBuffers;
-import static org.lwjgl.opengl.GL15.glGenBuffers;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
-import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
-
 import com.mcraft.world.Block;
 import com.mcraft.world.Chunk;
 import com.mcraft.world.World;
+import org.lwjgl.BufferUtils;
+
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.*;
 
 public class ChunkRenderer {
 
-    private static final int VERTEX_FLOATS = 6;
+    private static final int VERT_FLOATS = 6; 
 
     private int vao, vbo, ebo;
     private int indexCount;
 
+    private int wVao, wVbo, wEbo;
+    private int wIndexCount;
 
     private static final int[][] FACE_DIR = {
-        { 0,  1,  0}, { 0, -1,  0},
-        { 0,  0,  1}, { 0,  0, -1},
-        {-1,  0,  0}, { 1,  0,  0}
+        { 0, 1, 0}, { 0,-1, 0}, { 0, 0, 1},
+        { 0, 0,-1}, {-1, 0, 0}, { 1, 0, 0}
     };
-
     private static final float[][][] FACE_VERTS = {
-
-        {
-            {0,1,0},
-            {0,1,1},
-            {1,1,1},
-            {1,1,0}
-        },
-
-        {
-            {0,0,0},
-            {1,0,0},
-            {1,0,1},
-            {0,0,1}
-        },
-
-        {
-            {0,0,1},
-            {1,0,1},
-            {1,1,1},
-            {0,1,1}
-        },
-
-        {
-            {1,0,0},
-            {0,0,0},
-            {0,1,0},
-            {1,1,0}
-        },
-
-        {
-            {0,0,0},
-            {0,0,1},
-            {0,1,1},
-            {0,1,0}
-        },
-
-        {
-            {1,0,1},
-            {1,0,0},
-            {1,1,0},
-            {1,1,1}
-        }
+        {{0,1,0},{0,1,1},{1,1,1},{1,1,0}}, 
+        {{0,0,1},{0,0,0},{1,0,0},{1,0,1}},
+        {{0,0,1},{1,0,1},{1,1,1},{0,1,1}}, 
+        {{1,0,0},{0,0,0},{0,1,0},{1,1,0}}, 
+        {{0,0,0},{0,0,1},{0,1,1},{0,1,0}}, 
+        {{1,0,1},{1,0,0},{1,1,0},{1,1,1}}  
     };
-
-    private static final float[] FACE_LIGHT = {
-        1.0f,   
-        0.5f,   
-        0.8f,   
-        0.8f, 
-        0.65f,  
-        0.65f   
-    };
+    private static final float[] FACE_LIGHT = {1.0f,0.5f,0.8f,0.7f,0.65f,0.65f};
 
 
     public void buildMesh(Chunk chunk, World world) {
+        int cs = Chunk.SIZE, ch = Chunk.HEIGHT;
         int cx = chunk.getChunkX(), cz = chunk.getChunkZ();
-        Chunk nNorth = world.getChunkIfLoaded(cx,     cz - 1); 
-        Chunk nSouth = world.getChunkIfLoaded(cx,     cz + 1); 
-        Chunk nWest  = world.getChunkIfLoaded(cx - 1, cz    ); 
-        Chunk nEast  = world.getChunkIfLoaded(cx + 1, cz    );
-        int cs = Chunk.SIZE;
-        int ch = Chunk.HEIGHT;
 
-        int maxQuads = cs * ch * cs * 6;
-        FloatBuffer vBuf = BufferUtils.createFloatBuffer(maxQuads * 4 * VERTEX_FLOATS);
-        IntBuffer   iBuf = BufferUtils.createIntBuffer (maxQuads * 6);
+        Chunk nN = world.getChunkIfLoaded(cx,   cz-1);
+        Chunk nS = world.getChunkIfLoaded(cx,   cz+1);
+        Chunk nW = world.getChunkIfLoaded(cx-1, cz  );
+        Chunk nE = world.getChunkIfLoaded(cx+1, cz  );
 
-        int quadCount = 0;
+        int maxQ = cs * ch * cs * 6;
+        FloatBuffer vBuf = BufferUtils.createFloatBuffer(maxQ * 4 * VERT_FLOATS);
+        IntBuffer   iBuf = BufferUtils.createIntBuffer (maxQ * 6);
+        FloatBuffer wBuf = BufferUtils.createFloatBuffer(maxQ * 4 * VERT_FLOATS);
+        IntBuffer   wIdx = BufferUtils.createIntBuffer (maxQ * 6);
+
+        int quadCount  = 0;
+        int wQuadCount = 0;
 
         for (int y = 0; y < ch; y++) {
             for (int z = 0; z < cs; z++) {
                 for (int x = 0; x < cs; x++) {
                     Block block = chunk.getBlock(x, y, z);
-                    if (!block.solid) continue;
+                    boolean isWater = (block == Block.WATER);
+
+                    if (block == Block.AIR) continue;
+                    if (!block.solid && !isWater) continue;
 
                     for (int face = 0; face < 6; face++) {
                         int[] dir = FACE_DIR[face];
-                        int nx = x + dir[0];
-                        int ny = y + dir[1];
-                        int nz = z + dir[2];
-
                         Block neighbor = getNeighborFast(
-                            chunk, nNorth, nSouth, nWest, nEast,
-                            nx, ny, nz
+                            chunk, nN, nS, nW, nE,
+                            x + dir[0], y + dir[1], z + dir[2]
                         );
-                        if (neighbor.solid) continue;
+
+                        if (block.solid && neighbor.solid) continue;
+                        if (isWater && (neighbor == Block.WATER || neighbor.solid)) continue;
 
                         float[] uvs   = block.getUVs(face);
                         float   light = FACE_LIGHT[face];
+                        float[][] vv  = FACE_VERTS[face];
 
-                        float[][] verts = FACE_VERTS[face];
-                        for (int v = 0; v < 4; v++) {
-                            vBuf.put(x + verts[v][0]); 
-                            vBuf.put(y + verts[v][1]);
-                            vBuf.put(z + verts[v][2]);
-                            vBuf.put(uvs[v * 2    ]);
-                            vBuf.put(uvs[v * 2 + 1]); 
-                            vBuf.put(light);          
+                        if (isWater) {
+                            for (int v = 0; v < 4; v++) {
+                                float wl = (face == 0) ? light * 1.1f : light * 0.85f;
+                                wBuf.put(x+vv[v][0]).put(y+vv[v][1]).put(z+vv[v][2])
+                                    .put(uvs[v*2]).put(uvs[v*2+1]).put(wl);
+                            }
+                            int base = wQuadCount * 4;
+                            wIdx.put(base).put(base+1).put(base+2)
+                                .put(base+2).put(base+3).put(base);
+                            wQuadCount++;
+                        } else {
+                            for (int v = 0; v < 4; v++) {
+                                vBuf.put(x+vv[v][0]).put(y+vv[v][1]).put(z+vv[v][2])
+                                    .put(uvs[v*2]).put(uvs[v*2+1]).put(light);
+                            }
+                            int base = quadCount * 4;
+                            iBuf.put(base).put(base+1).put(base+2)
+                                .put(base+2).put(base+3).put(base);
+                            quadCount++;
                         }
-
-                        int base = quadCount * 4;
-                        iBuf.put(base    ); iBuf.put(base + 1); iBuf.put(base + 2);
-                        iBuf.put(base + 2); iBuf.put(base + 3); iBuf.put(base    );
-
-                        quadCount++;
                     }
                 }
             }
         }
 
-        vBuf.flip();
-        iBuf.flip();
-        indexCount = quadCount * 6;
+        vBuf.flip(); iBuf.flip(); wBuf.flip(); wIdx.flip();
+        indexCount  = quadCount  * 6;
+        wIndexCount = wQuadCount * 6;
 
-        uploadToGPU(vBuf, iBuf);
+        upload(vBuf, iBuf, false);  
+        upload(wBuf, wIdx, true); 
     }
-
-    private Block getNeighborFast(Chunk self, Chunk nNorth, Chunk nSouth, Chunk nWest,  Chunk nEast, int lx, int ly, int lz) {
-
-        if (ly < 0 || ly >= Chunk.HEIGHT) return Block.AIR;
-
-        if (lx >= 0 && lx < Chunk.SIZE && lz >= 0 && lz < Chunk.SIZE) {
-            return self.getBlock(lx, ly, lz);
-        }
-
-        if (lz < 0) { 
-            return (nNorth != null) ? nNorth.getBlock(lx, ly, Chunk.SIZE - 1) : Block.AIR;
-        }
-        if (lz >= Chunk.SIZE) { 
-            return (nSouth != null) ? nSouth.getBlock(lx, ly, 0) : Block.AIR;
-        }
-        if (lx < 0) {
-            return (nWest != null) ? nWest.getBlock(Chunk.SIZE - 1, ly, lz) : Block.AIR;
-        }
-        return (nEast != null) ? nEast.getBlock(0, ly, lz) : Block.AIR;
-    }
-
-    private void uploadToGPU(FloatBuffer vBuf, IntBuffer iBuf) {
-        if (vao != 0) {
-            glDeleteVertexArrays(vao);
-            glDeleteBuffers(vbo);
-            glDeleteBuffers(ebo);
-        }
-
-        vao = glGenVertexArrays();
-        vbo = glGenBuffers();
-        ebo = glGenBuffers();
-
-        glBindVertexArray(vao);
-
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, vBuf, GL_DYNAMIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, iBuf, GL_DYNAMIC_DRAW);
-
-        int stride = VERTEX_FLOATS * Float.BYTES;
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);
-        glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, 2, GL_FLOAT, false, stride, 12L);
-        glEnableVertexAttribArray(1);
-
-        glVertexAttribPointer(2, 1, GL_FLOAT, false, stride, 20L);
-        glEnableVertexAttribArray(2);
-
-        glBindVertexArray(0);
-    }
-
 
     public void render() {
         if (indexCount == 0) return;
@@ -218,16 +119,61 @@ public class ChunkRenderer {
         glBindVertexArray(0);
     }
 
+    public void renderWater() {
+        if (wIndexCount == 0) return;
+        glBindVertexArray(wVao);
+        glDrawElements(GL_TRIANGLES, wIndexCount, GL_UNSIGNED_INT, 0L);
+        glBindVertexArray(0);
+    }
+
+
+    private void upload(FloatBuffer vb, IntBuffer ib, boolean water) {
+        int myVao, myVbo, myEbo;
+
+        if (water) {
+            if (wVao != 0) { glDeleteVertexArrays(wVao); glDeleteBuffers(wVbo); glDeleteBuffers(wEbo); }
+            wVao = myVao = glGenVertexArrays();
+            wVbo = myVbo = glGenBuffers();
+            wEbo = myEbo = glGenBuffers();
+        } else {
+            if (vao != 0) { glDeleteVertexArrays(vao); glDeleteBuffers(vbo); glDeleteBuffers(ebo); }
+            vao = myVao = glGenVertexArrays();
+            vbo = myVbo = glGenBuffers();
+            ebo = myEbo = glGenBuffers();
+        }
+
+        glBindVertexArray(myVao);
+        glBindBuffer(GL_ARRAY_BUFFER, myVbo);
+        glBufferData(GL_ARRAY_BUFFER, vb, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, myEbo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, GL_DYNAMIC_DRAW);
+
+        int stride = VERT_FLOATS * Float.BYTES;
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, stride, 12L);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 1, GL_FLOAT, false, stride, 20L);
+        glEnableVertexAttribArray(2);
+        glBindVertexArray(0);
+    }
+
     public void delete() {
+        if (vao  != 0) { glDeleteVertexArrays(vao);  glDeleteBuffers(vbo);  glDeleteBuffers(ebo);  }
+        if (wVao != 0) { glDeleteVertexArrays(wVao); glDeleteBuffers(wVbo); glDeleteBuffers(wEbo); }
+        vao = vbo = ebo = wVao = wVbo = wEbo = 0;
+        indexCount = wIndexCount = 0;
+    }
 
-        if (vao != 0) glDeleteVertexArrays(vao);
-        if (vbo != 0) glDeleteBuffers(vbo);
-        if (ebo != 0) glDeleteBuffers(ebo);
-
-        vao = 0;
-        vbo = 0;
-        ebo = 0;
-
-        indexCount = 0;
+    private Block getNeighborFast(Chunk self,
+                                   Chunk nN, Chunk nS, Chunk nW, Chunk nE,
+                                   int lx, int ly, int lz) {
+        if (ly < 0 || ly >= Chunk.HEIGHT) return Block.AIR;
+        if (lx >= 0 && lx < Chunk.SIZE && lz >= 0 && lz < Chunk.SIZE)
+            return self.getBlock(lx, ly, lz);
+        if (lz < 0)            return (nN != null) ? nN.getBlock(lx, ly, Chunk.SIZE-1) : Block.AIR;
+        if (lz >= Chunk.SIZE)  return (nS != null) ? nS.getBlock(lx, ly, 0)           : Block.AIR;
+        if (lx < 0)            return (nW != null) ? nW.getBlock(Chunk.SIZE-1, ly, lz) : Block.AIR;
+        return                         (nE != null) ? nE.getBlock(0, ly, lz)            : Block.AIR;
     }
 }

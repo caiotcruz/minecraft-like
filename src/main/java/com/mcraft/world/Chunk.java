@@ -62,6 +62,15 @@ public class Chunk {
         renderer.render();
     }
 
+    public void renderWater(Shader shader) {
+        float[] model = {
+            1,0,0,0, 0,1,0,0, 0,0,1,0,
+            chunkX*(float)Chunk.SIZE, 0, chunkZ*(float)Chunk.SIZE, 1
+        };
+        shader.setMatrix4("uModel", model);
+        renderer.renderWater();
+    }
+
     public void deleteMesh() {
         renderer.delete(); 
         dirty = true;     

@@ -348,20 +348,12 @@ public class TextureAtlas {
             return new int[]{ r, g, 20, 220 };
         }
 
-        if (col == 13 && row == 12) {
-
-            boolean wave =
-                ((px + py) % 4 == 0);
-
-            int b = wave ? 220 : 170 + n * 4;
-            int g = wave ? 130 : 100 + n * 2;
-
-            return new int[]{
-                20,
-                clamp(g),
-                clamp(b),
-                180
-            };
+        // Água
+        if (col == 13 && row == 12) { 
+            boolean wave = ((px + py * 3) % 5 == 0);
+            int b = wave ? 210 : 158 + n * 4;
+            int g = wave ? 130 : 95  + n * 2;
+            return new int[]{ 18, clamp(g), clamp(b), 165 }; 
         }
 
         if (col == 11 && row == 2) {
