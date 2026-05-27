@@ -201,36 +201,30 @@ public class WorldGen {
         return blocks;
     }
 
-    private void generateTreesForBiome(byte[] blocks, int chunkX, int chunkZ,
-                                     int size, int height) {
-        Random rng = new Random(
-            (long) chunkX * 341_873_128_712L + (long) chunkZ * 132_897_987_541L);
-
-        double cx = (chunkX + 0.5) * size, cz = (chunkZ + 0.5) * size;
+    private void generateTreesForBiome(byte[] blocks, int chunkX, int chunkZ, int size, int height) {
+        double cx = (chunkX + 0.5) * size;
+        double cz = (chunkZ + 0.5) * size;
         Biome biome = getBiome(cx, cz);
-        int count = (int)(biome.treesPerChunk * (0.5 + rng.nextDouble() * 0.5));
-    
+
+        int maxTrees = biome.treesPerChunk;
+        if (maxTrees == 0) return;
+
+        int count = chunkRandInt(chunkX, chunkZ, 0, maxTrees + 1);
 
         for (int t = 0; t < count; t++) {
-            int tx = rng.nextInt(size - 4) + 2;
-            int tz = rng.nextInt(size - 4) + 2;
+            int tx = chunkRandInt(chunkX, chunkZ, t * 4 + 1, size - 4) + 2;
+            int tz = chunkRandInt(chunkX, chunkZ, t * 4 + 2, size - 4) + 2;
 
             int ty = height - 1;
-            while (ty > 0) {
-                int idx = ty * size * size + tz * size + tx;
-                if (blocks[idx] != Block.AIR.id) break;
-                ty--;
-            }
-
-            int surfIdx = ty * size * size + tz * size + tx;
+            while (ty > 0 && blocks[ty * size * size + tz * size + tx] == Block.AIR.id) ty--;
             if (ty <= 0 || ty >= height - 8) continue;
-            if (blocks[surfIdx] != (byte) Block.GRASS.id) continue;
+            if (blocks[ty * size * size + tz * size + tx] != (byte) Block.GRASS.id) continue;
 
-            int trunkH = 4 + rng.nextInt(2); 
+            int trunkH = 4 + chunkRandInt(chunkX, chunkZ, t * 4 + 3, 2);
 
             for (int dy = 1; dy <= trunkH; dy++) {
-                int idx = (ty + dy) * size * size + tz * size + tx;
-                if ((ty + dy) < height) blocks[idx] = (byte) Block.WOOD_LOG.id;
+                int y = ty + dy;
+                if (y < height) blocks[y * size * size + tz * size + tx] = (byte) Block.WOOD_LOG.id;
             }
 
             int leafBase = ty + trunkH;
@@ -240,13 +234,9 @@ public class WorldGen {
                         int lx = tx + dx, ly = leafBase + dy, lz = tz + dz;
                         if (lx < 0 || lx >= size || lz < 0 || lz >= size) continue;
                         if (ly < 0 || ly >= height) continue;
-
-                        if (Math.max(Math.abs(dx), Math.max(Math.abs(dz), Math.abs(dy))) <= 2) {
-                            int idx = ly * size * size + lz * size + lx;
-                            if (blocks[idx] == Block.AIR.id) {
-                                blocks[idx] = (byte) Block.LEAVES.id;
-                            }
-                        }
+                        if (Math.max(Math.abs(dx), Math.max(Math.abs(dz), Math.abs(dy))) > 2) continue;
+                        int idx = ly * size * size + lz * size + lx;
+                        if (blocks[idx] == Block.AIR.id) blocks[idx] = (byte) Block.LEAVES.id;
                     }
                 }
             }
@@ -327,6 +317,14 @@ public class WorldGen {
         return lerp(v,
             lerp(u, grad(aa, xf, yf),     grad(ba, xf-1, yf)),
             lerp(u, grad(ab, xf, yf-1),   grad(bb, xf-1, yf-1)));
+    }
+
+    private static int chunkRandInt(int cx, int cz, int idx, int bound) {
+        long h = (long) cx * 341_873_128_712L
+            ^ (long) cz * 132_897_987_541L
+            ^ (long) idx * 16_764_573L;
+        h = h * 2_685_548_017L + 0x5DEECE66DL;
+        return (int) (((h >>> 33) & 0x7FFF_FFFFL) % bound);
     }
 
     public Biome getBiome(double wx, double wz) {

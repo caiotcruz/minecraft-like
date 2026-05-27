@@ -115,7 +115,6 @@ public class ChunkRenderer {
                     Block block = chunk.getBlock(x, y, z);
                     if (!block.solid) continue;
 
-                    // Coordenadas globais (para contexto, mas não usadas no lookup)
                     for (int face = 0; face < 6; face++) {
                         int[] dir = FACE_DIR[face];
                         int nx = x + dir[0];
@@ -175,7 +174,6 @@ public class ChunkRenderer {
         if (lx < 0) {
             return (nWest != null) ? nWest.getBlock(Chunk.SIZE - 1, ly, lz) : Block.AIR;
         }
-        //  (X+)
         return (nEast != null) ? nEast.getBlock(0, ly, lz) : Block.AIR;
     }
 

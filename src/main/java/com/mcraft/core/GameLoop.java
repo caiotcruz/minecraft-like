@@ -468,7 +468,7 @@ public class GameLoop {
 
         for (Mob mob : mobs.getMobs()) {
             float dx = mob.getX() - cx;
-            float dy = mob.getY() + mob.getHeight()/2f - cy; // centro do mob
+            float dy = mob.getY() + mob.getHeight()/2f - cy;
             float dz = mob.getZ() - cz;
             float dist = (float) Math.sqrt(dx*dx + dy*dy + dz*dz);
             if (dist < REACH && dist < nearestDist) {
@@ -478,7 +478,7 @@ public class GameLoop {
         }
 
         if (nearest != null) {
-            nearest.damage(5); // dano por soco: 5 HP
+            nearest.damage(5);
         }
     }
 
