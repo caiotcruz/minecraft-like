@@ -219,6 +219,13 @@ public class TextureAtlas {
             return new int[]{ v, v, v + (n & 3), 255 };
         }
 
+        //Neve
+        if (col == 2 && row == 4) {
+            int v = 235 + n * 2;
+            int b = 240 + n;
+            return new int[]{ clamp(v), clamp(v), clamp(b), 255 };
+        }
+
         if (col == 3 && row == 0) {
 
             if (py < 4) {

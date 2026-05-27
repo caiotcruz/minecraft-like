@@ -21,7 +21,8 @@ public enum Block {
     LEATHER        (16, "leather",      6, 2, false, 0f),
     RAW_BEEF       (17, "raw_beef",     7, 2, false, 0f),
     ROTTEN_FLESH   (18, "rotten_flesh", 8, 2, false, 0f),
-    GUNPOWDER      (19, "gunpowder",    9, 2, false, 0f);
+    GUNPOWDER      (19, "gunpowder",    9, 2, false, 0f),
+    SNOW (20, "snow", 2, 4, true, 0.2f);
 
     public final int     id;
     public final String  name;

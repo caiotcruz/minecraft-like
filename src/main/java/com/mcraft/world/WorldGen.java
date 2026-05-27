@@ -8,6 +8,8 @@ public class WorldGen {
     private final int[] permTemp; 
     private final int[] permHumid;
     private final int[] permCont;
+    private static final int BLEND_RADIUS = 24;
+
 
     private static final int[][] GRAD2 = {
         {1, 1}, {-1, 1}, {1, -1}, {-1, -1},
@@ -18,6 +20,13 @@ public class WorldGen {
         { 1, 1, 0}, {-1, 1, 0}, { 1,-1, 0}, {-1,-1, 0},
         { 1, 0, 1}, {-1, 0, 1}, { 1, 0,-1}, {-1, 0,-1},
         { 0, 1, 1}, { 0,-1, 1}, { 0, 1,-1}, { 0,-1,-1}
+    };
+
+    private static final int[][] ORE_CFG = {
+        {Block.COAL_ORE.id,    2, 128, 7, 20, 40},
+        {Block.IRON_ORE.id,    2,  64, 4, 15, 30},
+        {Block.GOLD_ORE.id,    2,  32, 2, 15, 25},
+        {Block.DIAMOND_ORE.id, 2,  16, 1, 10, 20},
     };
 
     public WorldGen(long seed) {
@@ -109,17 +118,24 @@ public class WorldGen {
     }
 
     private boolean shouldCarve(double wx, int y, double wz, int surfaceY) {
-        double n1 = noise3D(wx / 20.0,         y / 15.0,          wz / 20.0);
-        double n2 = noise3D(wx / 14.0 + 300.0, y / 12.0 + 300.0,  wz / 14.0 + 300.0);
+        if (y <= 2) return false;
+
+        double n1 = noise3D(wx / 22.0,         y / 14.0,          wz / 22.0);
+        double n2 = noise3D(wx / 16.0 + 400.0, y / 11.0 + 400.0,  wz / 16.0 + 400.0);
         double caveVal = n1 * n1 + n2 * n2;
 
-        double threshold = 0.065;
+        double threshold = 0.018;
+
+        double chamberN = Math.abs(noise3D(wx / 40.0 + 800.0, y / 32.0 + 800.0, wz / 40.0 + 800.0));
+        if (chamberN < 0.07) {
+           threshold *= 0.7 + (1.0 - y / 128.0) * 0.6;
+        }
 
         int distToSurface = surfaceY - y;
-        if (distToSurface <= 0)  return false; 
-        if (distToSurface <= 10) threshold *= distToSurface / 10.0;
+        if (distToSurface <= 0)  return false;
+        if (distToSurface < 12) threshold *= (distToSurface / 12.0);
 
-        if (y < 25) threshold *= 1.45;
+        if (y <= 15) threshold *= 0.75;
 
         return caveVal < threshold;
     }
@@ -149,8 +165,7 @@ public class WorldGen {
                 double wz = chunkZ * size + z;
 
                 Biome biome = getBiome(wx, wz);
-                double n = fbm(wx, wz, 5, 120.0, 0.5);
-                int surfaceY = biome.baseHeight + (int)(n * biome.heightVar);
+                int surfaceY = blendedSurfaceY(wx, wz);
                 surfaceY = Math.max(2, Math.min(height - 2, surfaceY));
 
                 for (int y = 0; y < height; y++) {
@@ -162,9 +177,18 @@ public class WorldGen {
                     } else if (y < surfaceY) {
                         blocks[idx] = (byte) biome.subsoilBlock.id;
                     } else if (y == surfaceY) {
-                        blocks[idx] = (y <= biome.seaLevel)
-                            ? (byte) Block.SAND.id
-                            : (byte) biome.surfaceBlock.id;
+                        if (y <= biome.seaLevel) {
+                            blocks[idx] = (byte) Block.SAND.id;
+                        } else if (y >= biome.snowLevel) {
+                            blocks[idx] = (byte) Block.SNOW.id;
+                        } else if (biome == Biome.TUNDRA) {
+                            blocks[idx] = (byte) Block.SNOW.id;
+                        }else if (biome == Biome.MOUNTAINS && y >= surfaceY - 2 && y < surfaceY
+                            && surfaceY > 80 && blocks[idx] == (byte) Block.DIRT.id) {
+                            blocks[idx] = (byte) Block.STONE.id;
+                        } else {
+                            blocks[idx] = (byte) biome.surfaceBlock.id;
+                        }
                     } else {
                         blocks[idx] = (y <= biome.seaLevel)
                             ? (byte) Block.WATER.id
@@ -186,19 +210,41 @@ public class WorldGen {
                     }
                 }
 
-                for (int y = 1; y < surfaceY - 1; y++) {
-                    int idx = y * size * size + z * size + x;
-                    if (blocks[idx] != (byte) Block.STONE.id) continue;
-
-                    byte ore = pickOre(wx, y, wz);
-                    if (ore != 0) blocks[idx] = ore;
-                }
+                placeOreVeins(blocks, chunkX, chunkZ, size, height);
             }
         }
 
        generateTreesForBiome(blocks, chunkX, chunkZ, size, height);
 
         return blocks;
+    }
+
+    private int blendedSurfaceY(double wx, double wz) {
+        double weightSum = 0;
+        double heightSum = 0;
+
+        heightSum += sampleHeight(wx, wz) * 4.0;
+        weightSum += 4.0;
+
+        double[][] neighbors = {
+            {wx + BLEND_RADIUS, wz},
+            {wx - BLEND_RADIUS, wz},
+            {wx, wz + BLEND_RADIUS},
+            {wx, wz - BLEND_RADIUS}
+        };
+        for (double[] nb : neighbors) {
+            heightSum += sampleHeight(nb[0], nb[1]);
+            weightSum += 1.0;
+        }
+
+        int h = (int)(heightSum / weightSum);
+        return Math.max(2, Math.min(Chunk.HEIGHT - 2, h));
+    }
+
+    private int sampleHeight(double wx, double wz) {
+        Biome b = getBiome(wx, wz);
+        double n = fbm(wx, wz, 5, 120.0, 0.5);
+        return b.baseHeight + (int)(n * b.heightVar);
     }
 
     private void generateTreesForBiome(byte[] blocks, int chunkX, int chunkZ, int size, int height) {
@@ -243,57 +289,56 @@ public class WorldGen {
         }
     }
 
-    private byte pickOre(double wx, int y, double wz) {
+    private void placeOreVeins(byte[] blocks, int chunkX, int chunkZ,
+                                int size, int height) {
+        for (int[] cfg : ORE_CFG) {
+            int oreId   = cfg[0];
+            int minY    = cfg[1], maxY = cfg[2];
+            int veins   = cfg[3];
+            int minR10  = cfg[4], maxR10 = cfg[5];
 
-        //Diamante
-        if (y >= 2 && y <= 16) {
-            double nd = Math.abs(
-                noise3D(wx / 5.5 + 400,
-                        y  / 5.5 + 400,
-                        wz / 5.5 + 400)
-            );
+            for (int v = 0; v < veins; v++) {
+                int seed = oreId * 1000 + v;
 
-            if (nd < 0.018)
-                return (byte) Block.DIAMOND_ORE.id;
+                int cx = chunkRandInt(chunkX, chunkZ, seed,     size);
+                int cy = minY + chunkRandInt(chunkX, chunkZ, seed+1, maxY - minY);
+                int cz = chunkRandInt(chunkX, chunkZ, seed+2,   size);
+
+                float radius = (minR10 + chunkRandInt(chunkX, chunkZ, seed+3, maxR10 - minR10)) / 10.0f;
+
+                carveOreBlob(blocks, cx, cy, cz, radius, (byte) oreId, size, height);
+            }
         }
+    }
 
-        //Ouro
-        if (y >= 2 && y <= 32) {
-            double ng = Math.abs(
-                noise3D(wx / 6.5 + 800,
-                        y  / 6.5 + 800,
-                        wz / 6.5 + 800)
-            );
+    private void carveOreBlob(byte[] blocks, int cx, int cy, int cz, float radius, byte oreId, int size, int height) {
+        int r = (int) Math.ceil(radius) + 1;
+        float ry = radius * 0.7f;
 
-            if (ng < 0.024)
-                return (byte) Block.GOLD_ORE.id;
+        for (int dx = -r; dx <= r; dx++) {
+            for (int dy = -r; dy <= r; dy++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    int bx = cx + dx, by = cy + dy, bz = cz + dz;
+
+                    if (bx < 0 || bx >= size) continue;
+                    if (bz < 0 || bz >= size) continue;
+                    if (by <= 0 || by >= height - 1) continue;
+
+                    float dist = (dx*dx) / (radius*radius)
+                            + (dy*dy) / (ry*ry)
+                            + (dz*dz) / (radius*radius);
+
+                    float deform = ((dx*17 ^ dy*31 ^ dz*13) & 0xF) / 24.0f;
+
+                    if (dist + deform > 1.0f) continue;
+
+                    int idx = by * size * size + bz * size + bx;
+                    if (blocks[idx] == (byte) Block.STONE.id) {
+                        blocks[idx] = oreId;
+                    }
+                }
+            }
         }
-
-        //Ferro
-        if (y >= 2 && y <= 64) {
-            double ni = Math.abs(
-                noise3D(wx / 8.0 + 1200,
-                        y  / 8.0 + 1200,
-                        wz / 8.0 + 1200)
-            );
-
-            if (ni < 0.035)
-                return (byte) Block.IRON_ORE.id;
-        }
-
-        //Carvão
-        if (y >= 2 && y <= 128) {
-            double nc = Math.abs(
-                noise3D(wx / 10.0 + 1600,
-                        y  / 10.0 + 1600,
-                        wz / 10.0 + 1600)
-            );
-
-            if (nc < 0.050)
-                return (byte) Block.COAL_ORE.id;
-        }
-
-        return 0;
     }
 
     private int[] buildPerm(Random rng) {

@@ -38,6 +38,7 @@ import com.mcraft.render.Shader;
 import com.mcraft.render.SkyRenderer;
 import com.mcraft.render.TextureAtlas;
 import com.mcraft.ui.InventoryScreen;
+import com.mcraft.world.Biome;
 import com.mcraft.world.Block;
 import com.mcraft.world.DayNightCycle;
 import com.mcraft.world.World;
@@ -85,14 +86,16 @@ public class GameLoop {
     private float unloadTimer = 0f;
     private static final float UNLOAD_INTERVAL = 8f;
 
+    @SuppressWarnings("unused")
+    private Biome currentBiome = Biome.PLAINS;
+
     private InventoryScreen inventoryScreen;
     private boolean         inventoryOpen   = false;
     private boolean         prevEKeyDown    = false;
 
-    @SuppressWarnings("unused")
     private boolean         leftWasDown     = false;
     
-     private boolean         rightWasDown    = false;
+    private boolean         rightWasDown    = false;
     private float[]         ortho2D;
 
     private int   breakX = -1, breakY = -1, breakZ = -1;
@@ -243,6 +246,9 @@ public class GameLoop {
         skyRenderer.update(dt);
 
         mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
+        
+
+        currentBiome = world.getWorldGen().getBiome(player.getX(), player.getZ());
 
         worldGenTimer += dt;
         if (worldGenTimer >= WORLD_GEN_INTERVAL) {

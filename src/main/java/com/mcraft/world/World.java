@@ -339,4 +339,5 @@ public class World {
 
     public long getSeed() { return seed; }
     public WorldIO getWorldIO() {return worldIO;}
+    public WorldGen getWorldGen() { return gen; }
 }
