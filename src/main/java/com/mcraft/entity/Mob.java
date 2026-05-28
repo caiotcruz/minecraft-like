@@ -36,6 +36,10 @@ public class Mob extends Entity {
     private int     health;
     private boolean dead   = false;
 
+    private float hurtTimer   = 0f;
+    private static final float HURT_DURATION = 0.25f;
+
+
     public Mob(Type type, float x, float y, float z) {
         super(x, y, z, type.w, type.h);
         this.type = type;
@@ -56,6 +60,8 @@ public class Mob extends Entity {
         float distToPlayer = (float) Math.sqrt(dx*dx + dz*dz);
 
         state = (distToPlayer < type.senseRadius) ? AIState.SEEK : AIState.WANDER;
+
+        if (hurtTimer > 0) hurtTimer = Math.max(0, hurtTimer - dt);
 
         switch (state) {
             case WANDER -> updateWander(dt);
@@ -184,9 +190,10 @@ public class Mob extends Entity {
         };
     }
 
-        public void damage(int amount) {
+    public void damage(int amount) {
         if (dead) return;
-        health -= amount;
+        health    -= amount;
+        hurtTimer  = HURT_DURATION;
         if (health <= 0) dead = true;
     }
 
@@ -196,7 +203,11 @@ public class Mob extends Entity {
     }
 
     public boolean isDead() { return dead; }
-    
+    public boolean isHurt()       { return hurtTimer > 0; }
+
+    public float   getHurtTimer() { return hurtTimer; }
+    public float getHurtDuration() {return HURT_DURATION;}
+
     public Type   getType()  { return type; }
     public AIState getState() { return state; }
 
