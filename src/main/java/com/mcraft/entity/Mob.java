@@ -27,7 +27,7 @@ public class Mob extends Entity {
     private final Type    type;
     private final Random  rng = new Random();
 
-    private enum AIState { WANDER, SEEK }
+    public enum AIState { WANDER, SEEK }
     private AIState  state       = AIState.WANDER;
     private float    wanderTimer = 0;
     private float    wanderDirX  = 0;

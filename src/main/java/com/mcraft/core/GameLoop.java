@@ -5,6 +5,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_1;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
@@ -101,6 +102,9 @@ public class GameLoop {
     private int   breakX = -1, breakY = -1, breakZ = -1;
     private float breakElapsed  = 0f;
     private float breakDuration = 0f;
+
+    private float deathTimer = 0f;
+    private static final float RESPAWN_DELAY = 3.0f;
 
     @SuppressWarnings("unused")
     private int musicSource = -1;
@@ -242,11 +246,30 @@ public class GameLoop {
     }
 
     private void gameTick(float dt) {
+        
+        if (player.isDead()) {
+            deathTimer += dt;
+            float alpha = Math.min(1.0f, deathTimer / 1.5f);
+            hud.setDeathAlpha(alpha);
+
+            if (deathTimer >= 1.5f && input.isKeyDown(GLFW_KEY_R)) {
+                doRespawn();
+            }
+            if (deathTimer >= RESPAWN_DELAY) {
+                doRespawn();
+            }
+            return; 
+        }
+
+        hud.setDeathAlpha(Math.max(0f, hud.getDeathAlpha() - dt * 2f));
+
         dayNight.update(dt);
         skyRenderer.update(dt);
 
         mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
+        applyMobDamage(dt);
         
+        hud.setHealth(player.getHealth(), player.getMaxHealth());
 
         currentBiome = world.getWorldGen().getBiome(player.getX(), player.getZ());
 
@@ -526,6 +549,34 @@ public class GameLoop {
         hud.setBreakProgress(breakProgress);
         leftWasDown  = leftDown;
         rightWasDown = rightDown;
+    }
+
+    private void doRespawn() {
+        player.respawn();
+        deathTimer = 0f;
+        hud.setDeathAlpha(0f);
+        player.getInventory().clear();
+    }
+
+    private void applyMobDamage(float dt) {
+        float px = player.getX(), pz = player.getZ();
+        boolean hit = false;
+
+        for (com.mcraft.entity.Mob mob : mobs.getMobs()) {
+            if (mob.getType() != com.mcraft.entity.Mob.Type.ZOMBIE
+            && mob.getType() != com.mcraft.entity.Mob.Type.CREEPER) continue;
+            if (mob.getState() != com.mcraft.entity.Mob.AIState.SEEK) continue;
+
+            float dx = mob.getX() - px;
+            float dz = mob.getZ() - pz;
+            float dist = (float) Math.sqrt(dx*dx + dz*dz);
+
+            if (dist < 1.2f) {
+                hit = player.takeDamage(2);
+            }
+
+            if (hit){}
+        }
     }
 
     private void cleanup() {

@@ -2,7 +2,6 @@ package com.mcraft.player;
 
 import com.mcraft.render.Camera;
 import com.mcraft.ui.Inventory;
-import com.mcraft.world.Block;
 import com.mcraft.world.Chunk;
 import com.mcraft.world.World;
 
@@ -15,6 +14,16 @@ public class Player {
     private float velX, velY, velZ;
     private boolean onGround = false;
 
+    private int   health    = 20;   
+    private int   maxHealth = 20;
+    private float invincibleTimer = 0f; 
+    private static final float INVINCIBLE_TIME = 0.5f;
+
+    private float fallStart = Float.NaN;
+    private boolean wasFalling = false;
+
+     private boolean dead = false;
+
     private static final float GRAVITY    = -25.0f;
     private static final float JUMP_FORCE =   9.0f;
     private static final float MOVE_SPEED =   5.0f;
@@ -22,21 +31,27 @@ public class Player {
 
     private final Camera    camera;
     private final World     world;
-    private final Inventory inventory = new Inventory();
+    private final com.mcraft.ui.Inventory inventory;
+
+    private final float spawnX, spawnY, spawnZ;
 
     public Player(float x, float y, float z, World world) {
+        this.spawnX = x; this.spawnY = y; this.spawnZ = z;
         this.x = x; this.y = y; this.z = z;
         this.world  = world;
         this.camera = new Camera(x, y + EYE_HEIGHT, z);
 
-        inventory.addItem(Block.GRASS.id,   64);
-        inventory.addItem(Block.STONE.id,   64);
-        inventory.addItem(Block.DIRT.id,    64);
-        inventory.addItem(Block.WOOD_LOG.id, 32);
-        inventory.addItem(Block.PLANKS.id,  32);
+        this.inventory = new com.mcraft.ui.Inventory();
+        inventory.addItem(com.mcraft.world.Block.GRASS.id, 64);
+        inventory.addItem(com.mcraft.world.Block.STONE.id, 64);
+        inventory.addItem(com.mcraft.world.Block.DIRT.id,  64);
     }
 
     public void update(float dx, float dz, boolean jump, float dt) {
+        if (dead) return;
+        
+        if (invincibleTimer > 0) invincibleTimer -= dt;
+
         float yaw  = camera.getYaw();   
         float cos  = (float) Math.cos(yaw);
         float sin  = (float) Math.sin(yaw);
@@ -50,8 +65,12 @@ public class Player {
         velX = movX;
         velZ = movZ;
 
-        if (!onGround) velY += GRAVITY * dt;
-        velY = Math.max(velY, -50f); 
+        if (!onGround) {
+            velY += GRAVITY * dt;
+            velY = Math.max(velY, -50f);
+
+            if (!wasFalling) { fallStart = y; wasFalling = true; }
+        }
 
         if (jump && onGround) {
             velY = JUMP_FORCE;
@@ -59,6 +78,16 @@ public class Player {
         }
 
         moveAndCollide(dt);
+
+        if (onGround && wasFalling && !Float.isNaN(fallStart)) {
+            float dropped = fallStart - y; 
+            if (dropped > 3.0f) {
+                int dmg = (int)((dropped - 3.0f) * 1.2f); 
+                if (dmg > 0) takeDamage(dmg);
+            }
+            wasFalling = false; fallStart = Float.NaN;
+        }
+        if (!onGround) wasFalling = true;
 
         camera.setPosition(x, y + EYE_HEIGHT, z);
     }
@@ -111,11 +140,36 @@ public class Player {
         return false;
     }
 
+    public boolean takeDamage(int amount) {
+        if (dead || invincibleTimer > 0) return false;
+        health -= amount;
+        invincibleTimer = INVINCIBLE_TIME;
+        if (health <= 0) { health = 0; dead = true; }
+        return true;
+    }
+
+    public void heal(int amount) {
+        if (dead) return;
+        health = Math.min(maxHealth, health + amount);
+    }
+
+    public void respawn() {
+        x = spawnX; y = spawnY; z = spawnZ;
+        velX = velY = velZ = 0;
+        health = maxHealth;
+        dead = false; wasFalling = false; fallStart = Float.NaN;
+        invincibleTimer = 1.0f; 
+        camera.setPosition(x, y + EYE_HEIGHT, z);
+    }
+
     public Camera    getCamera()    { return camera; }
-    public Inventory getInventory() { return inventory; } 
+    public com.mcraft.ui.Inventory getInventory() { return inventory; }
     public float     getX()         { return x; }
     public float     getY()         { return y; }
     public float     getZ()         { return z; }
     public boolean   isGrounded()   {return onGround;}
     public Inventory geInventory()  {return inventory;}
+    public boolean   isDead()       { return dead; }
+    public int       getHealth()    { return health; }
+    public int       getMaxHealth() { return maxHealth; }
 }

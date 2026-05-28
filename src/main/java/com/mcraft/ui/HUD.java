@@ -54,6 +54,10 @@ public class HUD {
     private int vao2d, vbo2d, ebo2d;
     private int quadCount;
 
+    private int   playerHealth    = 20;
+    private int   playerMaxHealth = 20;
+    private float deathAlpha      = 0f;
+
     public HUD(int screenW, int screenH, Inventory inventory,
                Shader hudShader, TextureAtlas atlas) {
         this.screenW   = screenW;
@@ -114,6 +118,7 @@ public class HUD {
         hudShader.setInt("uTexture", 0);
 
         beginBatch();
+        drawHearts();
         drawCrosshair();
         drawHotbar();
         flushBatch(false);
@@ -124,6 +129,10 @@ public class HUD {
         
         beginBatch();
         drawHotbarCounts();
+        flushBatch(false);
+
+        beginBatch();
+        if (deathAlpha > 0.01f) drawDeathOverlay();
         flushBatch(false);
 
         glDisable(GL_BLEND);
@@ -227,6 +236,72 @@ public class HUD {
         addQuad(x, y, x + w, y + h, u0, v0, u1, v1, 1, 1, 1, 1);
     }
 
+    private void drawHearts() {
+        int totalHearts = playerMaxHealth / 2;
+        int fullHearts  = playerHealth    / 2;
+        boolean half    = (playerHealth % 2) == 1;
+
+        int heartW = 9, heartH = 8, gap = 1;
+        int startX = 4;
+        int startY = screenH - SLOT_SIZE - 10 - heartH - 6;
+
+        for (int i = 0; i < totalHearts; i++) {
+            int hx = startX + i * (heartW + gap);
+            boolean filled = (i < fullHearts);
+            boolean isHalf = (i == fullHearts && half);
+
+            drawPixelHeart(hx, startY, heartW, heartH, 0.30f, 0.30f, 0.30f, 0.7f);
+
+            if (filled) {
+                drawPixelHeart(hx, startY, heartW, heartH, 0.85f, 0.10f, 0.10f, 1.0f);
+            } else if (isHalf) {
+                drawPixelHeartHalf(hx, startY, heartW, heartH, 0.85f, 0.10f, 0.10f);
+            }
+        }
+    }
+
+    private void drawPixelHeart(int x, int y, int w, int h, float r, float g, float b, float a) {
+        int s = Math.max(1, w / 9); 
+
+        addRect(x + s,     y,       s*2, s*2, r, g, b, a);
+        addRect(x + s*4,   y,       s*2, s*2, r, g, b, a);
+        addRect(x,         y + s*2, s*7, s*2, r, g, b, a);
+        addRect(x + s,     y + s*4, s*5, s,   r, g, b, a);
+        addRect(x + s*2,   y + s*5, s*3, s,   r, g, b, a);
+        addRect(x + s*3,   y + s*6, s,   s,   r, g, b, a);
+    }
+
+    private void drawPixelHeartHalf(int x, int y, int w, int h, float r, float g, float b) {
+        int s   = Math.max(1, w / 9);
+        int mid = x + w / 2; 
+
+        addRect(x + s,   y,       s*2, s*2, r, g, b, 1f);           
+        addRect(x,       y + s*2, mid - x, s*2, r, g, b, 1f);         
+        addRect(x + s,   y + s*4, mid - x - s, s, r, g, b, 1f);
+        addRect(x + s*2, y + s*5, mid - x - s*2, s, r, g, b, 1f);
+    }
+
+    private void drawDeathOverlay() {
+        addRect(0, 0, screenW, screenH, 0.6f, 0.0f, 0.0f, deathAlpha * 0.65f);
+
+        if (deathAlpha > 0.5f) {
+            String msg = "YOU DIED";
+            int pixSize = 4;
+            int totalW = 8 * (PixelFont.measureWidth(8) + 1) * pixSize;
+            int tx = (screenW - totalW) / 2;
+            int ty = (screenH / 2) - 20;
+
+            for (int i = 0; i < msg.length(); i++) {
+                char c = msg.charAt(i);
+                if (c >= '0' && c <= '9') {
+                    PixelFont.drawIntShadow(this::addRect,
+                        tx + i * (PixelFont.measureWidth(c-'0')+1)*pixSize,
+                        ty, pixSize, c - '0', 1f, 1f, 1f);
+                }
+            }
+        }
+    }
+
     private void addQuad(float x0, float y0, float x1, float y1,
                      float u0, float v0, float u1, float v1,
                      float r, float g, float b, float a) {
@@ -295,4 +370,15 @@ public class HUD {
     public float getBreakProgress(){
         return this.breakProgress;
     }
+
+    public void setHealth(int health, int maxHealth) {
+        if (this.playerHealth != health || this.playerMaxHealth != maxHealth) {
+            this.playerHealth    = health;
+            this.playerMaxHealth = maxHealth;
+        }
+    }
+
+    public void setDeathAlpha(float a) { this.deathAlpha = a; }
+
+    public float getDeathAlpha() {return this.deathAlpha;}
 }

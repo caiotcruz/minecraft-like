@@ -73,6 +73,14 @@ public class Inventory {
 
         this.selectedSlot = selectedSlot;
     }
+    
+    public void clear() {
+        for (int i = 0; i < TOTAL_SLOTS; i++) {
+            clearSlot(i);
+        }
+
+        selectedSlot = 0;
+    }
 
     public int[] getItems() {
         return itemId;
