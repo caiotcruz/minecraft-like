@@ -248,45 +248,125 @@ public class WorldGen {
     }
 
     private void generateTreesForBiome(byte[] blocks, int chunkX, int chunkZ, int size, int height) {
-        double cx = (chunkX + 0.5) * size;
-        double cz = (chunkZ + 0.5) * size;
-        Biome biome = getBiome(cx, cz);
+        double cxW = (chunkX + 0.5) * size, czW = (chunkZ + 0.5) * size;
+        Biome biome = getBiome(cxW, czW);
 
-        int maxTrees = biome.treesPerChunk;
-        if (maxTrees == 0) return;
-
-        int count = chunkRandInt(chunkX, chunkZ, 0, maxTrees + 1);
+        if (biome.treesPerChunk == 0) return;
+        int count = chunkRandInt(chunkX, chunkZ, 0, biome.treesPerChunk + 1);
 
         for (int t = 0; t < count; t++) {
-            int tx = chunkRandInt(chunkX, chunkZ, t * 4 + 1, size - 4) + 2;
-            int tz = chunkRandInt(chunkX, chunkZ, t * 4 + 2, size - 4) + 2;
+            int tx = chunkRandInt(chunkX, chunkZ, t*4+1, size-4) + 2;
+            int tz = chunkRandInt(chunkX, chunkZ, t*4+2, size-4) + 2;
 
             int ty = height - 1;
-            while (ty > 0 && blocks[ty * size * size + tz * size + tx] == Block.AIR.id) ty--;
-            if (ty <= 0 || ty >= height - 8) continue;
-            if (blocks[ty * size * size + tz * size + tx] != (byte) Block.GRASS.id) continue;
+            while (ty > 0 && blocks[ty*size*size + tz*size + tx] == Block.AIR.id) ty--;
+            if (ty <= 2 || ty >= height - 12) continue;
 
-            int trunkH = 4 + chunkRandInt(chunkX, chunkZ, t * 4 + 3, 2);
+            byte surface = blocks[ty * size * size + tz * size + tx];
 
-            for (int dy = 1; dy <= trunkH; dy++) {
-                int y = ty + dy;
-                if (y < height) blocks[y * size * size + tz * size + tx] = (byte) Block.WOOD_LOG.id;
-            }
-
-            int leafBase = ty + trunkH;
-            for (int dx = -2; dx <= 2; dx++) {
-                for (int dz = -2; dz <= 2; dz++) {
-                    for (int dy = -1; dy <= 2; dy++) {
-                        int lx = tx + dx, ly = leafBase + dy, lz = tz + dz;
-                        if (lx < 0 || lx >= size || lz < 0 || lz >= size) continue;
-                        if (ly < 0 || ly >= height) continue;
-                        if (Math.max(Math.abs(dx), Math.max(Math.abs(dz), Math.abs(dy))) > 2) continue;
-                        int idx = ly * size * size + lz * size + lx;
-                        if (blocks[idx] == Block.AIR.id) blocks[idx] = (byte) Block.LEAVES.id;
-                    }
+            switch (biome) {
+                case FOREST, PLAINS -> {
+                    if (surface != (byte)Block.GRASS.id) continue;
+                    plantOakTree(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
                 }
+                case TAIGA -> {
+                    if (surface != (byte)Block.GRASS.id && surface != (byte)Block.SNOW.id) continue;
+                    plantSpruceTree(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
+                }
+                case SWAMP -> {
+                    if (surface != (byte)Block.GRASS.id) continue;
+                    plantSwampTree(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
+                }
+                case MOUNTAINS -> {
+                    if (surface != (byte)Block.GRASS.id && surface != (byte)Block.STONE.id) continue;
+                    if (chunkRandFloat(chunkX, chunkZ, t*4+3) < 0.4f) 
+                        plantOakTree(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
+                }
+                case DESERT -> {
+                    if (surface != (byte)Block.SAND.id) continue;
+                    plantCactus(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
+                }
+                default -> {} 
             }
         }
+    }
+
+    private void plantOakTree(byte[] blocks, int tx, int ty, int tz, int size, int height, int cx, int cz, int t) {
+        int trunkH = 4 + chunkRandInt(cx, cz, t*10+5, 2); 
+
+        for (int dy = 1; dy <= trunkH; dy++) setBlock(blocks, tx, ty+dy, tz, Block.WOOD_LOG, size, height);
+
+        int leafTop = ty + trunkH;
+        for (int dx = -2; dx <= 2; dx++)
+            for (int dz = -2; dz <= 2; dz++)
+                for (int dy = -1; dy <= 2; dy++) {
+                    if (Math.max(Math.abs(dx), Math.max(Math.abs(dz), Math.abs(dy))) > 2) continue;
+                    if (dx==0 && dz==0 && dy <= 0) continue; 
+                    setBlockIfAir(blocks, tx+dx, leafTop+dy, tz+dz, Block.LEAVES, size, height);
+                }
+    }
+
+    private void plantSpruceTree(byte[] blocks, int tx, int ty, int tz, int size, int height, int cx, int cz, int t) {
+        int trunkH = 6 + chunkRandInt(cx, cz, t*10+5, 3); 
+
+        for (int dy = 1; dy <= trunkH; dy++) setBlock(blocks, tx, ty+dy, tz, Block.WOOD_LOG, size, height);
+
+        int[] layerRadius = {0, 1, 1, 2, 2, 2};
+        int startLayer = ty + trunkH;
+
+        for (int layer = 0; layer < layerRadius.length; layer++) {
+            int ly   = startLayer - layer;
+            int lrad = layerRadius[layer];
+            for (int dx = -lrad; dx <= lrad; dx++)
+                for (int dz = -lrad; dz <= lrad; dz++) {
+                    if (Math.abs(dx) == lrad && Math.abs(dz) == lrad) continue;
+                    setBlockIfAir(blocks, tx+dx, ly, tz+dz, Block.LEAVES, size, height);
+                }
+        }
+    }
+
+    private void plantSwampTree(byte[] blocks, int tx, int ty, int tz, int size, int height, int cx, int cz, int t) {
+        int trunkH = 3 + chunkRandInt(cx, cz, t*10+5, 3); 
+        for (int dy = 1; dy <= trunkH; dy++) setBlock(blocks, tx, ty+dy, tz, Block.WOOD_LOG, size, height);
+
+        int leafTop = ty + trunkH;
+        for (int dx = -3; dx <= 3; dx++)
+            for (int dz = -3; dz <= 3; dz++)
+                for (int dy = 0; dy <= 1; dy++) {
+                    int dist = dx*dx + dz*dz;
+                    if (dist > 9) continue; 
+                    setBlockIfAir(blocks, tx+dx, leafTop+dy, tz+dz, Block.LEAVES, size, height);
+                }
+        setBlockIfAir(blocks, tx, leafTop+2, tz, Block.LEAVES, size, height);
+    }
+
+    private void plantCactus(byte[] blocks, int tx, int ty, int tz, int size, int height, int cx, int cz, int t) {
+        int cactusH = 2 + chunkRandInt(cx, cz, t*10+5, 3);
+
+        for (int dy = 1; dy <= cactusH; dy++) {
+            setBlock(blocks, tx, ty+dy, tz, Block.CACTUS, size, height);
+        }
+
+        if (chunkRandFloat(cx, cz, t*10+6) < 0.30f) {
+            int armY  = ty + 1 + chunkRandInt(cx, cz, t*10+7, cactusH - 1);
+            int armLen = 1 + chunkRandInt(cx, cz, t*10+8, 2);
+
+            for (int dx = 1; dx <= armLen; dx++)
+                setBlock(blocks, tx+dx, armY, tz, Block.CACTUS, size, height);
+            for (int dz = 1; dz <= armLen; dz++)
+                setBlock(blocks, tx, armY, tz+dz, Block.CACTUS, size, height);
+        }
+    }
+
+    private void setBlock(byte[] b, int x, int y, int z, Block type, int s, int h) {
+        if (x<0||x>=s||z<0||z>=s||y<=0||y>=h) return;
+        b[y*s*s + z*s + x] = (byte) type.id;
+    }
+
+    private void setBlockIfAir(byte[] b, int x, int y, int z, Block type, int s, int h) {
+        if (x<0||x>=s||z<0||z>=s||y<=0||y>=h) return;
+        if (b[y*s*s + z*s + x] == (byte)Block.AIR.id)
+            b[y*s*s + z*s + x] = (byte) type.id;
     }
 
     private void placeOreVeins(byte[] blocks, int chunkX, int chunkZ,
@@ -370,6 +450,17 @@ public class WorldGen {
             ^ (long) idx * 16_764_573L;
         h = h * 2_685_548_017L + 0x5DEECE66DL;
         return (int) (((h >>> 33) & 0x7FFF_FFFFL) % bound);
+    }
+
+    private static float chunkRandFloat(int cx, int cz, int idx) {
+        long h = (long) cx * 341_873_128_712L
+            ^ (long) cz * 132_897_987_541L
+            ^ (long) idx * 16_764_573L;
+
+        h = h * 2_685_548_017L + 0x5DEECE66DL;
+
+        return ((h >>> 33) & 0x7FFF_FFFFL)
+                / (float) 0x7FFF_FFFF;
     }
 
     public Biome getBiome(double wx, double wz) {

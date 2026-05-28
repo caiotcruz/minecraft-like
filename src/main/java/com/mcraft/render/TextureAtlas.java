@@ -284,6 +284,16 @@ public class TextureAtlas {
             return new int[]{ 0, 0, 0, 0 };
         }
 
+        //Cacto
+        if (col == 6 && row == 4) { 
+            boolean border = (px == 0 || px == 15 || py == 0 || py == 15);
+            boolean spine  = (px % 5 == 0 && py % 3 == 2) || (px % 7 == 3 && py % 5 == 1);
+            if (border) return new int[]{ 25, 100, 25, 255 };
+            if (spine)  return new int[]{ 200, 210, 180, 255 }; 
+            int g = 68 + n * 5;
+            return new int[]{ 20, clamp(g), 20, 255 };
+        }
+
          // Bife Cru
         if (col == 7 && row == 2) {
             boolean dark = ((px + py) % 4 == 0);
