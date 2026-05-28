@@ -32,6 +32,7 @@ import com.mcraft.render.Camera;
 import com.mcraft.render.Shader;
 import com.mcraft.render.TextureAtlas;
 import com.mcraft.world.Block;
+import com.mcraft.player.Player;
 
 public class HUD {
 
@@ -54,16 +55,17 @@ public class HUD {
     private int vao2d, vbo2d, ebo2d;
     private int quadCount;
 
-    private int   playerHealth    = 20;
-    private int   playerMaxHealth = 20;
     private float deathAlpha      = 0f;
+    private final Player player;
+    private float damageFlash    = 0f; 
+    private int   lastHealth     = -1;
 
-    public HUD(int screenW, int screenH, Inventory inventory,
-               Shader hudShader, TextureAtlas atlas) {
+    public HUD (int screenW, int screenH, Inventory inventory, Shader hudShader, TextureAtlas atlas, Player player) {
         this.screenW   = screenW;
         this.screenH   = screenH;
         this.inventory = inventory;
         this.hudShader = hudShader;
+        this.player = player;
         this.atlas     = atlas;
         this.ortho     = Camera.ortho(screenW, screenH);
 
@@ -97,7 +99,7 @@ public class HUD {
     }
 
 
-    public void render() {
+    public void render(float dt) {
 
         quadCount = 0;
 
@@ -118,7 +120,6 @@ public class HUD {
         hudShader.setInt("uTexture", 0);
 
         beginBatch();
-        drawHearts();
         drawCrosshair();
         drawHotbar();
         flushBatch(false);
@@ -129,6 +130,19 @@ public class HUD {
         
         beginBatch();
         drawHotbarCounts();
+        flushBatch(false);
+
+        beginBatch();
+        int curHealth = player.getHealth();
+        if (lastHealth > 0 && curHealth < lastHealth) {
+            damageFlash = 1.0f;
+        }
+        lastHealth = curHealth;
+        if (damageFlash > 0) damageFlash -= dt * 4f; 
+        damageFlash = Math.max(0f, damageFlash);
+
+        drawHearts(curHealth, player.getMaxHealth());
+        if (damageFlash > 0.01f)   drawDamageFlash();
         flushBatch(false);
 
         beginBatch();
@@ -236,49 +250,56 @@ public class HUD {
         addQuad(x, y, x + w, y + h, u0, v0, u1, v1, 1, 1, 1, 1);
     }
 
-    private void drawHearts() {
-        int totalHearts = playerMaxHealth / 2;
-        int fullHearts  = playerHealth    / 2;
-        boolean half    = (playerHealth % 2) == 1;
+    private void drawHearts(int health, int maxHealth) {
+        int totalHearts = maxHealth / 2;
+        int fullHearts  = health    / 2;
+        boolean hasHalf = (health % 2) == 1;
 
-        int heartW = 9, heartH = 8, gap = 1;
-        int startX = 4;
-        int startY = screenH - SLOT_SIZE - 10 - heartH - 6;
+        int HW = 18, HH = 16, GAP = 2; 
+        int totalW = totalHearts * (HW + GAP) - GAP;
+
+        int hotbarW = Inventory.HOTBAR_SIZE * (SLOT_SIZE + PADDING) - PADDING;
+        int hotbarX = (screenW - hotbarW) / 2;
+        int hotbarY = screenH - SLOT_SIZE - 10;
+        int startX  = hotbarX + (hotbarW - totalW) / 2;
+        int startY  = hotbarY - HH - 4;
 
         for (int i = 0; i < totalHearts; i++) {
-            int hx = startX + i * (heartW + gap);
-            boolean filled = (i < fullHearts);
-            boolean isHalf = (i == fullHearts && half);
+            int hx = startX + i * (HW + GAP);
 
-            drawPixelHeart(hx, startY, heartW, heartH, 0.30f, 0.30f, 0.30f, 0.7f);
+            drawPixelHeart(hx, startY, HW, HH, 0.28f, 0.28f, 0.28f, 0.8f);
 
-            if (filled) {
-                drawPixelHeart(hx, startY, heartW, heartH, 0.85f, 0.10f, 0.10f, 1.0f);
-            } else if (isHalf) {
-                drawPixelHeartHalf(hx, startY, heartW, heartH, 0.85f, 0.10f, 0.10f);
+            if (i < fullHearts) {
+                float red  = 0.85f + damageFlash * 0.15f;
+                float green= 0.10f - damageFlash * 0.10f;
+                drawPixelHeart(hx, startY, HW, HH, red, green, 0.10f, 1.0f);
+            } else if (i == fullHearts && hasHalf) {
+                drawPixelHeartHalf(hx, startY, HW, HH, 0.85f, 0.10f, 0.10f);
             }
         }
     }
 
     private void drawPixelHeart(int x, int y, int w, int h, float r, float g, float b, float a) {
-        int s = Math.max(1, w / 9); 
+        int s = w / 9; 
 
-        addRect(x + s,     y,       s*2, s*2, r, g, b, a);
-        addRect(x + s*4,   y,       s*2, s*2, r, g, b, a);
-        addRect(x,         y + s*2, s*7, s*2, r, g, b, a);
-        addRect(x + s,     y + s*4, s*5, s,   r, g, b, a);
-        addRect(x + s*2,   y + s*5, s*3, s,   r, g, b, a);
-        addRect(x + s*3,   y + s*6, s,   s,   r, g, b, a);
+        addRect(x + s,   y,       s*3, s*2, r, g, b, a);
+        addRect(x + s*5, y,       s*3, s*2, r, g, b, a);
+        addRect(x,       y + s*2, s*9, s*2, r, g, b, a);
+        addRect(x + s,   y + s*4, s*7, s*2, r, g, b, a);
+        addRect(x + s*2, y + s*6, s*5, s,   r, g, b, a);
+        addRect(x + s*3, y + s*7, s*3, s,   r, g, b, a);
+        addRect(x + s*4, y + s*8, s,   s,   r, g, b, a);
     }
 
-    private void drawPixelHeartHalf(int x, int y, int w, int h, float r, float g, float b) {
-        int s   = Math.max(1, w / 9);
-        int mid = x + w / 2; 
+    private void drawPixelHeartHalf(int x, int y, int w, int h,
+                                    float r, float g, float b) {
+        int s   = w / 9;
+        int mid = x + w / 2;
 
-        addRect(x + s,   y,       s*2, s*2, r, g, b, 1f);           
-        addRect(x,       y + s*2, mid - x, s*2, r, g, b, 1f);         
-        addRect(x + s,   y + s*4, mid - x - s, s, r, g, b, 1f);
-        addRect(x + s*2, y + s*5, mid - x - s*2, s, r, g, b, 1f);
+        addRect(x + s,   y,       s*3, s*2, r, g, b, 1f);
+        addRect(x,       y + s*2, mid-x, s*2, r, g, b, 1f);
+        addRect(x + s,   y + s*4, mid-x-s, s*2, r, g, b, 1f);
+        addRect(x + s*2, y + s*6, mid-x-s*2, s, r, g, b, 1f);
     }
 
     private void drawDeathOverlay() {
@@ -300,6 +321,11 @@ public class HUD {
                 }
             }
         }
+    }
+
+    private void drawDamageFlash() {
+        float a = damageFlash * 0.45f;
+        addRect(0, 0, screenW, screenH, 0.75f, 0f, 0f, a);
     }
 
     private void addQuad(float x0, float y0, float x1, float y1,
@@ -369,13 +395,6 @@ public class HUD {
 
     public float getBreakProgress(){
         return this.breakProgress;
-    }
-
-    public void setHealth(int health, int maxHealth) {
-        if (this.playerHealth != health || this.playerMaxHealth != maxHealth) {
-            this.playerHealth    = health;
-            this.playerMaxHealth = maxHealth;
-        }
     }
 
     public void setDeathAlpha(float a) { this.deathAlpha = a; }

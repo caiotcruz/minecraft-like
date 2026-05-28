@@ -6,6 +6,8 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_1;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
@@ -153,7 +155,7 @@ public class GameLoop {
 
         hud = new com.mcraft.ui.HUD(
             window.getWidth(), window.getHeight(),
-            player.getInventory(), hudShader, atlas
+            player.getInventory(), hudShader, atlas, player
         );
 
         mobs = new MobManager(drops -> {
@@ -235,7 +237,7 @@ public class GameLoop {
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             render3D();
-            hud.render();
+            hud.render(dt);
 
             if (inventoryOpen) {
                 inventoryScreen.render();
@@ -269,8 +271,6 @@ public class GameLoop {
         mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
         applyMobDamage(dt);
         
-        hud.setHealth(player.getHealth(), player.getMaxHealth());
-
         currentBiome = world.getWorldGen().getBiome(player.getX(), player.getZ());
 
         worldGenTimer += dt;
@@ -354,7 +354,33 @@ public class GameLoop {
         if (input.isKeyDown(GLFW_KEY_S)) dz += 1;
         if (input.isKeyDown(GLFW_KEY_A)) dx -= 1;
         if (input.isKeyDown(GLFW_KEY_D)) dx += 1;
+
+        //Debug
         
+        //Deixar a noite
+        if(input.isKeyDown(GLFW_KEY_F2)) dayNight.setTime(0.8f);
+
+        // Spawnar Zumbi 
+        if (input.isKeyDown(GLFW_KEY_F3)) {
+
+            float[] front = camera.getFront();
+
+            float spawnX = player.getX() + front[0] * 3f;
+            float spawnY = player.getY();
+            float spawnZ = player.getZ() + front[2] * 3f;
+
+            mobs.getMobs().add(
+                new Mob(
+                    Mob.Type.ZOMBIE,
+                    spawnX,
+                    spawnY,
+                    spawnZ
+                )
+            );
+        }
+        //-------
+
+
         boolean jump = input.isKeyDown(GLFW_KEY_SPACE);
 
         player.update(dx, dz, jump, dt);
