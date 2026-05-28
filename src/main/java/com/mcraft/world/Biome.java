@@ -10,7 +10,7 @@ public enum Biome {
     TAIGA    ("Taiga",   Block.GRASS, Block.DIRT,      62,  64,  20,  5,  105, 0xA8C0B8),
     TUNDRA   ("Tundra",  Block.SNOW,  Block.DIRT,      62,  59,  10,  0,   64, 0xC8D8E0),
     SWAMP    ("Swamp",   Block.GRASS, Block.DIRT,      60,  60,   8,  3,  999, 0x78907A),
-    OCEAN    ("Ocean",   Block.SAND,  Block.SAND,      72,  34,   8,  0,  999, 0x607898);
+    OCEAN    ("Ocean",   Block.SAND,  Block.SAND,      64,  34,   8,  0,  999, 0x607898);
 
     public final String name;
     public final Block  surfaceBlock, subsoilBlock;

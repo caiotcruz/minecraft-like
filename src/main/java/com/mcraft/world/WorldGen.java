@@ -8,7 +8,7 @@ public class WorldGen {
     private final int[] permTemp; 
     private final int[] permHumid;
     private final int[] permCont;
-    private static final int BLEND_RADIUS = 24;
+    private static final int BLEND_RADIUS = 40;
 
 
     private static final int[][] GRAD2 = {
@@ -220,25 +220,22 @@ public class WorldGen {
     }
 
     private int blendedSurfaceY(double wx, double wz) {
-        double weightSum = 0;
-        double heightSum = 0;
-
-        heightSum += sampleHeight(wx, wz) * 4.0;
-        weightSum += 4.0;
-
-        double[][] neighbors = {
-            {wx + BLEND_RADIUS, wz},
-            {wx - BLEND_RADIUS, wz},
-            {wx, wz + BLEND_RADIUS},
-            {wx, wz - BLEND_RADIUS}
+        int R = BLEND_RADIUS;
+        double[][] pts = {
+            {wx,   wz  }, {wx+R, wz  }, {wx-R, wz  },
+            {wx,   wz+R}, {wx,   wz-R},
+            {wx+R, wz+R}, {wx-R, wz+R},
+            {wx+R, wz-R}, {wx-R, wz-R}
         };
-        for (double[] nb : neighbors) {
-            heightSum += sampleHeight(nb[0], nb[1]);
-            weightSum += 1.0;
+        double[] weights = {6.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 0.5};
+
+        double hSum = 0, wSum = 0;
+        for (int i = 0; i < pts.length; i++) {
+            hSum += sampleHeight(pts[i][0], pts[i][1]) * weights[i];
+            wSum += weights[i];
         }
 
-        int h = (int)(heightSum / weightSum);
-        return Math.max(2, Math.min(Chunk.HEIGHT - 2, h));
+        return Math.max(2, Math.min(Chunk.HEIGHT - 2, (int)(hSum / wSum)));
     }
 
     private int sampleHeight(double wx, double wz) {
