@@ -22,11 +22,12 @@ public class WorldGen {
         { 0, 1, 1}, { 0,-1, 1}, { 0, 1,-1}, { 0,-1,-1}
     };
 
+    // blockId, minY, maxY, veiosPerChunk, minRadius×10, maxRadius×10
     private static final int[][] ORE_CFG = {
-        {Block.COAL_ORE.id,    2, 128, 7, 20, 40},
-        {Block.IRON_ORE.id,    2,  64, 4, 15, 30},
-        {Block.GOLD_ORE.id,    2,  32, 2, 15, 25},
-        {Block.DIAMOND_ORE.id, 2,  16, 1, 10, 20},
+        {Block.COAL_ORE.id,     2, 128, 10,  15, 30}, 
+        {Block.IRON_ORE.id,     2,  64,  6,  10, 20},
+        {Block.GOLD_ORE.id,     2,  32,  3,  8, 15}, 
+        {Block.DIAMOND_ORE.id,  2,  16,  2,  6,  12},
     };
 
     public WorldGen(long seed) {
@@ -204,9 +205,7 @@ public class WorldGen {
                     && current != (byte) Block.DIRT.id) continue;
 
                     if (shouldCarve(wx, y, wz, surfaceY)) {
-                        blocks[idx] = (y < 40)
-                            ? (byte) Block.WATER.id
-                            : (byte) Block.AIR.id;
+                        blocks[idx] = (byte) Block.AIR.id;
                     }
                 }
 
@@ -390,29 +389,24 @@ public class WorldGen {
 
     private void carveOreBlob(byte[] blocks, int cx, int cy, int cz, float radius, byte oreId, int size, int height) {
         int r = (int) Math.ceil(radius) + 1;
-        float ry = radius * 0.7f;
-
+        float ry = radius * 0.63f; 
         for (int dx = -r; dx <= r; dx++) {
             for (int dy = -r; dy <= r; dy++) {
                 for (int dz = -r; dz <= r; dz++) {
-                    int bx = cx + dx, by = cy + dy, bz = cz + dz;
+                    int bx = cx+dx, by = cy+dy, bz = cz+dz;
+                    if (bx<0||bx>=size||bz<0||bz>=size||by<=0||by>=height-1) continue;
 
-                    if (bx < 0 || bx >= size) continue;
-                    if (bz < 0 || bz >= size) continue;
-                    if (by <= 0 || by >= height - 1) continue;
+                    float dist = (float)(dx*dx) / (radius*radius)
+                            + (float)(dy*dy) / (ry*ry)
+                            + (float)(dz*dz) / (radius*radius);
 
-                    float dist = (dx*dx) / (radius*radius)
-                            + (dy*dy) / (ry*ry)
-                            + (dz*dz) / (radius*radius);
-
-                    float deform = ((dx*17 ^ dy*31 ^ dz*13) & 0xF) / 24.0f;
+                    float deform = ((dx*17 ^ dy*31 ^ dz*13) & 0x7) / 16.0f; // era & 0xF
 
                     if (dist + deform > 1.0f) continue;
 
-                    int idx = by * size * size + bz * size + bx;
-                    if (blocks[idx] == (byte) Block.STONE.id) {
+                    int idx = by*size*size + bz*size + bx;
+                    if (blocks[idx] == (byte)Block.STONE.id)
                         blocks[idx] = oreId;
-                    }
                 }
             }
         }
