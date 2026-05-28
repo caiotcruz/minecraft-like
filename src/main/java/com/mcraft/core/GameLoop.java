@@ -264,7 +264,7 @@ public class GameLoop {
             world.unloadDistant(player.getX(), player.getZ(), world.getWorldIO());
         }
 
-        handleBlockBreaking(dt);
+        handlePlayerInteraction(dt);
 
         for (int k = 0; k < 9; k++) {
             if (input.isKeyDown(GLFW_KEY_1 + k)) {
@@ -388,20 +388,81 @@ public class GameLoop {
         sound.updateListener( camera.getX(), camera.getY(), camera.getZ(), front[0], front[1], front[2], up[0], up[1], up[2] );
     }
 
-    private void handleBlockBreaking(float dt){
+    private float rayAABB(float ox, float oy, float oz, float dx, float dy, float dz, float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+        float tmin = 0f, tmax = Float.MAX_VALUE;
 
+        if (Math.abs(dx) > 1e-6f) {
+            float t1 = (minX - ox) / dx, t2 = (maxX - ox) / dx;
+            if (t1 > t2) { float tmp = t1; t1 = t2; t2 = tmp; }
+            tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
+        } else if (ox < minX || ox > maxX) return -1f;
+
+        if (Math.abs(dy) > 1e-6f) {
+            float t1 = (minY - oy) / dy, t2 = (maxY - oy) / dy;
+            if (t1 > t2) { float tmp = t1; t1 = t2; t2 = tmp; }
+            tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
+        } else if (oy < minY || oy > maxY) return -1f;
+
+        if (Math.abs(dz) > 1e-6f) {
+            float t1 = (minZ - oz) / dz, t2 = (maxZ - oz) / dz;
+            if (t1 > t2) { float tmp = t1; t1 = t2; t2 = tmp; }
+            tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
+        } else if (oz < minZ || oz > maxZ) return -1f;
+
+        return (tmax >= tmin) ? tmin : -1f;
+    }
+
+    private Mob getMobInSight(float reach) {
+        float ox = camera.getX(), oy = camera.getY(), oz = camera.getZ();
         float[] front = camera.getFront();
-        boolean leftDown = input.isMouseDown(GLFW_MOUSE_BUTTON_LEFT);
+        float dx = front[0], dy = front[1], dz = front[2];
+
+        Mob   closest = null;
+        float closestT = reach;
+
+        for (Mob mob : mobs.getMobs()) {
+            float hw = mob.getWidth() / 2f;
+            float t = rayAABB(ox, oy, oz, dx, dy, dz,
+                mob.getX() - hw, mob.getY(),                mob.getZ() - hw,
+                mob.getX() + hw, mob.getY() + mob.getHeight(), mob.getZ() + hw);
+
+            if (t >= 0 && t < closestT) {
+                closestT = t;
+                closest  = mob;
+            }
+        }
+        return closest;
+    }
+
+    private void handlePlayerInteraction(float dt) {
+        float ox = camera.getX(), oy = camera.getY(), oz = camera.getZ();
+        float[] front = camera.getFront();
+
+        Raycast.HitResult hit = Raycast.cast(ox, oy, oz,
+            front[0], front[1], front[2], REACH, world);
+
+        float blockDist = hit.hit
+            ? (float) Math.sqrt(
+                Math.pow(hit.blockX + 0.5 - ox, 2) +
+                Math.pow(hit.blockY + 0.5 - oy, 2) +
+                Math.pow(hit.blockZ + 0.5 - oz, 2))
+            : Float.MAX_VALUE;
+
+        Mob targetMob = getMobInSight(3.5f);
+
+        boolean leftDown        = input.isMouseDown(GLFW_MOUSE_BUTTON_LEFT);
+        boolean rightDown       = input.isMouseDown(GLFW_MOUSE_BUTTON_RIGHT);
         boolean leftJustPressed = leftDown && !leftWasDown;
 
-        Raycast.HitResult hit = Raycast.cast(
-            camera.getX(), camera.getY(), camera.getZ(),
-            front[0], front[1], front[2],
-            REACH, world
-        );
+        if (leftJustPressed && targetMob != null) {
+            float mdx = targetMob.getX() - ox, mdy = targetMob.getY() - oy, mdz = targetMob.getZ() - oz;
+            float mobDist = (float) Math.sqrt(mdx*mdx + mdy*mdy + mdz*mdz);
 
-        if (leftJustPressed && !hit.hit) {
-            attackNearestMob();
+            if (mobDist < blockDist) {
+                targetMob.damage(5);
+                leftWasDown = leftDown; rightWasDown = rightDown;
+                return;
+            }
         }
 
         if (hit.hit) {
@@ -442,7 +503,7 @@ public class GameLoop {
                 if (!leftDown) breakX = breakY = breakZ = -1;
             }
 
-            boolean rightDown = input.isMouseDown(GLFW_MOUSE_BUTTON_RIGHT);
+            rightDown = input.isMouseDown(GLFW_MOUSE_BUTTON_RIGHT);
             if (rightDown && !rightWasDown) {
                 int blockId = player.getInventory().getSelectedBlockId();
                 if (blockId != 0) {
@@ -463,29 +524,8 @@ public class GameLoop {
             ? Math.min(1f, breakElapsed / breakDuration)
             : 0f;
         hud.setBreakProgress(breakProgress);
-    }
-
-    private void attackNearestMob() {
-        final float REACH = 3.5f;
-        float cx = camera.getX(), cy = camera.getY(), cz = camera.getZ();
-
-        Mob nearest = null;
-        float nearestDist = Float.MAX_VALUE;
-
-        for (Mob mob : mobs.getMobs()) {
-            float dx = mob.getX() - cx;
-            float dy = mob.getY() + mob.getHeight()/2f - cy;
-            float dz = mob.getZ() - cz;
-            float dist = (float) Math.sqrt(dx*dx + dy*dy + dz*dz);
-            if (dist < REACH && dist < nearestDist) {
-                nearestDist = dist;
-                nearest = mob;
-            }
-        }
-
-        if (nearest != null) {
-            nearest.damage(5);
-        }
+        leftWasDown  = leftDown;
+        rightWasDown = rightDown;
     }
 
     private void cleanup() {
