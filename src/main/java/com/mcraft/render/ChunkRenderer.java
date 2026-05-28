@@ -80,6 +80,25 @@ public class ChunkRenderer {
                         float[][] vv  = FACE_VERTS[face];
 
                         if (isWater) {
+
+                            int nx = x + dir[0], ny = y + dir[1], nz = z + dir[2];
+
+                            boolean crossBorder = (nx < 0 || nx >= cs || nz < 0 || nz >= cs);
+
+                            if (crossBorder) {
+                                boolean neighborLoaded =
+                                    (nx < 0      && nN != null) ||
+                                    (nx >= cs    && nS != null) || 
+                                    (nz < 0      && nW != null) ||
+                                    (nz >= cs    && nE != null);
+
+                                if (!neighborLoaded) continue; 
+                            }
+
+                            neighbor = getNeighborFast(chunk, nN, nS, nW, nE, nx, ny, nz);
+                            if (neighbor == Block.WATER || neighbor.solid) continue;
+
+
                             for (int v = 0; v < 4; v++) {
                                 float wl = (face == 0) ? light * 1.1f : light * 0.85f;
                                 wBuf.put(x+vv[v][0]).put(y+vv[v][1]).put(z+vv[v][2])

@@ -110,6 +110,7 @@ public class World {
         Chunk c = chunks.get(key(cx, cz));
         if (c != null) c.markDirty();
     }
+
     public void generateInitialArea(float worldX, float worldZ) {
         int cx = Math.floorDiv((int) worldX, Chunk.SIZE);
         int cz = Math.floorDiv((int) worldZ, Chunk.SIZE);
@@ -182,6 +183,11 @@ public class World {
             long k = key(c.getChunkX(), c.getChunkZ());
             chunks.put(k, c);
             pendingGeneration.remove(k);
+
+            markDirty(c.getChunkX() - 1, c.getChunkZ());
+            markDirty(c.getChunkX() + 1, c.getChunkZ());
+            markDirty(c.getChunkX(),     c.getChunkZ() - 1);
+            markDirty(c.getChunkX(),     c.getChunkZ() + 1);
         }
     }
 
