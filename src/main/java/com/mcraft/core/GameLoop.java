@@ -2,31 +2,31 @@ package com.mcraft.core;
 
 import static org.lwjgl.glfw.GLFW.GLFW_CURSOR;
 import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
+import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_NORMAL;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_1;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
+import static org.lwjgl.glfw.GLFW.glfwGetCursorPos;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
+import static org.lwjgl.glfw.GLFW.glfwSetCursorPos;
 import static org.lwjgl.glfw.GLFW.glfwSetInputMode;
+import static org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetScrollCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_NORMAL;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
-import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
-import static org.lwjgl.glfw.GLFW.glfwGetCursorPos;
-import static org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetCursorPos;
 import static org.lwjgl.opengl.GL11.glClearColor;
 
 import com.mcraft.audio.SoundEvent;
@@ -332,74 +332,69 @@ public class GameLoop {
     }
 
     private void updatePhysics(float dt) {
-        
-        boolean eDown = input.isKeyDown(GLFW_KEY_E);
-        if (eDown && !prevEKeyDown) {             
-            if (inventoryOpen) {
-                closeInventory();
-            } else {
-                openInventory();
-            }
-        }
-        
-        prevEKeyDown = eDown;
+
+        if (player.isDead()) return;
+
+        handleInventoryToggle();
 
         if (inventoryOpen) {
             double[] cx = new double[1];
             double[] cy = new double[1];
+
             glfwGetCursorPos(window.getHandle(), cx, cy);
 
             inventoryScreen.updateMouse((int) cx[0], (int) cy[0]);
-            return;
         }
 
-        
-        float dx = 0, dz = 0;
-        if (input.isKeyDown(GLFW_KEY_W)) dz -= 1;
-        if (input.isKeyDown(GLFW_KEY_S)) dz += 1;
-        if (input.isKeyDown(GLFW_KEY_A)) dx -= 1;
-        if (input.isKeyDown(GLFW_KEY_D)) dx += 1;
+        float dx = 0f;
+        float dz = 0f;
+        boolean jump = false;
 
-        //Debug
-        
-        //Deixar a noite
-        if(input.isKeyDown(GLFW_KEY_F2)) dayNight.setTime(0.8f);
+        if (!inventoryOpen) {
 
-        // Spawnar Zumbi 
-        if (input.isKeyDown(GLFW_KEY_F3)) {
+            if (input.isKeyDown(GLFW_KEY_W)) dz -= 1;
+            if (input.isKeyDown(GLFW_KEY_S)) dz += 1;
+            if (input.isKeyDown(GLFW_KEY_A)) dx -= 1;
+            if (input.isKeyDown(GLFW_KEY_D)) dx += 1;
 
-            float[] front = camera.getFront();
+            jump = input.isKeyDown(GLFW_KEY_SPACE);
 
-            float spawnX = player.getX() + front[0] * 3f;
-            float spawnY = player.getY();
-            float spawnZ = player.getZ() + front[2] * 3f;
+            if (input.isKeyDown(GLFW_KEY_F2)) {
+                dayNight.setTime(0.8f);
+            }
 
-            mobs.getMobs().add(
-                new Mob(
-                    Mob.Type.ZOMBIE,
-                    spawnX,
-                    spawnY,
-                    spawnZ
-                )
-            );
+            if (input.isKeyDown(GLFW_KEY_F3)) {
+
+                float[] front = camera.getFront();
+
+                float spawnX = player.getX() + front[0] * 3f;
+                float spawnY = player.getY();
+                float spawnZ = player.getZ() + front[2] * 3f;
+
+                mobs.getMobs().add(
+                    new Mob(
+                        Mob.Type.ZOMBIE,
+                        spawnX,
+                        spawnY,
+                        spawnZ
+                    )
+                );
+            }
         }
-        //-------
-
-
-        boolean jump = input.isKeyDown(GLFW_KEY_SPACE);
 
         player.update(dx, dz, jump, dt);
 
         boolean moving = dx != 0 || dz != 0;
 
-        if (moving) {
+        if (moving && !inventoryOpen) {
+
             stepTimer -= dt;
 
             if (stepTimer <= 0f) {
 
-                int bx = (int)Math.floor(player.getX());
-                int by = (int)Math.floor(player.getY() - 1);
-                int bz = (int)Math.floor(player.getZ());
+                int bx = (int) Math.floor(player.getX());
+                int by = (int) Math.floor(player.getY() - 1);
+                int bz = (int) Math.floor(player.getZ());
 
                 Block ground = world.getBlock(bx, by, bz);
 
@@ -414,8 +409,7 @@ public class GameLoop {
                 stepTimer = STEP_INTERVAL;
             }
         }
-
-    }
+    }   
 
     private void handleCameraInput() {
 
@@ -426,7 +420,10 @@ public class GameLoop {
 
             glfwGetCursorPos(window.getHandle(), cx, cy);
 
-            inventoryScreen.updateMouse( (int) cx[0], (int) cy[0] );
+            inventoryScreen.updateMouse((int) cx[0], (int) cy[0]);
+
+            input.consumeMouseDX();
+            input.consumeMouseDY();
 
             return;
         }
@@ -434,12 +431,18 @@ public class GameLoop {
         float mdx = input.consumeMouseDX();
         float mdy = input.consumeMouseDY();
 
-        camera.rotate( mdx * MOUSE_SENS, mdy * MOUSE_SENS);
+        camera.rotate(mdx * MOUSE_SENS, mdy * MOUSE_SENS);
 
         float[] front = camera.getFront();
         float[] up    = camera.getUp();
 
-        sound.updateListener( camera.getX(), camera.getY(), camera.getZ(), front[0], front[1], front[2], up[0], up[1], up[2] );
+        sound.updateListener(
+            camera.getX(),
+            camera.getY(),
+            camera.getZ(),
+            front[0], front[1], front[2],
+            up[0], up[1], up[2]
+        );
     }
 
     private float rayAABB(float ox, float oy, float oz, float dx, float dy, float dz, float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
@@ -489,11 +492,36 @@ public class GameLoop {
     }
 
     private void handlePlayerInteraction(float dt) {
-        float ox = camera.getX(), oy = camera.getY(), oz = camera.getZ();
+
+        if (inventoryOpen) {
+
+            breakElapsed  = 0f;
+            breakDuration = 0f;
+
+            hitSoundTimer = 0f;
+
+            breakX = breakY = breakZ = -1;
+
+            hud.setBreakProgress(0f);
+
+            leftWasDown  = false;
+            rightWasDown = false;
+
+            return;
+        }
+
+        float ox = camera.getX();
+        float oy = camera.getY();
+        float oz = camera.getZ();
+
         float[] front = camera.getFront();
 
-        Raycast.HitResult hit = Raycast.cast(ox, oy, oz,
-            front[0], front[1], front[2], REACH, world);
+        Raycast.HitResult hit = Raycast.cast(
+            ox, oy, oz,
+            front[0], front[1], front[2],
+            REACH,
+            world
+        );
 
         float blockDist = hit.hit
             ? (float) Math.sqrt(
@@ -509,77 +537,160 @@ public class GameLoop {
         boolean leftJustPressed = leftDown && !leftWasDown;
 
         if (leftJustPressed && targetMob != null) {
-            float mdx = targetMob.getX() - ox, mdy = targetMob.getY() - oy, mdz = targetMob.getZ() - oz;
-            float mobDist = (float) Math.sqrt(mdx*mdx + mdy*mdy + mdz*mdz);
+
+            float mdx = targetMob.getX() - ox;
+            float mdy = targetMob.getY() - oy;
+            float mdz = targetMob.getZ() - oz;
+
+            float mobDist = (float) Math.sqrt(mdx * mdx + mdy * mdy + mdz * mdz);
 
             if (mobDist < blockDist) {
+
                 targetMob.damage(5);
-                leftWasDown = leftDown; rightWasDown = rightDown;
+
+                leftWasDown  = leftDown;
+                rightWasDown = rightDown;
+
                 return;
             }
         }
 
         if (hit.hit) {
+
             Block target = world.getBlock(hit.blockX, hit.blockY, hit.blockZ);
 
             if (leftDown && target.breakTime > 0f) {
-                if (hit.blockX != breakX || hit.blockY != breakY || hit.blockZ != breakZ) {
-                    breakX        = hit.blockX;
-                    breakY        = hit.blockY;
-                    breakZ        = hit.blockZ;
+
+                if (hit.blockX != breakX
+                || hit.blockY != breakY
+                || hit.blockZ != breakZ) {
+
+                    breakX = hit.blockX;
+                    breakY = hit.blockY;
+                    breakZ = hit.blockZ;
+
                     breakElapsed  = 0f;
                     breakDuration = target.breakTime;
 
-                    sound.playRandom(sound.hitSound(target), breakX + 0.5f, breakY + 0.5f, breakZ + 0.5f, 0.4f);
-                    hitSoundTimer = 0f;
+                    sound.playRandom(
+                        sound.hitSound(target),
+                        breakX + 0.5f,
+                        breakY + 0.5f,
+                        breakZ + 0.5f,
+                        0.4f
+                    );
 
+                    hitSoundTimer = 0f;
                 }
 
                 breakElapsed += dt;
 
                 if (breakElapsed >= breakDuration) {
+
                     world.setBlock(breakX, breakY, breakZ, 0);
+
                     player.getInventory().addItem(target.id, 1);
-                    breakElapsed = 0f; breakDuration = 0f;
+
+                    sound.playRandom(
+                        sound.breakSound(target),
+                        breakX + 0.5f,
+                        breakY + 0.5f,
+                        breakZ + 0.5f,
+                        1f
+                    );
+
+                    breakElapsed  = 0f;
+                    breakDuration = 0f;
+
                     breakX = breakY = breakZ = -1;
-                    sound.playRandom(sound.breakSound(target), breakX + 0.5f, breakY + 0.5f, breakZ + 0.5f, 1f);
                 }
 
                 hitSoundTimer += dt;
+
                 if (hitSoundTimer >= HIT_SOUND_INTERVAL) {
+
                     hitSoundTimer = 0f;
-                    sound.playRandom(sound.hitSound(target), breakX + 0.5f, breakY + 0.5f, breakZ + 0.5f, 0.4f);
+
+                    sound.playRandom(
+                        sound.hitSound(target),
+                        breakX + 0.5f,
+                        breakY + 0.5f,
+                        breakZ + 0.5f,
+                        0.4f
+                    );
                 }
 
             } else {
-                breakElapsed = 0f;
-                hitSoundTimer = 0f; 
-                if (!leftDown) breakX = breakY = breakZ = -1;
-            }
 
-            rightDown = input.isMouseDown(GLFW_MOUSE_BUTTON_RIGHT);
-            if (rightDown && !rightWasDown) {
-                int blockId = player.getInventory().getSelectedBlockId();
-                if (blockId != 0) {
-                    world.setBlock(hit.prevX, hit.prevY, hit.prevZ, blockId);
-                    player.getInventory().consumeSelected(1);
-                    sound.playRandom(sound.placeSound(target), hit.prevX + 0.5f, hit.prevY + 0.5f, hit.prevZ + 0.5f, 0.6f);
+                breakElapsed  = 0f;
+                breakDuration = 0f;
+
+                hitSoundTimer = 0f;
+
+                if (!leftDown) {
+                    breakX = breakY = breakZ = -1;
                 }
             }
+
+            if (rightDown && !rightWasDown) {
+
+                int blockId = player.getInventory().getSelectedBlockId();
+
+                if (blockId != 0) {
+
+                    world.setBlock(
+                        hit.prevX,
+                        hit.prevY,
+                        hit.prevZ,
+                        blockId
+                    );
+
+                    player.getInventory().consumeSelected(1);
+
+                    sound.playRandom(
+                        sound.placeSound(target),
+                        hit.prevX + 0.5f,
+                        hit.prevY + 0.5f,
+                        hit.prevZ + 0.5f,
+                        0.6f
+                    );
+                }
+            }
+
             rightWasDown = rightDown;
             leftWasDown  = leftDown;
+
         } else {
-            breakElapsed = 0f; breakDuration = 0f;
+
+            breakElapsed  = 0f;
+            breakDuration = 0f;
+
             breakX = breakY = breakZ = -1;
-            leftWasDown = rightWasDown = false;
+
+            leftWasDown  = false;
+            rightWasDown = false;
         }
 
         float breakProgress = (breakDuration > 0f)
             ? Math.min(1f, breakElapsed / breakDuration)
             : 0f;
+
         hud.setBreakProgress(breakProgress);
+
         leftWasDown  = leftDown;
         rightWasDown = rightDown;
+    }
+
+    private void handleInventoryToggle() {
+        boolean eDown = input.isKeyDown(GLFW_KEY_E);
+        if (eDown && !prevEKeyDown) {
+            if (inventoryOpen) {
+                closeInventory();
+            } else {
+                openInventory();
+            }
+        }
+        prevEKeyDown = eDown;
     }
 
     private void doRespawn() {
