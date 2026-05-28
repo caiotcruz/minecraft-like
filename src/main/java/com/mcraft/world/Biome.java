@@ -2,15 +2,15 @@ package com.mcraft.world;
 
 public enum Biome {
 
-     //          nome             surf        sub          mar    base     var     trees  snowY     fog(RGB int)
-    PLAINS   ("Plains",  Block.GRASS, Block.DIRT,    64, 63, 22, 1,  999, 0xB8D4E8),
-    DESERT   ("Desert",  Block.SAND,  Block.SAND,    58, 60, 14, 4,  999, 0xE8D898),
-    FOREST   ("Forest",  Block.GRASS, Block.DIRT,    64, 64, 24, 6,  999, 0x98C8A0),
-    MOUNTAINS("Mounts",  Block.STONE, Block.STONE,   64, 82, 38, 1,   95, 0xC8D8E8),
-    TAIGA    ("Taiga",   Block.GRASS, Block.DIRT,    64, 64, 26, 5,  105, 0xA8C0B8),
-    TUNDRA   ("Tundra",  Block.SNOW,  Block.DIRT,    64, 68, 12, 0,   64, 0xC8D8E0),
-    SWAMP    ("Swamp",   Block.GRASS, Block.DIRT,    65, 63, 10, 3,  999, 0x78907A),
-    OCEAN    ("Ocean",   Block.SAND,  Block.SAND,    72, 36, 10, 0,  999, 0x607898);
+    //          nome           surf         sub             mar       base       var   trees  snow        fog
+    PLAINS   ("Plains",  Block.GRASS, Block.DIRT,      62,  64,  16,  1,  999, 0xB8D4E8),
+    DESERT   ("Desert",  Block.SAND,  Block.SAND,      52,  66,  12,  2,  999, 0xE8D898),
+    FOREST   ("Forest",  Block.GRASS, Block.DIRT,      62,  65,  20,  6,  999, 0x98C8A0),
+    MOUNTAINS("Mounts",  Block.STONE, Block.STONE,     64,  85,  34,  1,   95, 0xC8D8E8),
+    TAIGA    ("Taiga",   Block.GRASS, Block.DIRT,      62,  64,  20,  5,  105, 0xA8C0B8),
+    TUNDRA   ("Tundra",  Block.SNOW,  Block.DIRT,      62,  59,  10,  0,   64, 0xC8D8E0),
+    SWAMP    ("Swamp",   Block.GRASS, Block.DIRT,      60,  60,   8,  3,  999, 0x78907A),
+    OCEAN    ("Ocean",   Block.SAND,  Block.SAND,      72,  34,   8,  0,  999, 0x607898);
 
     public final String name;
     public final Block  surfaceBlock, subsoilBlock;
