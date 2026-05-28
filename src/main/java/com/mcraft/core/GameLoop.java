@@ -237,6 +237,11 @@ public class GameLoop {
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             render3D();
+            int eyeX = (int) Math.floor(camera.getX());
+            int eyeY = (int) Math.floor(camera.getY());
+            int eyeZ = (int) Math.floor(camera.getZ());
+            boolean underwater = (world.getBlock(eyeX, eyeY, eyeZ) == Block.WATER);
+            hud.setUnderwater(underwater);
             hud.render(dt);
 
             if (inventoryOpen) {

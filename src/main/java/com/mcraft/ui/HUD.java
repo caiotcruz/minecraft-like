@@ -44,6 +44,9 @@ public class HUD {
 
     private float breakProgress = 0f;
 
+    private boolean underwater    = false;
+    private float   underwaterWave = 0f;
+
     private final int     screenW, screenH;
     private final Inventory inventory;
     private final Shader    hudShader;
@@ -143,6 +146,13 @@ public class HUD {
 
         drawHearts(curHealth, player.getMaxHealth());
         if (damageFlash > 0.01f)   drawDamageFlash();
+        flushBatch(false);
+
+        beginBatch();
+        if (underwater) {
+            underwaterWave += dt * 1.8f; 
+            drawUnderwaterOverlay();
+        }
         flushBatch(false);
 
         beginBatch();
@@ -328,6 +338,32 @@ public class HUD {
         addRect(0, 0, screenW, screenH, 0.75f, 0f, 0f, a);
     }
 
+    private void drawUnderwaterOverlay() {
+        float pulse = 0.22f +
+        (float)Math.sin(underwaterWave) * 0.04f;
+
+        addRect(
+            0, 0,
+            screenW, screenH,
+            0.04f, 0.16f, 0.42f,
+            pulse
+        );
+
+        float edge = pulse * 1.35f;
+
+        addRect(0, 0, screenW, 70,
+            0.05f, 0.18f, 0.55f, edge);
+
+        addRect(0, screenH - 70, screenW, 70,
+            0.05f, 0.18f, 0.55f, edge);
+
+        addRect(0, 70, 70, screenH - 140,
+            0.05f, 0.18f, 0.55f, edge * 0.8f);
+
+        addRect(screenW - 70, 70, 70, screenH - 140,
+            0.05f, 0.18f, 0.55f, edge * 0.8f);
+    }
+
     private void addQuad(float x0, float y0, float x1, float y1,
                      float u0, float v0, float u1, float v1,
                      float r, float g, float b, float a) {
@@ -392,12 +428,14 @@ public class HUD {
     public void setBreakProgress(float p) {
         this.breakProgress = Math.max(0f, Math.min(1f, p));
     }
-
     public float getBreakProgress(){
         return this.breakProgress;
     }
 
     public void setDeathAlpha(float a) { this.deathAlpha = a; }
-
     public float getDeathAlpha() {return this.deathAlpha;}
+
+    public void setUnderwater(boolean u) { this.underwater = u; }
+    public boolean getUnderwater() { return this.underwater;}
+
 }
