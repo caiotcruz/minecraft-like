@@ -343,6 +343,23 @@ public class World {
         return Collections.unmodifiableMap(chunks);
     }
 
+    public int getSurfaceY(float wx, float wz) {
+        int cx = Math.floorDiv((int)wx, Chunk.SIZE);
+        int cz = Math.floorDiv((int)wz, Chunk.SIZE);
+        int lx = Math.floorMod((int)wx, Chunk.SIZE);
+        int lz = Math.floorMod((int)wz, Chunk.SIZE);
+
+        Chunk chunk = getOrCreate(cx, cz); 
+
+        for (int y = Chunk.HEIGHT - 1; y >= 1; y--) {
+            Block b = chunk.getBlock(lx, y, lz);
+            if (b.solid && b != Block.WATER) { 
+                return y + 1;
+            }
+        }
+        return 65; 
+    }
+
     public long getSeed() { return seed; }
     public WorldIO getWorldIO() {return worldIO;}
     public WorldGen getWorldGen() { return gen; }

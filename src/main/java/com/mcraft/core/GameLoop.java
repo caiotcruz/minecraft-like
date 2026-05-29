@@ -128,6 +128,9 @@ public class GameLoop {
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         
         world  = new World(seed, worldIO);
+        if (spawnY == 90){
+            spawnY = world.getSurfaceY(spawnX, spawnZ);
+        }
 
         player = new Player(
             spawnX,
