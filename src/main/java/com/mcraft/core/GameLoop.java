@@ -273,6 +273,8 @@ public class GameLoop {
         dayNight.update(dt);
         skyRenderer.update(dt);
 
+        player.tickRegen(TICK_STEP);
+
         mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
         applyMobDamage(dt);
         

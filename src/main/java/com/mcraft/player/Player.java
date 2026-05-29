@@ -18,6 +18,8 @@ public class Player {
     private int   maxHealth = 20;
     private float invincibleTimer = 0f; 
     private static final float INVINCIBLE_TIME = 0.5f;
+    private float regenTimer     = 0f;
+    private static final float REGEN_INTERVAL  = 5.0f;
 
     private float fallStart = Float.NaN;
     private boolean wasFalling = false;
@@ -146,6 +148,18 @@ public class Player {
         invincibleTimer = INVINCIBLE_TIME;
         if (health <= 0) { health = 0; dead = true; }
         return true;
+    }
+
+    public void tickRegen(float dt) {
+        if (dead || health >= maxHealth) { regenTimer = 0f; return; }
+
+        if (invincibleTimer > 0) { regenTimer = 0f; return; }
+
+        regenTimer += dt;
+        if (regenTimer >= REGEN_INTERVAL) {
+            regenTimer = 0f;
+            heal(1);
+        }
     }
 
     public void heal(int amount) {
