@@ -150,6 +150,13 @@ public class Player {
         return true;
     }
 
+    public void applyKnockback(float dirX, float dirZ, float force) {
+        velX += dirX * force;
+        velZ += dirZ * force;
+        velY  = Math.max(velY, 3.0f);
+        onGround = false; 
+    }
+        
     public void tickRegen(float dt) {
         if (dead || health >= maxHealth) { regenTimer = 0f; return; }
 

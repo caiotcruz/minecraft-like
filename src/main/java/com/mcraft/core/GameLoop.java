@@ -550,6 +550,13 @@ public class GameLoop {
 
                 targetMob.damage(5);
 
+                float kx = targetMob.getX() - camera.getX();
+                float kz = targetMob.getZ() - camera.getZ();
+                float klen = (float) Math.sqrt(kx*kx + kz*kz);
+                if (klen > 0.001f) {
+                    targetMob.applyKnockback(kx/klen, kz/klen, 9.0f);
+                }
+
                 leftWasDown  = leftDown;
                 rightWasDown = rightDown;
 
@@ -717,6 +724,12 @@ public class GameLoop {
 
             if (dist < 1.2f) {
                 hit = player.takeDamage(2);
+                float kx = player.getX() - mob.getX();
+                float kz = player.getZ() - mob.getZ();
+                float klen = (float) Math.sqrt(kx*kx + kz*kz);
+                if (klen > 0.001f) {
+                    player.applyKnockback(kx/klen, kz/klen, 7.0f);
+                }
             }
 
             if (hit){}

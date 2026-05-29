@@ -36,6 +36,12 @@ public abstract class Entity {
         if (checkCollision(world)) { z -= velZ * dt; velZ = 0; }
     }
 
+    public void applyKnockback(float dirX, float dirZ, float force) {
+        velX += dirX * force;
+        velZ += dirZ * force;
+        velY  = Math.max(velY, 3.5f); 
+    }
+
     protected boolean checkCollision(World world) {
         float hw = width / 2f;
         int minX = (int)Math.floor(x - hw), maxX = (int)Math.floor(x + hw);
