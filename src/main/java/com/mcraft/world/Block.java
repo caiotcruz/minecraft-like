@@ -23,7 +23,10 @@ public enum Block {
     ROTTEN_FLESH   (18, "rotten_flesh", 8, 2, false, 0f),
     GUNPOWDER      (19, "gunpowder",    9, 2, false, 0f),
     SNOW           (20, "snow", 2, 4, true, 0.2f),
-    CACTUS         (21, "cactus", 6, 4, true, 0.5f);
+    CACTUS         (21, "cactus", 6, 4, true, 0.5f),
+    SNOWY_GRASS    (22, "snowy_grass", 7, 4, true,  0.9f), 
+    ICE            (23, "ice",         8, 4, true,  0.2f), 
+    BED            (24, "bed",         9, 4, true,  0.5f); 
 
     public final int     id;
     public final String  name;

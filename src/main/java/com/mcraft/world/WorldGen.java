@@ -179,7 +179,15 @@ public class WorldGen {
                         blocks[idx] = (byte) biome.subsoilBlock.id;
                     } else if (y == surfaceY) {
                         if (y <= biome.seaLevel) {
-                            blocks[idx] = (byte) Block.SAND.id;
+                            if (biome == Biome.TUNDRA) {
+                                blocks[idx] = (byte) Block.SNOW.id; 
+                            } else if (biome == Biome.MOUNTAINS){
+                                blocks[idx] = (byte) Block.STONE.id; 
+                            } else if (biome == Biome.DESERT || biome == Biome.OCEAN || biome == Biome.FOREST || biome == Biome.TAIGA) {
+                                blocks[idx] = (byte) Block.SAND.id;
+                            } else {
+                                blocks[idx] = (byte) Block.DIRT.id; 
+                            }
                         } else if (y >= biome.snowLevel) {
                             blocks[idx] = (byte) Block.SNOW.id;
                         } else if (biome == Biome.TUNDRA) {
@@ -189,6 +197,15 @@ public class WorldGen {
                             blocks[idx] = (byte) Block.STONE.id;
                         } else {
                             blocks[idx] = (byte) biome.surfaceBlock.id;
+                        }
+                    } else if (y > surfaceY && y <= biome.seaLevel) {
+                        if (biome == Biome.TUNDRA && y == biome.seaLevel) {
+                            long iceHash = (long)((int)(wx * 7.3 + wz * 3.7 + y * 11.1)) * 2654435761L;
+                            blocks[idx] = ((iceHash >> 16) & 0xF) < 6
+                                ? (byte) Block.ICE.id
+                                : (byte) Block.WATER.id;
+                        } else {
+                            blocks[idx] = (byte) Block.WATER.id;
                         }
                     } else {
                         blocks[idx] = (y <= biome.seaLevel)
@@ -266,7 +283,7 @@ public class WorldGen {
                     plantOakTree(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
                 }
                 case TAIGA -> {
-                    if (surface != (byte)Block.GRASS.id && surface != (byte)Block.SNOW.id) continue;
+                    if (surface != (byte)Block.GRASS.id && surface != (byte)Block.SNOW.id && surface != (byte)Block.SNOWY_GRASS.id) continue;
                     plantSpruceTree(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
                 }
                 case SWAMP -> {

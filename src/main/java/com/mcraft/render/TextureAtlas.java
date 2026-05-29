@@ -301,6 +301,22 @@ public class TextureAtlas {
             return new int[]{ 195, 60, 50, 255 };
         }
 
+        // Grama com Neve
+        if (col == 7 && row == 4) { 
+            if (py < 4) {
+                int v = 225 + n * 2;
+                return new int[]{ clamp(v), clamp(v), clamp(v + 5), 255 };
+            }
+
+            if (py > 11) {
+                int d = 85 + n * 2;
+                return new int[]{ d, d - 10, d - 20, 255 };
+            }
+
+            int g = 95 + n * 3;
+            return new int[]{ clamp(g - 35), clamp(g), clamp(g - 25), 255 };
+        }
+
         //Carne Podre
         if (col == 8 && row == 2) {
             boolean vein = (px % 5 == 2) || (py % 5 == 3);
@@ -308,12 +324,27 @@ public class TextureAtlas {
             return new int[]{ 80, 100, 50, 255 };
         }
 
+        // Gelo
+        if (col == 8 && row == 4) { 
+            boolean fissure = ((px * 5 + py * 7) % 13 == 0);
+            if (fissure) return new int[]{ 160, 190, 230, 220 };
+            int v = 195 + n * 3;
+            return new int[]{ clamp(v - 10), clamp(v), clamp(v + 15), 210 };
+        }
+
         //Polvora
         if (col == 9 && row == 2) {
             boolean grain = ((px * 13 + py * 7) % 6 == 0);
             return grain ? new int[]{ 55, 55, 55, 255 } : new int[]{ 35, 35, 35, 255 };
         }
-        
+
+        //Cama
+        if (col == 9 && row == 4) { 
+            boolean pillow = (px >= 2 && px <= 5 && py >= 2 && py <= 6);
+            if (pillow) return new int[]{ 220, 215, 200, 255 }; 
+            return new int[]{ 180, 40, 40, 255 };               
+        }
+                
         if (col == 1 && row == 1) {
 
             int v = 32 + (n < 4 ? 0 : n * 2);
