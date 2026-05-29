@@ -9,7 +9,6 @@ public enum Biome {
     MOUNTAINS("Mounts",  Block.STONE, Block.STONE,     64,  85,  34,  1,   95, 0xC8D8E8),
     TAIGA    ("Taiga",   Block.SNOWY_GRASS, Block.DIRT,      62,  65,  20,  5,  105, 0xA8C0B8),
     TUNDRA   ("Tundra",  Block.SNOW,  Block.DIRT,      62,  63,  10,  0,   64, 0xC8D8E0),
-    SWAMP    ("Swamp",   Block.GRASS, Block.DIRT,      60,  60,   8,  3,  999, 0x78907A),
     OCEAN    ("Ocean",   Block.SAND,  Block.SAND,      64,  34,   8,  0,  999, 0x607898);
 
     public final String name;
@@ -44,11 +43,11 @@ public enum Biome {
             if (humidity < 0.22) return PLAINS;
             if (humidity < 0.52) return FOREST;
             if (humidity < 0.72) return FOREST;
-            return SWAMP;
+            return FOREST;
         }
 
         if (humidity < 0.32) return DESERT;
         if (humidity < 0.58) return MOUNTAINS;
-        return SWAMP;
+        return FOREST;
     }
 }

@@ -179,11 +179,11 @@ public class WorldGen {
                         blocks[idx] = (byte) biome.subsoilBlock.id;
                     } else if (y == surfaceY) {
                         if (y <= biome.seaLevel) {
-                            if (biome == Biome.TUNDRA) {
+                            if (biome == Biome.TUNDRA || biome == Biome.TAIGA) {
                                 blocks[idx] = (byte) Block.SNOW.id; 
                             } else if (biome == Biome.MOUNTAINS){
                                 blocks[idx] = (byte) Block.STONE.id; 
-                            } else if (biome == Biome.DESERT || biome == Biome.OCEAN || biome == Biome.FOREST || biome == Biome.TAIGA) {
+                            } else if (biome == Biome.DESERT || biome == Biome.OCEAN || biome == Biome.FOREST) {
                                 blocks[idx] = (byte) Block.SAND.id;
                             } else {
                                 blocks[idx] = (byte) Block.DIRT.id; 
@@ -226,6 +226,7 @@ public class WorldGen {
                     }
                 }
 
+                generateWaterPockets(blocks, chunkX, chunkZ, size, height);
                 placeOreVeins(blocks, chunkX, chunkZ, size, height);
             }
         }
@@ -286,10 +287,6 @@ public class WorldGen {
                     if (surface != (byte)Block.GRASS.id && surface != (byte)Block.SNOW.id && surface != (byte)Block.SNOWY_GRASS.id) continue;
                     plantSpruceTree(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
                 }
-                case SWAMP -> {
-                    if (surface != (byte)Block.GRASS.id) continue;
-                    plantSwampTree(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
-                }
                 case MOUNTAINS -> {
                     if (surface != (byte)Block.GRASS.id && surface != (byte)Block.STONE.id) continue;
                     if (chunkRandFloat(chunkX, chunkZ, t*4+3) < 0.4f) 
@@ -336,21 +333,6 @@ public class WorldGen {
                     setBlockIfAir(blocks, tx+dx, ly, tz+dz, Block.LEAVES, size, height);
                 }
         }
-    }
-
-    private void plantSwampTree(byte[] blocks, int tx, int ty, int tz, int size, int height, int cx, int cz, int t) {
-        int trunkH = 3 + chunkRandInt(cx, cz, t*10+5, 3); 
-        for (int dy = 1; dy <= trunkH; dy++) setBlock(blocks, tx, ty+dy, tz, Block.WOOD_LOG, size, height);
-
-        int leafTop = ty + trunkH;
-        for (int dx = -3; dx <= 3; dx++)
-            for (int dz = -3; dz <= 3; dz++)
-                for (int dy = 0; dy <= 1; dy++) {
-                    int dist = dx*dx + dz*dz;
-                    if (dist > 9) continue; 
-                    setBlockIfAir(blocks, tx+dx, leafTop+dy, tz+dz, Block.LEAVES, size, height);
-                }
-        setBlockIfAir(blocks, tx, leafTop+2, tz, Block.LEAVES, size, height);
     }
 
     private void plantCactus(byte[] blocks, int tx, int ty, int tz, int size, int height, int cx, int cz, int t) {
@@ -427,6 +409,43 @@ public class WorldGen {
                 }
             }
         }
+    }
+
+    private void generateWaterPockets(byte[] blocks, int chunkX, int chunkZ, int size, int height) {
+        if (chunkRandInt(chunkX, chunkZ, 99_998, 100) >= 12) return;
+
+        int px = chunkRandInt(chunkX, chunkZ, 99_999, size);
+        int py = 5 + chunkRandInt(chunkX, chunkZ, 100_000, 25); 
+        int pz = chunkRandInt(chunkX, chunkZ, 100_001, size);
+        float radius = 2.0f + chunkRandFloat(chunkX, chunkZ, 100_002) * 2.0f; 
+
+        int r = (int) Math.ceil(radius) + 1;
+        int airCount = 0, total = 0;
+
+        for (int dx = -r; dx <= r; dx++)
+            for (int dy = -r; dy <= r; dy++)
+                for (int dz = -r; dz <= r; dz++) {
+                    int bx = px+dx, by = py+dy, bz = pz+dz;
+                    if (bx<0||bx>=size||bz<0||bz>=size||by<=1||by>=height-1) continue;
+                    if ((float)(dx*dx + dz*dz)/(radius*radius)
+                    + (float)(dy*dy)/((radius*0.6f)*(radius*0.6f)) > 1.0f) continue;
+                    total++;
+                    if (blocks[by*size*size + bz*size + bx] == (byte)Block.AIR.id) airCount++;
+                }
+
+        if (total == 0 || airCount < total * 0.60f) return; 
+
+        for (int dx = -r; dx <= r; dx++)
+            for (int dy = -r; dy <= r; dy++)
+                for (int dz = -r; dz <= r; dz++) {
+                    int bx = px+dx, by = py+dy, bz = pz+dz;
+                    if (bx<0||bx>=size||bz<0||bz>=size||by<=1||by>=height-1) continue;
+                    float dist = (float)(dx*dx + dz*dz)/(radius*radius)
+                            + (float)(dy*dy)/((radius*0.6f)*(radius*0.6f));
+                    if (dist > 1.0f) continue;
+                    if (blocks[by*size*size + bz*size + bx] == (byte)Block.AIR.id)
+                        blocks[by*size*size + bz*size + bx] = (byte)Block.WATER.id;
+                }
     }
 
     private int[] buildPerm(Random rng) {
