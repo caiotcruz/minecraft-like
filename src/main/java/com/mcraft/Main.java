@@ -25,6 +25,7 @@ public class Main {
         float pitch = 0f;
 
         float timeOfDay = 0.333f;
+        int day = 1;
         SaveData saveData = null;
 
         if (io.hasSave()) {
@@ -43,6 +44,7 @@ public class Main {
                 pitch = saveData.pitch;
 
                 timeOfDay = saveData.timeOfDay;
+                day = saveData.day;
 
                 System.out.println("[Load] Mundo carregado: seed=" + seed);
 
@@ -88,6 +90,7 @@ public class Main {
             );
 
             loop.getDayNight().setTime(timeOfDay);
+            loop.getDayNight().setDay(day);
 
             loop.getPlayer()
                 .getCamera()

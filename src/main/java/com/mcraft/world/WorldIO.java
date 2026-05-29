@@ -81,6 +81,7 @@ public class WorldIO {
             out.writeFloat(player.getCamera().getPitch());
 
             out.writeFloat(dayNight.getTime());
+            out.writeInt(dayNight.getDay());
 
             int[] items  = player.getInventory().getItems();
             int[] counts = player.getInventory().getCounts();
@@ -154,6 +155,7 @@ public class WorldIO {
             if (version >= 2) {
 
                 data.timeOfDay = in.readFloat();
+                data.day = in.readInt();
 
                 int size = in.readInt();
 

@@ -276,6 +276,8 @@ public class GameLoop {
         dayNight.update(dt);
         skyRenderer.update(dt);
 
+        hud.setDay(dayNight.getDay());
+
         player.tickRegen(TICK_STEP);
 
         mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
@@ -646,26 +648,42 @@ public class GameLoop {
 
             if (rightDown && !rightWasDown) {
 
-                int blockId = player.getInventory().getSelectedBlockId();
-
-                if (blockId != 0) {
-
-                    world.setBlock(
-                        hit.prevX,
-                        hit.prevY,
-                        hit.prevZ,
-                        blockId
+                Block hitBlock = world.getBlock(hit.blockX, hit.blockY, hit.blockZ);
+                
+                if (hitBlock == Block.BED) {
+                    player.setSpawnPoint(
+                        hit.blockX + 0.5f,
+                        hit.blockY + 1f,
+                        hit.blockZ + 0.5f
                     );
+                    hud.showNotification("Ponto de spawn definido!", 3.0f);
 
-                    player.getInventory().consumeSelected(1);
+                    if (dayNight.isNight()) {
+                        dayNight.skipToMorning();
+                        hud.showNotification("Passando para a manhã...", 2.0f);
+                    }
+                }else{
+                    int blockId = player.getInventory().getSelectedBlockId();
 
-                    sound.playRandom(
-                        sound.placeSound(target),
-                        hit.prevX + 0.5f,
-                        hit.prevY + 0.5f,
-                        hit.prevZ + 0.5f,
-                        0.6f
-                    );
+                    if (blockId != 0) {
+
+                        world.setBlock(
+                            hit.prevX,
+                            hit.prevY,
+                            hit.prevZ,
+                            blockId
+                        );
+
+                        player.getInventory().consumeSelected(1);
+
+                        sound.playRandom(
+                            sound.placeSound(target),
+                            hit.prevX + 0.5f,
+                            hit.prevY + 0.5f,
+                            hit.prevZ + 0.5f,
+                            0.6f
+                        );
+                    }
                 }
             }
 

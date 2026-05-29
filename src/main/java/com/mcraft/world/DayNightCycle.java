@@ -3,13 +3,16 @@ package com.mcraft.world;
 public class DayNightCycle {
 
     public static final float DAY_DURATION = 600f; 
+    private int day = 1;
     
     private float timeScale = 1.0f;
 
     private float t = 0.33f;
 
     public void update(float dt) {
+        float prev = t;
         t = (t + (dt * timeScale) / DAY_DURATION) % 1.0f;
+        if (t < prev) day++;
     }
 
     public float getAmbientLight() {
@@ -67,7 +70,6 @@ public class DayNightCycle {
         };
     }
 
-    //Métodos para Debug
     public void setTimeScale(float scale) {
         this.timeScale = scale;
     }
@@ -78,5 +80,13 @@ public class DayNightCycle {
 
     public boolean isNight() {
         return t < 0.20f || t > 0.80f;
+    }
+
+    public void skipToMorning() { t = 0.26f; }
+
+    public int getDay() { return day; }
+
+    public void setDay(int day){
+        this.day = day;
     }
 }

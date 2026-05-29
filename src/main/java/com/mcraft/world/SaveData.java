@@ -11,6 +11,7 @@ public class SaveData {
     public float yaw;
     public float pitch;
 
+    public int day;
     public float timeOfDay;
 
     public int[] inventoryItems;

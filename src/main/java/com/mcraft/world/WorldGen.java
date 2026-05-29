@@ -208,9 +208,15 @@ public class WorldGen {
                             blocks[idx] = (byte) Block.WATER.id;
                         }
                     } else {
-                        blocks[idx] = (y <= biome.seaLevel)
+                        if (biome == Biome.FOREST){
+                            blocks[idx] = (y <= biome.seaLevel + 1)
                             ? (byte) Block.WATER.id
                             : (byte) Block.AIR.id;
+                        }else{
+                            blocks[idx] = (y <= biome.seaLevel)
+                            ? (byte) Block.WATER.id
+                            : (byte) Block.AIR.id;
+                        }
                     }
                 }
 
@@ -399,7 +405,7 @@ public class WorldGen {
                             + (float)(dy*dy) / (ry*ry)
                             + (float)(dz*dz) / (radius*radius);
 
-                    float deform = ((dx*17 ^ dy*31 ^ dz*13) & 0x7) / 16.0f; // era & 0xF
+                    float deform = ((dx*17 ^ dy*31 ^ dz*13) & 0x7) / 16.0f;
 
                     if (dist + deform > 1.0f) continue;
 

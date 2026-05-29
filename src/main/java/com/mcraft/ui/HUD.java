@@ -63,6 +63,10 @@ public class HUD {
     private float damageFlash    = 0f; 
     private int   lastHealth     = -1;
 
+    private int   currentDay     = 1;
+    private String notifMessage  = "";
+    private float  notifTimer    = 0f;
+
     public HUD (int screenW, int screenH, Inventory inventory, Shader hudShader, TextureAtlas atlas, Player player) {
         this.screenW   = screenW;
         this.screenH   = screenH;
@@ -153,6 +157,11 @@ public class HUD {
             underwaterWave += dt * 1.8f; 
             drawUnderwaterOverlay();
         }
+        flushBatch(false);
+
+        beginBatch();
+        drawDayCounter();
+        if (notifTimer > 0) { drawNotification(dt); }
         flushBatch(false);
 
         beginBatch();
@@ -364,6 +373,53 @@ public class HUD {
             0.05f, 0.18f, 0.55f, edge * 0.8f);
     }
 
+    private void drawDayCounter() {
+        int px  = screenW - 80, py = 6;
+        int day = currentDay;
+        int ps  = 2; 
+
+        PixelFont.drawIntShadow(this::addRect, px, py, ps, day, 1f, 1f, 0.8f);
+
+        float t = 0.5f;
+        boolean isNight = (t < 0.22f || t > 0.72f);
+        float iconColor = isNight ? 0.7f : 1.0f;
+        addRect(px - 18, py, 14, 14, iconColor, iconColor, isNight ? 0.5f : 0.1f, 0.85f);
+    }
+
+    private void drawNotification(float dt) {
+
+        notifTimer -= dt;
+
+        if (notifTimer <= 0f) {
+            notifMessage = "";
+            return;
+        }
+
+        float alpha = Math.min(1.0f, notifTimer);
+        int pixelSize = 2;
+        int msgW = PixelFont.measureWidth(notifMessage) * pixelSize;
+        int mx = (screenW - msgW) / 2;
+        int my = screenH / 2 - 60;
+
+        addRect(
+            mx - 10,
+            my - 4,
+            msgW + 20,
+            18,
+            0f, 0f, 0f,
+            alpha * 0.65f
+        );
+
+        PixelFont.drawStringShadow(
+            this::addRect,
+            mx,
+            my,
+            pixelSize,
+            notifMessage,
+            1f, 1f, 1f
+        );
+    }
+
     private void addQuad(float x0, float y0, float x1, float y1,
                      float u0, float v0, float u1, float v1,
                      float r, float g, float b, float a) {
@@ -391,6 +447,11 @@ public class HUD {
 
     private void addRect(int x, int y, int w, int h, float r, float g, float b, float a) {
         addQuad(x, y, x + w, y + h, 0, 0, 1, 1, r, g, b, a);
+    }
+
+    public void showNotification(String msg, float duration) {
+        this.notifMessage = msg;
+        this.notifTimer   = duration;
     }
 
     private void beginBatch() {
@@ -437,5 +498,7 @@ public class HUD {
 
     public void setUnderwater(boolean u) { this.underwater = u; }
     public boolean getUnderwater() { return this.underwater;}
+
+    public void setDay(int day)   { this.currentDay = day; }
 
 }

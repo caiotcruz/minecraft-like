@@ -35,11 +35,11 @@ public class Player {
     private final World     world;
     private final com.mcraft.ui.Inventory inventory;
 
-    private final float spawnX, spawnY, spawnZ;
+    private float spawnPointX, spawnPointY, spawnPointZ;
 
     public Player(float x, float y, float z, World world) {
-        this.spawnX = x; this.spawnY = y; this.spawnZ = z;
         this.x = x; this.y = y; this.z = z;
+        this.spawnPointX = x; this.spawnPointY = y; this.spawnPointZ = z;
         this.world  = world;
         this.camera = new Camera(x, y + EYE_HEIGHT, z);
 
@@ -47,6 +47,7 @@ public class Player {
         inventory.addItem(com.mcraft.world.Block.GRASS.id, 64);
         inventory.addItem(com.mcraft.world.Block.STONE.id, 64);
         inventory.addItem(com.mcraft.world.Block.DIRT.id,  64);
+        inventory.addItem(com.mcraft.world.Block.BED.id,  1);
     }
 
     public void update(float dx, float dz, boolean jump, float dt) {
@@ -175,12 +176,18 @@ public class Player {
     }
 
     public void respawn() {
-        x = spawnX; y = spawnY; z = spawnZ;
+        this.x = spawnPointX; this.y = spawnPointY; this.z = spawnPointZ;
         velX = velY = velZ = 0;
         health = maxHealth;
         dead = false; wasFalling = false; fallStart = Float.NaN;
         invincibleTimer = 1.0f; 
         camera.setPosition(x, y + EYE_HEIGHT, z);
+    }
+
+    public void setSpawnPoint(float x, float y, float z) {
+        this.spawnPointX = x;
+        this.spawnPointY = y;
+        this.spawnPointZ = z;
     }
 
     public Camera    getCamera()    { return camera; }
