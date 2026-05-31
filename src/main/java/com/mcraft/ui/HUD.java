@@ -63,6 +63,9 @@ public class HUD {
     private float damageFlash    = 0f; 
     private int   lastHealth     = -1;
 
+    private float rainIntensity;
+    private float rainOverlayTimer = 0f;
+    
     private int   currentDay     = 1;
     private String notifMessage  = "";
     private float  notifTimer    = 0f;
@@ -150,6 +153,12 @@ public class HUD {
 
         drawHearts(curHealth, player.getMaxHealth());
         if (damageFlash > 0.01f)   drawDamageFlash();
+        flushBatch(false);
+
+        beginBatch();
+        if (rainIntensity > 0.1f) {
+            drawRainOverlay(curHealth, dt);
+        }
         flushBatch(false);
 
         beginBatch();
@@ -420,6 +429,17 @@ public class HUD {
         );
     }
 
+    private void drawRainOverlay(float intensity, float dt) {
+        rainOverlayTimer += dt * 3.5f;
+        for (int i = 0; i < 20; i++) {
+            float t = ((i * 0.137f + rainOverlayTimer * 0.2f) % 1.0f);
+            int gx = (int)(((i * 0x9E3779B9L) & 0xFFFFL) % screenW);
+            int gy = (int)(t * (screenH + 20)) - 10;
+            int gh = 8 + (i % 3) * 4;
+            addRect(gx, gy, 1, gh, 0.6f, 0.75f, 0.9f, intensity * 0.22f);
+        }
+    }
+
     private void addQuad(float x0, float y0, float x1, float y1,
                      float u0, float v0, float u1, float v1,
                      float r, float g, float b, float a) {
@@ -500,5 +520,9 @@ public class HUD {
     public boolean getUnderwater() { return this.underwater;}
 
     public void setDay(int day)   { this.currentDay = day; }
+
+    public void setRainIntensity(float intensity) {
+        this.rainIntensity = intensity;
+    }
 
 }

@@ -44,6 +44,8 @@ import com.mcraft.ui.InventoryScreen;
 import com.mcraft.world.Biome;
 import com.mcraft.world.Block;
 import com.mcraft.world.DayNightCycle;
+import com.mcraft.world.WeatherSystem;
+import com.mcraft.world.WeatherType;
 import com.mcraft.world.World;
 import com.mcraft.world.WorldIO;
 
@@ -115,6 +117,7 @@ public class GameLoop {
     private static final float STEP_INTERVAL = 0.45f;
 
     private final DayNightCycle dayNight = new DayNightCycle();
+    private final WeatherSystem weather = new WeatherSystem();
 
     private final MobManager mobs;
 
@@ -276,6 +279,13 @@ public class GameLoop {
         dayNight.update(dt);
         skyRenderer.update(dt);
 
+        weather.update(TICK_STEP, player.getX(), player.getY(), player.getZ(), currentBiome);
+        if (weather.getCurrent() == WeatherType.RAIN) {
+            hud.setRainIntensity(weather.getIntensity());
+        } else {
+            hud.setRainIntensity(0f);
+        }
+
         hud.setDay(dayNight.getDay());
 
         player.tickRegen(TICK_STEP);
@@ -322,6 +332,7 @@ public class GameLoop {
         float[] view = camera.getViewMatrix();
 
         skyRenderer.render(camera, dayNight, skyShader, proj, view);
+        weather.render(camera, skyShader, proj, view);
 
         blockShader.use();
         blockShader.setMatrix4("uProjection", proj);
@@ -366,10 +377,14 @@ public class GameLoop {
 
             jump = input.isKeyDown(GLFW_KEY_SPACE);
 
+            //DEBUG
+
+            //Coloar Noite
             if (input.isKeyDown(GLFW_KEY_F2)) {
                 dayNight.setTime(0.8f);
             }
 
+            //Spawnar Zumbi
             if (input.isKeyDown(GLFW_KEY_F3)) {
 
                 float[] front = camera.getFront();
@@ -386,6 +401,16 @@ public class GameLoop {
                         spawnZ
                     )
                 );
+            }
+
+            //Alterar Weather
+            if (weather.getCurrent() == WeatherType.CLEAR) {
+
+                weather.setCurrent(WeatherType.forBiome(currentBiome));
+
+            } else {
+
+                weather.setCurrent(WeatherType.CLEAR);
             }
         }
 
