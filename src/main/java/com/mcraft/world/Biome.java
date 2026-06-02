@@ -3,11 +3,12 @@ package com.mcraft.world;
 public enum Biome {
 
     //          nome           surf         sub             mar       base       var   trees  snow        fog
-    PLAINS   ("Plains",  Block.GRASS, Block.DIRT,      62,  64,  16,  1,  999, 0xB8D4E8),
+    PLAINS   ("Plains",  Block.GRASS, Block.DIRT,      62,  65,  16,  1,  999, 0xB8D4E8),
     DESERT   ("Desert",  Block.SAND,  Block.SAND,      52,  66,  12,  2,  999, 0xE8D898),
     FOREST   ("Forest",  Block.GRASS, Block.DIRT,      62,  65,  20,  6,  999, 0x98C8A0),
-    MOUNTAINS("Mounts",  Block.STONE, Block.STONE,     64,  85,  34,  1,   95, 0xC8D8E8),
-    TAIGA    ("Taiga",   Block.SNOWY_GRASS, Block.DIRT,      62,  65,  20,  5,  105, 0xA8C0B8),
+    MOUNTAINS("Mounts",  Block.STONE, Block.STONE,     64,  66,  52,  1,   95, 0xC8D8E8),
+    TAIGA    ("Taiga",   Block.SNOWY_GRASS, Block.DIRT,62,  65,  20,  5,  105, 0xA8C0B8),
+    RAINFOREST ("RainForest",Block.GRASS, Block.DIRT,  62,  65,  22, 12,  999, 0x48A060),
     TUNDRA   ("Tundra",  Block.SNOW,  Block.DIRT,      62,  63,  10,  0,   64, 0xC8D8E0),
     OCEAN    ("Ocean",   Block.SAND,  Block.SAND,      64,  34,   8,  0,  999, 0x607898);
 
@@ -27,27 +28,33 @@ public enum Biome {
     public float fogG() { return ((fogColor >>  8) & 0xFF) / 255f; }
     public float fogB() { return ( fogColor        & 0xFF) / 255f; }
 
-    public static Biome fromClimate(double temp, double humidity) {
+    private static double spread(double v) {
+        if (v < 0.5) return 0.5 * Math.pow(2 * v, 1.6);
+        else         return 1.0 - 0.5 * Math.pow(2 * (1 - v), 1.6);
+    }
+
+    public static Biome fromClimate(double rawTemp, double rawHumidity) {
+        double temp = spread(rawTemp);
+        double hum  = spread(rawHumidity);
+
         if (temp < 0.28) {
-            if (humidity < 0.42) return TUNDRA;
-            return TAIGA;
+            return (hum < 0.52) ? Biome.TUNDRA : Biome.TAIGA;
         }
 
-        if (temp < 0.52) {
-            if (humidity < 0.28) return PLAINS;
-            if (humidity < 0.66) return FOREST;
-            return FOREST;
+        if (temp < 0.50) {
+            if (hum < 0.32) return Biome.PLAINS;
+            if (hum < 0.68) return Biome.MOUNTAINS;  
+            return Biome.TAIGA;
         }
 
-        if (temp < 0.72) {
-            if (humidity < 0.22) return PLAINS;
-            if (humidity < 0.52) return FOREST;
-            if (humidity < 0.72) return FOREST;
-            return FOREST;
+        if (temp < 0.70) {
+            if (hum < 0.28) return Biome.PLAINS;
+            if (hum < 0.58) return Biome.FOREST;
+            return Biome.RAINFOREST;
         }
 
-        if (humidity < 0.32) return DESERT;
-        if (humidity < 0.58) return MOUNTAINS;
-        return FOREST;
+        if (hum < 0.32) return Biome.DESERT;
+        if (hum < 0.60) return Biome.PLAINS;
+        return Biome.RAINFOREST;
     }
 }

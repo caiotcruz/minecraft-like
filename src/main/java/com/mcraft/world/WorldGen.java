@@ -302,6 +302,11 @@ public class WorldGen {
                     if (surface != (byte)Block.SAND.id) continue;
                     plantCactus(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
                 }
+                case RAINFOREST -> {
+                    if (surface != (byte)Block.GRASS.id) continue;
+                    if (ty < height - 16) 
+                        plantRainforestTree(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
+                }
                 default -> {} 
             }
         }
@@ -356,6 +361,38 @@ public class WorldGen {
                 setBlock(blocks, tx+dx, armY, tz, Block.CACTUS, size, height);
             for (int dz = 1; dz <= armLen; dz++)
                 setBlock(blocks, tx, armY, tz+dz, Block.CACTUS, size, height);
+        }
+    }
+
+    private void plantRainforestTree(byte[] blocks, int tx, int ty, int tz, int size, int height, int cx, int cz, int t) {
+        int trunkH = 9 + chunkRandInt(cx, cz, t*10+5, 5); 
+
+        for (int dy = 1; dy <= trunkH; dy++) {
+            for (int dtx = 0; dtx <= 1; dtx++) {
+                for (int dtz = 0; dtz <= 1; dtz++) {
+                    setBlock(blocks, tx+dtx, ty+dy, tz+dtz, Block.WOOD_LOG, size, height);
+                }
+            }
+        }
+
+        int[][] layers = {
+            {trunkH - 2, 4}, 
+            {trunkH,     3}, 
+            {trunkH + 2, 2}, 
+        };
+
+        for (int[] layer : layers) {
+            int lyOff = layer[0], rad = layer[1];
+            int ly = ty + lyOff;
+            for (int dx = -rad; dx <= rad + 1; dx++) {
+                for (int dz = -rad; dz <= rad + 1; dz++) {
+                    int dist2 = dx*dx + dz*dz;
+                    if (dist2 > (rad+1)*(rad+1)) continue;
+                    setBlockIfAir(blocks, tx+dx, ly, tz+dz, Block.LEAVES, size, height);
+                    if (dist2 <= rad*rad)
+                        setBlockIfAir(blocks, tx+dx, ly-1, tz+dz, Block.LEAVES, size, height);
+                }
+            }
         }
     }
 
