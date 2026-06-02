@@ -668,7 +668,20 @@ public class GameLoop {
 
             if (mobDist < blockDist) {
 
-                targetMob.damage(5);
+                int toolId = player.getInventory().getSelectedBlockId();
+                Block tool = Block.fromId(toolId); 
+                int damage = 2;
+
+                if (tool != null) {
+                    switch (tool) {
+                        case WOODEN_SWORD: damage += 5; break;
+                        case WOODEN_PICKAXE: damage += 1; break;
+                        case WOODEN_AXE: damage += 3; break; 
+                        case WOODEN_SHOVEL: damage -= 1; break;
+                        default: break;
+                    }
+                }
+                targetMob.damage(damage);
 
                 float kx = targetMob.getX() - camera.getX();
                 float kz = targetMob.getZ() - camera.getZ();
@@ -690,6 +703,9 @@ public class GameLoop {
 
             if (leftDown && target.breakTime > 0f) {
 
+                int   toolId = player.getInventory().getSelectedBlockId();
+                float mult   = getToolMultiplier(toolId, target);
+
                 if (hit.blockX != breakX
                 || hit.blockY != breakY
                 || hit.blockZ != breakZ) {
@@ -699,7 +715,7 @@ public class GameLoop {
                     breakZ = hit.blockZ;
 
                     breakElapsed  = 0f;
-                    breakDuration = target.breakTime;
+                    breakDuration = target.breakTime/mult;
 
                     sound.playRandom(
                         sound.hitSound(target),
@@ -841,6 +857,28 @@ public class GameLoop {
             }
         }
         prevEKeyDown = eDown;
+    }
+
+    private float getToolMultiplier(int toolId, Block target) {
+        if (toolId == Block.WOODEN_PICKAXE.id) {
+            return switch (target) {
+                case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 2.5f;
+                default -> 1.0f;
+            };
+        }
+        if (toolId == Block.WOODEN_AXE.id) {
+            return switch (target) {
+                case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> 2.5f;
+                default -> 1.0f;
+            };
+        }
+        if (toolId == Block.WOODEN_SHOVEL.id) {
+            return switch (target) {
+                case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS -> 2.5f;
+                default -> 1.0f;
+            };
+        }
+        return 1.0f;
     }
 
     private void doRespawn() {

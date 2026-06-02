@@ -13,43 +13,66 @@ public class CraftingGrid {
     private static final Map<String, int[]> RECIPES_3x3 = new HashMap<>();
 
     static {
-        // ── Receitas 2×2 (inventário) ─────────────────────────────────
-        // 1 tora → 4 pranchas
-        reg2(new int[][]{{5,0},{0,0}}, Block.PLANKS.id, 4);
-        // 4 pranchas → bancada
-        reg2(new int[][]{{9,9},{9,9}}, Block.CRAFTING_TABLE.id, 1);
+        // Receitas 2×2 (inventário)
 
-        // ── Receitas 3×3 (bancada)
-        // Picareta de madeira: 3 pranchas topo + 2 gravetos centro/baixo
-        // (placeholder: use PLANKS no centro por enquanto)
+        //Planks
+        reg2(new int[][]{
+            {5,0},
+            {0,0}
+        }, Block.PLANKS.id, 4);
+        
+        //bancada
+        reg2(new int[][]{
+            {9,9},
+            {9,9}
+        }, Block.CRAFTING_TABLE.id, 1);
+
+        //Stick
+        reg2(new int[][]{
+            {9,0},
+            {9,0}
+        }, Block.STICK.id , 4);
+        reg2(new int[][]{
+            {0,9},
+            {0,9}
+        }, Block.STICK.id , 4);
+
+        // Receitas 3×3 (bancada)
+
+        // Picareta de madeira
         reg3(new int[][]{
             {9, 9, 9},
-            {0, 9, 0},
-            {0, 9, 0}
-        }, 270, 1);
-
-        // Pá de madeira
-        reg3(new int[][]{
-            {0, 9, 0},
-            {0, 9, 0},
-            {0, 9, 0}
-        }, 269, 1);
+            {0, 30, 0},
+            {0, 30, 0}
+        }, Block.WOODEN_PICKAXE.id, 1);
 
         // Machado de madeira
         reg3(new int[][]{
             {9, 9, 0},
-            {9, 9, 0},
-            {0, 9, 0}
-        }, 271, 1);
+            {9, 30, 0},
+            {0, 30, 0}
+        }, Block.WOODEN_AXE.id, 1);
+        reg3(new int[][]{
+            {0, 9, 9},
+            {0, 30, 9},
+            {0, 30, 0}
+        }, Block.WOODEN_AXE.id, 1);
+
+        // Pá de madeira
+        reg3(new int[][]{
+            {0, 9, 0},
+            {0, 30, 0},
+            {0, 30, 0}
+        }, Block.WOODEN_SHOVEL.id, 1);
 
         // Espada de madeira
         reg3(new int[][]{
             {0, 9, 0},
             {0, 9, 0},
-            {0, 9, 0} 
-        }, 272, 1);
+            {0, 30, 0} 
+        }, Block.WOODEN_SWORD.id, 1);
 
-        // Baú: 8 pranchas em anel
+        // Baú
         reg3(new int[][]{
             {9, 9, 9},
             {9, 0, 9},

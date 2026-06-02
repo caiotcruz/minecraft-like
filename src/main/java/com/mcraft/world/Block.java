@@ -2,32 +2,54 @@ package com.mcraft.world;
 
 public enum Block {
 
-    AIR            ( 0, "air",              0,   0,  false,  0f   ),
-    GRASS          ( 1, "grass",            0,   0,  true,   0.90f),
-    DIRT           ( 2, "dirt",             2,   0,  true,   0.75f),
-    STONE          ( 3, "stone",            1,   0,  true,   3.00f),
-    SAND           ( 4, "sand",             2,   1,  true,   0.75f),
-    WOOD_LOG       ( 5, "wood_log",         4,   1,  true,   2.00f),
-    LEAVES         ( 6, "leaves",           4,   3,  true,   0.35f),
-    WATER          ( 7, "water",           13,  12,  false,  0f   ),
-    BEDROCK        ( 8, "bedrock",          1,   1,  true,   0f   ),
-    PLANKS         ( 9, "planks",           4,   0,  true,   1.50f),
-    CRAFTING_TABLE (10, "crafting_table",  11,   2,  true,   1.50f),
-    COAL_ORE       (11, "coal_ore",     0,   2,  true,  3.0f),
-    IRON_ORE       (12, "iron_ore",     1,   2,  true,  4.5f),
-    GOLD_ORE       (13, "gold_ore",     2,   2,  true,  4.5f),
-    DIAMOND_ORE    (14, "diamond_ore",  3,   2,  true,  6.0f),
-    FEATHER        (15, "feather",      5, 2, false, 0f),
-    LEATHER        (16, "leather",      6, 2, false, 0f),
-    RAW_BEEF       (17, "raw_beef",     7, 2, false, 0f),
-    ROTTEN_FLESH   (18, "rotten_flesh", 8, 2, false, 0f),
-    GUNPOWDER      (19, "gunpowder",    9, 2, false, 0f),
-    SNOW           (20, "snow", 2, 4, true, 0.2f),
-    CACTUS         (21, "cactus", 6, 4, true, 0.5f),
-    SNOWY_GRASS    (22, "snowy_grass", 7, 4, true,  0.9f), 
-    ICE            (23, "ice",         8, 4, true,  0.2f), 
-    BED            (24, "bed",         9, 4, true,  0.5f),
-    WOOL           (25, "wool",        0, 6, true, 0.8f);
+    AIR            ( 0, "air",              0,  0, false, 0f),
+    WATER          ( 7, "water",           13, 12, false, 0f),
+    
+    // ROW 0 — BLOCOS BÁSICOS
+    GRASS          ( 1, "grass",            0,  0, true,  0.90f),
+    STONE          ( 3, "stone",            1,  0, true,  3.00f),
+    DIRT           ( 2, "dirt",             2,  0, true,  0.75f),
+    PLANKS         ( 9, "planks",           3,  0, true,  1.50f),
+    BEDROCK        ( 8, "bedrock",          4,  0, true,  0f),
+
+    // ROW 1 — NATUREZA
+    SAND           ( 4, "sand",             0,  1, true,  0.75f),
+    WOOD_LOG       ( 5, "wood_log",         1,  1, true,  2.00f),
+    LEAVES         ( 6, "leaves",           2,  1, true,  0.35f),
+    CACTUS         (21, "cactus",           3,  1, true,  0.50f),
+
+    // ROW 2 — MINÉRIOS
+    COAL_ORE       (11, "coal_ore",         0,  2, true,  3.0f),
+    IRON_ORE       (12, "iron_ore",         1,  2, true,  4.5f),
+    GOLD_ORE       (13, "gold_ore",         2,  2, true,  4.5f),
+    DIAMOND_ORE    (14, "diamond_ore",      3,  2, true,  6.0f),
+
+    // ROW 3 — BLOCOS UTILITÁRIOS
+    CRAFTING_TABLE (10, "crafting_table",   0,  3, true,  1.50f),
+    CHEST          (31, "chest",            1,  3, true,  1.50f),
+    BED            (24, "bed",              2,  3, true,  0.50f),
+
+    // ROW 4 — FERRAMENTAS E ARMAS
+    STICK          (30, "stick",            0,  4, false, 0f),
+
+    WOODEN_PICKAXE (26, "wooden_pickaxe",   1,  4, false, 0f),
+    WOODEN_AXE     (27, "wooden_axe",       2,  4, false, 0f),
+    WOODEN_SHOVEL  (28, "wooden_shovel",    3,  4, false, 0f),
+    WOODEN_SWORD   (29, "wooden_sword",     4,  4, false, 0f),
+
+    // ROW 5 — DROPS E RECURSOS
+    FEATHER        (15, "feather",          0,  5, false, 0f),
+    LEATHER        (16, "leather",          1,  5, false, 0f),
+    RAW_BEEF       (17, "raw_beef",         2,  5, false, 0f),
+    ROTTEN_FLESH   (18, "rotten_flesh",     3,  5, false, 0f),
+    GUNPOWDER      (19, "gunpowder",        4,  5, false, 0f),
+    WOOL           (25, "wool",             5,  5, true,  0.8f),
+
+    // ROW 6 — BIOMAS FRIOS
+    SNOW           (20, "snow",             0,  6, true,  0.2f),
+    SNOWY_GRASS    (22, "snowy_grass",      1,  6, true,  0.9f),
+    ICE            (23, "ice",              2,  6, true,  0.2f);
+
 
     public final int     id;
     public final String  name;
