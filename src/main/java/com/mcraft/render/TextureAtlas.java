@@ -290,11 +290,28 @@ public class TextureAtlas {
 
         // BED
         if (col == 2 && row == 3) {
-            boolean pillow = (px >= 2 && px <= 5 && py >= 4 && py <= 11);
-            if (pillow) return new int[]{ 230, 230, 225, 255 }; 
-            return new int[]{ 180, 35, 35, 255 };
+            if (py < 8) {
+                boolean pillow = (px >= 2 && px <= 13) && (py >= 1 && py <= 4);
+                if (pillow) {
+                    int v = 225 + (n & 7);
+                    return new int[]{ v, v, v - 5, 255 }; 
+                }
+                
+                int r = 175 + (n & 7);
+                return new int[]{ r, 35, 35, 255 };
+            } 
+            
+            else {
+                boolean woodBase = (py >= 13);
+                if (woodBase) {
+                    int shading = (px % 4 == 0 || py == 13) ? -20 : 0;
+                    return new int[]{ clamp(130 + shading), clamp(82 + shading), clamp(40 + shading), 255 };
+                }
+                
+                int shading = (px % 4 == 0) ? -15 : 0;
+                return new int[]{ clamp(160 + shading), clamp(30 + shading), clamp(30 + shading), 255 };
+            }
         }
-
 
         //  ROW 4 — FERRAMENTAS E ARMAS
         

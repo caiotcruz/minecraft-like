@@ -23,6 +23,8 @@ public class ChunkRenderer {
     private int wVao, wVbo, wEbo;
     private int wIndexCount;
 
+    private static final float BED_TOP_Y = 0.5625f;
+
     private static final int[][] FACE_DIR = {
         { 0, 1, 0}, { 0,-1, 0}, { 0, 0, 1},
         { 0, 0,-1}, {-1, 0, 0}, { 1, 0, 0}
@@ -35,6 +37,16 @@ public class ChunkRenderer {
         {{0,0,0},{0,0,1},{0,1,1},{0,1,0}}, 
         {{1,0,1},{1,0,0},{1,1,0},{1,1,1}}  
     };
+
+    private static final float[][][] BED_VERTS = {
+        {{0,BED_TOP_Y,0},{0,BED_TOP_Y,1},{1,BED_TOP_Y,1},{1,BED_TOP_Y,0}},
+        {{0,0,1},{0,0,0},{1,0,0},{1,0,1}},
+        {{0,0,1},{1,0,1},{1,BED_TOP_Y,1},{0,BED_TOP_Y,1}},
+        {{1,0,0},{0,0,0},{0,BED_TOP_Y,0},{1,BED_TOP_Y,0}},
+        {{0,0,0},{0,0,1},{0,BED_TOP_Y,1},{0,BED_TOP_Y,0}},
+        {{1,0,1},{1,0,0},{1,BED_TOP_Y,0},{1,BED_TOP_Y,1}}
+    };
+
     private static final float[] FACE_LIGHT = {1.0f,0.5f,0.8f,0.7f,0.65f,0.65f};
 
 
@@ -78,6 +90,10 @@ public class ChunkRenderer {
                         float[] uvs   = block.getUVs(face);
                         float   light = FACE_LIGHT[face];
                         float[][] vv  = FACE_VERTS[face];
+
+                        if (block == Block.BED){
+                            vv = (block == Block.BED) ? BED_VERTS[face] : FACE_VERTS[face];
+                        }
 
                         if (isWater) {
 
