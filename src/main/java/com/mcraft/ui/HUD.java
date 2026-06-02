@@ -436,7 +436,7 @@ public class HUD {
             int gx = (int)(((i * 0x9E3779B9L) & 0xFFFFL) % screenW);
             int gy = (int)(t * (screenH + 20)) - 10;
             int gh = 8 + (i % 3) * 4;
-            addRect(gx, gy, 1, gh, 0.6f, 0.75f, 0.9f, intensity * 0.22f);
+            addRect(gx, gy, 1, gh, 0.6f, 0.75f, 0.9f, intensity * 0.75f);
         }
     }
 

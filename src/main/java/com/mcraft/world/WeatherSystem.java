@@ -15,7 +15,7 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class WeatherSystem {
 
-    private static final int MAX_PARTICLES = 600;
+    private static final int MAX_PARTICLES = 800;
     private static final float SPAWN_RADIUS = 20f;
     private static final float RAIN_SPEED   = 28f;
     private static final float SNOW_SPEED   = 4f;
@@ -44,15 +44,22 @@ public class WeatherSystem {
 
     public void update(float dt, float cx, float cy, float cz, Biome biome) {
         changeTimer -= dt;
-        if (changeTimer <= 0) {
+        if (changeTimer <= 0f) {
+
             changeTimer = 180f + rng.nextFloat() * 240f;
-            WeatherType target = rng.nextFloat() < 0.4f
+
+            WeatherType target =
+            rng.nextFloat() < 0.75f
                 ? WeatherType.CLEAR
                 : WeatherType.forBiome(biome);
+
             current = target;
         }
 
-        float targetIntensity = (current != WeatherType.CLEAR) ? 1.0f : 0.0f;
+        float targetIntensity =
+        (current != WeatherType.CLEAR)
+            ? 1f
+            : 0f;
         intensity += (targetIntensity - intensity) * dt * 0.5f;
 
         if (intensity < 0.01f) return;
@@ -79,20 +86,34 @@ public class WeatherSystem {
         if (intensity < 0.01f) return;
 
         float[] right = camera.getRight();
-        float r, g, b, a, pw, ph;
 
-        if (current == WeatherType.RAIN || intensity < 0.5f) {
-            r = 0.6f; g = 0.7f; b = 0.85f;
-            a = intensity * 0.55f;
-            pw = 0.04f; ph = 0.5f;
+        float r, g, b, a;
+        float pw, ph;
+
+        if (current == WeatherType.RAIN) {
+
+            r = 0.55f;
+            g = 0.70f;
+            b = 1.00f;
+            a = 0.72f * intensity;
+
+            pw = 0.06f;
+            ph = 0.55f;
+
         } else {
-            r = 0.92f; g = 0.94f; b = 1.0f;
-            a = intensity * 0.70f;
-            pw = 0.12f; ph = 0.12f;
+
+            r = 0.92f;
+            g = 0.94f;
+            b = 1.00f;
+            a = 0.70f * intensity;
+
+            pw = 0.12f;
+            ph = 0.12f;
         }
 
         glDisable(GL_DEPTH_TEST);
         glDepthMask(false);
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -100,34 +121,62 @@ public class WeatherSystem {
         skyShader.setMatrix4("uProjection", proj);
         skyShader.setMatrix4("uView", view);
 
-        vBuf.clear(); iBuf.clear();
+        vBuf.clear();
+        iBuf.clear();
+
         int qc = 0;
 
-        float[] up = {0, 1, 0};
+        float[] up = {0f, 1f, 0f};
 
-        for (int i = 0; i < (int)(MAX_PARTICLES * intensity); i++) {
+        int particleCount = (int)(MAX_PARTICLES * intensity);
+
+        for (int i = 0; i < particleCount; i++) {
+
             if (qc >= MAX_QUADS) break;
-            float hs = pw / 2, ht = ph / 2;
-            float rux = right[0]*hs, ruy = right[1]*hs, ruz = right[2]*hs;
-            float uux = up[0]*ht,   uuy = up[1]*ht,   uuz = up[2]*ht;
 
-            vBuf.put(px[i]-rux-uux).put(py[i]-ruy-uuy).put(pz[i]-ruz-uuz).put(r).put(g).put(b).put(a);
-            vBuf.put(px[i]+rux-uux).put(py[i]+ruy-uuy).put(pz[i]+ruz-ruz).put(r).put(g).put(b).put(a);
-            vBuf.put(px[i]+rux+uux).put(py[i]+ruy+uuy).put(pz[i]+ruz+uuz).put(r).put(g).put(b).put(a);
-            vBuf.put(px[i]-rux+uux).put(py[i]-ruy+uuy).put(pz[i]-ruz+uuz).put(r).put(g).put(b).put(a);
+            float hs = pw * 0.5f;
+            float ht = ph * 0.5f;
+
+            float rux = right[0] * hs;
+            float ruy = right[1] * hs;
+            float ruz = right[2] * hs;
+
+            float uux = up[0] * ht;
+            float uuy = up[1] * ht;
+            float uuz = up[2] * ht;
+
+            vBuf.put(px[i] - rux - uux).put(py[i] - ruy - uuy).put(pz[i] - ruz - uuz).put(r).put(g).put(b).put(a);
+            vBuf.put(px[i] + rux - uux).put(py[i] + ruy - ruz).put(pz[i] + ruz - uuz).put(r).put(g).put(b).put(a);
+            vBuf.put(px[i] + rux + uux).put(py[i] + ruy + uuy).put(pz[i] + ruz + uuz).put(r).put(g).put(b).put(a);
+            vBuf.put(px[i] - rux + uux).put(py[i] - ruy + uuy).put(pz[i] - ruz + uuz).put(r).put(g).put(b).put(a);
+
             int base = qc * 4;
-            iBuf.put(base).put(base+1).put(base+2).put(base+2).put(base+3).put(base);
+
+            iBuf.put(base);
+            iBuf.put(base + 1);
+            iBuf.put(base + 2);
+
+            iBuf.put(base + 2);
+            iBuf.put(base + 3);
+            iBuf.put(base);
+
             qc++;
         }
 
         if (qc > 0) {
-            vBuf.flip(); iBuf.flip();
+            vBuf.flip();
+            iBuf.flip();
+
             glBindVertexArray(vao);
+
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glBufferSubData(GL_ARRAY_BUFFER, 0, vBuf);
+
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
             glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, iBuf);
+
             glDrawElements(GL_TRIANGLES, qc * 6, GL_UNSIGNED_INT, 0L);
+
             glBindVertexArray(0);
         }
 
@@ -141,6 +190,9 @@ public class WeatherSystem {
         this.current = newWeather;
     }
 
+    public void setIntensity(float intensity){
+        this.intensity = intensity;
+    }
     public float getIntensity()     { return intensity; }
 
     private void initGPU() {

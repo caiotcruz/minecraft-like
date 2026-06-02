@@ -378,7 +378,35 @@ public class GameLoop {
     private void render3D() {
         float[] sky = dayNight.getSkyColor();
         float[] fog = dayNight.getFogColor();
-        glClearColor(sky[0], sky[1], sky[2], 1f);
+        
+        float rainIntensity =
+        (weather.getCurrent() == WeatherType.RAIN ||
+        weather.getIntensity() > 0.05f)
+            ? weather.getIntensity()
+            : 0f;
+
+        float grayBlend = rainIntensity * 0.68f;
+        float grayLevel = 0.38f;
+
+        float finalSkyR =
+            sky[0] * (1f - grayBlend) + grayLevel * grayBlend;
+
+        float finalSkyG =
+            sky[1] * (1f - grayBlend) + grayLevel * grayBlend;
+
+        float finalSkyB =
+            sky[2] * (1f - grayBlend) + (grayLevel + 0.04f) * grayBlend;
+
+        glClearColor(finalSkyR, finalSkyG, finalSkyB, 1f);
+
+        float finalFogR =
+        fog[0] * (1f - grayBlend) + grayLevel * grayBlend;
+
+        float finalFogG =
+            fog[1] * (1f - grayBlend) + grayLevel * grayBlend;
+
+        float finalFogB =
+            fog[2] * (1f - grayBlend) + (grayLevel + 0.05f) * grayBlend;
 
         float[] proj = Camera.perspective(70f,
             (float)window.getWidth() / window.getHeight(), 0.05f, 900f);
@@ -391,7 +419,7 @@ public class GameLoop {
         blockShader.setMatrix4("uProjection", proj);
         blockShader.setMatrix4("uView",       view);
         blockShader.setFloat  ("uAmbientLight", dayNight.getAmbientLight());
-        blockShader.setVec3   ("uFogColor", fog[0], fog[1], fog[2]);
+        blockShader.setVec3   ("uFogColor", finalFogR, finalFogG, finalFogB);
         atlas.bind(0);
         blockShader.setInt("uTexture", 0);
         world.render(blockShader, camera, proj, view);
@@ -466,13 +494,12 @@ public class GameLoop {
             }
 
             //Alterar Weather
-            if (weather.getCurrent() == WeatherType.CLEAR) {
+            WeatherType biomeWeather = WeatherType.forBiome(currentBiome);
 
-                weather.setCurrent(WeatherType.forBiome(currentBiome));
-
-            } else {
-
+            if (weather.getCurrent() == biomeWeather) {
                 weather.setCurrent(WeatherType.CLEAR);
+            } else {
+                weather.setCurrent(biomeWeather);
             }
         }
 
