@@ -66,6 +66,7 @@ public class HUD {
     private float rainIntensity;
     private float rainOverlayTimer = 0f;
     
+    private float currentGameTime = 0.27f;
     private int   currentDay     = 1;
     private String notifMessage  = "";
     private float  notifTimer    = 0f;
@@ -383,18 +384,38 @@ public class HUD {
     }
 
     private void drawDayCounter() {
-        int px  = screenW - 80, py = 6;
-        int day = currentDay;
-        int ps  = 2; 
 
-        PixelFont.drawIntShadow(this::addRect, px, py, ps, day, 1f, 1f, 0.8f);
+        boolean isNight = (currentGameTime > 0.76f || currentGameTime < 0.24f);
 
-        float t = 0.5f;
-        boolean isNight = (t < 0.22f || t > 0.72f);
-        float iconColor = isNight ? 0.7f : 1.0f;
-        addRect(px - 18, py, 14, 14, iconColor, iconColor, isNight ? 0.5f : 0.1f, 0.85f);
+        int px = screenW - 80;
+        int py = 6;
+        int ps = 2;
+
+        int numW = PixelFont.measureWidth(currentDay) * ps;
+
+        addRect(px - 22, py - 2, numW + 24, 18, 0f, 0f, 0f, 0.55f);
+
+        if (isNight) {
+            drawMoonIcon(px - 18, py);
+        } else {
+            drawSunIcon(px - 18, py);
+        }
+
+        PixelFont.drawIntShadow( this::addRect, px, py, ps, currentDay, 1f, 1f, 0.8f);
     }
 
+    private void drawSunIcon(int x, int y) {
+    addRect(x + 4, y,     6, 14, 1.0f, 0.90f, 0.05f, 1f);
+        addRect(x,     y + 4, 14, 6, 1.0f, 0.90f, 0.05f, 1f);
+    }
+
+    private void drawMoonIcon(int x, int y) {
+        addRect(x + 2, y,     10, 14, 0.88f, 0.88f, 0.96f, 1f);
+        addRect(x,     y + 4, 14, 6,  0.88f, 0.88f, 0.96f, 1f);
+
+        addRect(x + 6, y + 2, 6, 10, 0.06f, 0.06f, 0.12f, 1f);
+    }
+    
     private void drawNotification(float dt) {
 
         notifTimer -= dt;
@@ -520,6 +541,7 @@ public class HUD {
     public boolean getUnderwater() { return this.underwater;}
 
     public void setDay(int day)   { this.currentDay = day; }
+    public void setGameTime(float t)  { this.currentGameTime = t; }
 
     public void setRainIntensity(float intensity) {
         this.rainIntensity = intensity;

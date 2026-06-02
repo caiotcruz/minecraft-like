@@ -339,6 +339,7 @@ public class GameLoop {
             hud.setRainIntensity(0f);
         }
 
+        hud.setGameTime(dayNight.getTime());
         hud.setDay(dayNight.getDay());
 
         player.tickRegen(TICK_STEP);
