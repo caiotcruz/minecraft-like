@@ -40,6 +40,7 @@ import com.mcraft.render.Camera;
 import com.mcraft.render.Shader;
 import com.mcraft.render.SkyRenderer;
 import com.mcraft.render.TextureAtlas;
+import com.mcraft.ui.CraftingScreen;
 import com.mcraft.ui.InventoryScreen;
 import com.mcraft.world.Biome;
 import com.mcraft.world.Block;
@@ -96,6 +97,10 @@ public class GameLoop {
 
     private InventoryScreen inventoryScreen;
     private boolean         inventoryOpen   = false;
+
+    private CraftingScreen craftingScreen;
+    private boolean craftingOpen = false;
+
     private boolean         prevEKeyDown    = false;
 
     private boolean         leftWasDown     = false;
@@ -180,14 +185,40 @@ public class GameLoop {
             ortho2D
         );
 
+        craftingScreen = new CraftingScreen(
+            window.getWidth(), window.getHeight(),
+            player.getInventory(), hudShader, atlas, ortho2D
+        );
+
+
         glfwSetMouseButtonCallback(window.getHandle(), (win, button, action, mods) -> {
-            if (!inventoryOpen) return;
+
+            if (!inventoryOpen && !craftingOpen) return;
+
             if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-                double[] cx = new double[1], cy = new double[1];
+
+                double[] cx = new double[1];
+                double[] cy = new double[1];
+
                 glfwGetCursorPos(win, cx, cy);
-                boolean consumed = inventoryScreen.onClick((int) cx[0], (int) cy[0]);
+
+                boolean consumed = false;
+
+                if (craftingOpen) {
+                    consumed = craftingScreen.onClick(
+                        (int) cx[0],
+                        (int) cy[0]
+                    );
+                } else if (inventoryOpen) {
+                    consumed = inventoryScreen.onClick(
+                        (int) cx[0],
+                        (int) cy[0]
+                    );
+                }
+
                 if (!consumed) {
                     closeInventory();
+                    closeCrafting();
                 }
             }
         });
@@ -197,6 +228,7 @@ public class GameLoop {
     }
 
     private void openInventory() {
+        craftingOpen = false;
         inventoryOpen = true;
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
@@ -204,6 +236,18 @@ public class GameLoop {
         int cy = window.getHeight() / 2;
         glfwSetCursorPos(window.getHandle(), cx, cy);
         inventoryScreen.updateMouse(cx, cy);
+    }
+
+    private void openCrafting(){
+        inventoryOpen = false;
+        craftingOpen = true;
+
+        glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+        int cx = window.getWidth()  / 2;
+        int cy = window.getHeight() / 2;
+        glfwSetCursorPos(window.getHandle(), cx, cy);
+        craftingScreen.updateMouse(cx, cy);
     }
 
     private void closeInventory() {
@@ -214,6 +258,12 @@ public class GameLoop {
         input.resetFirstMouse();
     }
 
+    private void closeCrafting(){
+        craftingOpen = false;
+        craftingScreen.onClose();
+        glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        input.resetFirstMouse();
+    }
 
     public void run() {
         while (!window.shouldClose()) {
@@ -250,6 +300,9 @@ public class GameLoop {
             hud.setUnderwater(underwater);
             hud.render(dt);
 
+            if (craftingOpen){
+                craftingScreen.render();
+            } 
             if (inventoryOpen) {
                 inventoryScreen.render();
             }
@@ -364,11 +417,20 @@ public class GameLoop {
             inventoryScreen.updateMouse((int) cx[0], (int) cy[0]);
         }
 
+        if (craftingOpen) {
+            double[] cx = new double[1];
+            double[] cy = new double[1];
+
+            glfwGetCursorPos(window.getHandle(), cx, cy);
+
+            craftingScreen.updateMouse((int) cx[0], (int) cy[0]);
+        }
+
         float dx = 0f;
         float dz = 0f;
         boolean jump = false;
 
-        if (!inventoryOpen) {
+        if (!inventoryOpen && !craftingOpen) {
 
             if (input.isKeyDown(GLFW_KEY_W)) dz -= 1;
             if (input.isKeyDown(GLFW_KEY_S)) dz += 1;
@@ -418,7 +480,7 @@ public class GameLoop {
 
         boolean moving = dx != 0 || dz != 0;
 
-        if (moving && !inventoryOpen) {
+        if (moving && !inventoryOpen && !craftingOpen) {
 
             stepTimer -= dt;
 
@@ -445,7 +507,7 @@ public class GameLoop {
 
     private void handleCameraInput() {
 
-        if (inventoryOpen) {
+        if (inventoryOpen || craftingOpen) {
 
             double[] cx = new double[1];
             double[] cy = new double[1];
@@ -525,7 +587,7 @@ public class GameLoop {
 
     private void handlePlayerInteraction(float dt) {
 
-        if (inventoryOpen) {
+        if (inventoryOpen || craftingOpen) {
 
             breakElapsed  = 0f;
             breakDuration = 0f;
@@ -687,7 +749,10 @@ public class GameLoop {
                         dayNight.skipToMorning();
                         hud.showNotification("Passando para a manhã...", 2.0f);
                     }
-                }else{
+                } else if (hitBlock == Block.CRAFTING_TABLE) {
+                    openCrafting();
+                    return; 
+                } else{
                     int blockId = player.getInventory().getSelectedBlockId();
 
                     if (blockId != 0) {
@@ -741,6 +806,8 @@ public class GameLoop {
         if (eDown && !prevEKeyDown) {
             if (inventoryOpen) {
                 closeInventory();
+            } else if (craftingOpen){
+                closeCrafting();
             } else {
                 openInventory();
             }
@@ -786,6 +853,9 @@ public class GameLoop {
         world.shutdown();
         if (inventoryOpen) {
             inventoryScreen.onClose();
+        }
+        if (craftingOpen){
+            craftingScreen.onClose();
         }
         blockShader.delete();
         world.saveAll(world.getWorldIO());

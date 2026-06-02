@@ -15,22 +15,22 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class InventoryScreen {
 
-    private static final int SLOT_PX = 36;         
-    private static final int PAD     = 4;            
-    private static final int BORDER  = 10;           
-    private static final int S       = SLOT_PX + PAD; 
+    protected static final int SLOT_PX = 36;         
+    protected static final int PAD     = 4;            
+    protected static final int BORDER  = 10;           
+    protected static final int S       = SLOT_PX + PAD; 
 
-    private final int          sw, sh;
-    private final Inventory    inventory;
+    protected final int          sw, sh;
+    protected final Inventory    inventory;
     private final CraftingGrid craft   = new CraftingGrid(2);
-    private final Shader       shader;
-    private final TextureAtlas atlas;
-    private final float[]      ortho;
+    protected final Shader       shader;
+    protected final TextureAtlas atlas;
+    protected final float[]      ortho;
 
-    private int heldId  = 0;
-    private int heldQty = 0;
-    private int mouseX;
-    private int mouseY;
+    protected int heldId  = 0;
+    protected int heldQty = 0;
+    protected int mouseX;
+    protected int mouseY;
 
     private static final int MAX_QUADS   = 8192;
     private static final int VERT_FLOATS = 8;   
@@ -55,32 +55,32 @@ public class InventoryScreen {
         initGPU();
     }
 
-    private int panelW() {
+    protected int panelW() {
         return BORDER * 2 + 9 * S - PAD;
     }
 
-    private int panelH() {
-        return BORDER * 2 + 2 * S + 8 + 3 * S + PAD + SLOT_PX;
+    protected int panelH() {
+        return BORDER * 2 + getTopRows() * S + 8 + 3 * S + PAD + SLOT_PX;
     }
 
-    private int panelX() { return (sw - panelW()) / 2; }
-    private int panelY() { return (sh - panelH()) / 2; }
+    protected int panelX() { return (sw - panelW()) / 2; }
+    protected int panelY() { return (sh - panelH()) / 2; }
 
+    protected int getTopRows() {
+        return 2;
+    }
 
     private int craftX(int col) { return panelX() + BORDER + col * S; }
-
     private int craftY(int row) { return panelY() + BORDER + row * S; }
 
     private int arrowX() { return craftX(2) + 4; }
-
     private int arrowY() { return craftY(0) + SLOT_PX / 2 - 4; }
 
     private int resultX() { return arrowX() + 30; }
-
     private int resultY() { return craftY(0) + (2 * S - PAD - SLOT_PX) / 2; }
 
-    private int invAreaY() {
-        return craftY(0) + 2 * S - PAD + 8;  
+    protected int invAreaY() {
+        return panelY() + BORDER + getTopRows() * S - PAD + 8;  
     }
 
     private int slotX(int idx) {
@@ -88,7 +88,7 @@ public class InventoryScreen {
         return panelX() + BORDER + col * S;
     }
 
-    private int slotY(int idx) {
+    protected int slotY(int idx) {
         if (idx < 9) {
             return invAreaY() + 3 * S - PAD + PAD + 4;
         } else {
@@ -109,7 +109,9 @@ public class InventoryScreen {
 
         beginBatch();
         drawPanel();
-        drawCraftSection();
+        
+        drawTopSectionGeometry(); 
+        
         drawInventorySlots();
         if (heldId != 0) {
             drawRect(mouseX - SLOT_PX / 2, mouseY - SLOT_PX / 2,
@@ -120,7 +122,9 @@ public class InventoryScreen {
         atlas.bind(0);
         beginBatch();
         drawInventoryIcons();
-        drawCraftIcons();
+        
+        drawTopSectionIcons();
+        
         if (heldId != 0) {
             drawBlockIcon(Block.fromId(heldId),
                     mouseX - SLOT_PX / 2 + 2,
@@ -136,7 +140,6 @@ public class InventoryScreen {
         glDisable(GL_BLEND);
     }
 
-
     private void drawPanel() {
         drawRect(panelX(), panelY(), panelW(), panelH(),
                 0.12f, 0.12f, 0.12f, 0.93f);
@@ -150,7 +153,7 @@ public class InventoryScreen {
                 0.55f, 0.55f, 0.55f, 0.6f);
     }
 
-    private void drawCraftSection() {
+    protected void drawTopSectionGeometry() {
         for (int r = 0; r < 2; r++) {
             for (int c = 0; c < 2; c++) {
                 drawSlotBg(craftX(c), craftY(r), false);
@@ -167,11 +170,9 @@ public class InventoryScreen {
             drawRect(resultX(), resultY(), SLOT_PX, SLOT_PX,
                     0.3f, 0.7f, 0.3f, 0.35f);
         }
-
     }
 
-
-    private void drawInventorySlots() {
+    protected void drawInventorySlots() {
         for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
             boolean isSelected = (i < Inventory.HOTBAR_SIZE)
                                  && (i == inventory.getSelectedSlot());
@@ -179,7 +180,7 @@ public class InventoryScreen {
         }
     }
 
-    private void drawSlotBg(int x, int y, boolean selected) {
+    protected void drawSlotBg(int x, int y, boolean selected) {
         float bg = selected ? 0.62f : 0.32f;
         drawRect(x, y, SLOT_PX, SLOT_PX, bg, bg, bg, 1.0f);
         float br = selected ? 1.0f : 0.55f;
@@ -189,7 +190,7 @@ public class InventoryScreen {
         drawRect(x + SLOT_PX - 1, y,             1,       SLOT_PX, br, br, br, 1f);
     }
 
-    private void drawInventoryIcons() {
+    protected void drawInventoryIcons() {
         for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
             int id = inventory.getItemId(i);
             if (id == 0) continue;  
@@ -197,7 +198,7 @@ public class InventoryScreen {
         }
     }
 
-    private void drawCraftIcons() {
+    protected void drawTopSectionIcons() {
         for (int r = 0; r < 2; r++) {
             for (int c = 0; c < 2; c++) {
                 int id = craft.getSlot(r, c);
@@ -215,12 +216,9 @@ public class InventoryScreen {
         }
     }
 
-    private void drawSlotCounts() {
-
+    protected void drawSlotCounts() {
         for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
-
             int qty = inventory.getItemQty(i);
-
             if (qty <= 1) continue;
 
             int qx = slotX(i) + SLOT_PX - (
@@ -245,6 +243,10 @@ public class InventoryScreen {
         this.mouseY = my;
     }
 
+    protected boolean isDefaultCraftActive() {
+        return true; 
+    }
+
     public boolean onClick(int mx, int my) {
         for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
             if (hitTest(mx, my, slotX(i), slotY(i), SLOT_PX, SLOT_PX)) {
@@ -253,18 +255,20 @@ public class InventoryScreen {
             }
         }
 
-        for (int r = 0; r < 2; r++) {
-            for (int c = 0; c < 2; c++) {
-                if (hitTest(mx, my, craftX(c), craftY(r), SLOT_PX, SLOT_PX)) {
-                    handleCraftSlotClick(r, c);
-                    return true;
+        if (isDefaultCraftActive()) {
+            for (int r = 0; r < 2; r++) {
+                for (int c = 0; c < 2; c++) {
+                    if (hitTest(mx, my, craftX(c), craftY(r), SLOT_PX, SLOT_PX)) {
+                        handleCraftSlotClick(r, c);
+                        return true;
+                    }
                 }
             }
-        }
 
-        if (hitTest(mx, my, resultX(), resultY(), SLOT_PX, SLOT_PX)) {
-            handleResultClick();
-            return true;
+            if (hitTest(mx, my, resultX(), resultY(), SLOT_PX, SLOT_PX)) {
+                handleResultClick();
+                return true;
+            }
         }
 
         if (hitTest(mx, my, panelX(), panelY(), panelW(), panelH())) {
@@ -364,12 +368,12 @@ public class InventoryScreen {
         }
     }
 
-    private void drawRect(int x, int y, int w, int h,
+    protected void drawRect(int x, int y, int w, int h,
                            float r, float g, float b, float a) {
         addQuad(x, y, x + w, y + h, 0, 0, 1, 1, r, g, b, a);
     }
 
-    private void drawBlockIcon(Block block, int x, int y, int size) {
+    protected void drawBlockIcon(Block block, int x, int y, int size) {
         if (block == null || block == Block.AIR) return;
         float ts = 1f / 16f;
         float u0 = block.texCol * ts, v0 = block.texRow * ts;
@@ -377,7 +381,6 @@ public class InventoryScreen {
     }
 
     private void addQuad(float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float r, float g, float b, float a) {
-
         if (vBuf.remaining() < 32 || iBuf.remaining() < 6)
             return;
 
@@ -401,7 +404,6 @@ public class InventoryScreen {
     private void addRect(int x, int y, int w, int h, float r, float g, float b, float a) {
         addQuad(x, y, x + w, y + h, 0, 0, 1, 1, r, g, b, a);
     }
-
 
     private void initGPU() {
         vao = glGenVertexArrays();
@@ -429,13 +431,13 @@ public class InventoryScreen {
         glBindVertexArray(0);
     }
 
-    private void beginBatch() {
+    protected void beginBatch() {
         vBuf.clear();
         iBuf.clear();
         quadCount = 0;
     }
 
-    private void flushBatch(boolean useTexture) {
+    protected void flushBatch(boolean useTexture) {
         if (quadCount == 0) return;
 
         vBuf.flip();
@@ -455,7 +457,7 @@ public class InventoryScreen {
         glBindVertexArray(0);
     }
 
-    private static boolean hitTest(int mx, int my, int x, int y, int w, int h) {
+    protected static boolean hitTest(int mx, int my, int x, int y, int w, int h) {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }
 }

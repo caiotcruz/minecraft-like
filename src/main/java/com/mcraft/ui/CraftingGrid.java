@@ -1,27 +1,67 @@
 package com.mcraft.ui;
 
+import com.mcraft.world.Block;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.mcraft.world.Block;
-
 public class CraftingGrid {
 
-    private final int size;
+    public final int size; // 2 ou 3
     private final int[][] grid;
 
-    private static final Map<String, int[]> RECIPES = new HashMap<>();
+    private static final Map<String, int[]> RECIPES_2x2 = new HashMap<>();
+    private static final Map<String, int[]> RECIPES_3x3 = new HashMap<>();
 
     static {
+        // ── Receitas 2×2 (inventário) ─────────────────────────────────
+        // 1 tora → 4 pranchas
+        reg2(new int[][]{{5,0},{0,0}}, Block.PLANKS.id, 4);
+        // 4 pranchas → bancada
+        reg2(new int[][]{{9,9},{9,9}}, Block.CRAFTING_TABLE.id, 1);
 
-        int[][] singleWood = new int[2][2];
-        singleWood[0][0] = Block.WOOD_LOG.id;
-        register(singleWood, 2, Block.PLANKS.id, 4);
+        // ── Receitas 3×3 (bancada)
+        // Picareta de madeira: 3 pranchas topo + 2 gravetos centro/baixo
+        // (placeholder: use PLANKS no centro por enquanto)
+        reg3(new int[][]{
+            {9, 9, 9},
+            {0, 9, 0},
+            {0, 9, 0}
+        }, 270, 1);
 
-        register(new int[][]{
-                {Block.PLANKS.id, Block.PLANKS.id},
-                {Block.PLANKS.id, Block.PLANKS.id}
-        }, 2, Block.CRAFTING_TABLE.id, 1);
+        // Pá de madeira
+        reg3(new int[][]{
+            {0, 9, 0},
+            {0, 9, 0},
+            {0, 9, 0}
+        }, 269, 1);
+
+        // Machado de madeira
+        reg3(new int[][]{
+            {9, 9, 0},
+            {9, 9, 0},
+            {0, 9, 0}
+        }, 271, 1);
+
+        // Espada de madeira
+        reg3(new int[][]{
+            {0, 9, 0},
+            {0, 9, 0},
+            {0, 9, 0} 
+        }, 272, 1);
+
+        // Baú: 8 pranchas em anel
+        reg3(new int[][]{
+            {9, 9, 9},
+            {9, 0, 9},
+            {9, 9, 9}
+        }, 54, 1); 
+
+        // Cama: 3 lã (topo) + 3 pranchas (base) — placeholder com pedra
+        reg3(new int[][]{
+            {3, 3, 3},  // stone como placeholder para lã
+            {9, 9, 9},
+            {0, 0, 0}
+        }, Block.BED.id, 1);
     }
 
     public CraftingGrid(int size) {
@@ -29,73 +69,37 @@ public class CraftingGrid {
         this.grid = new int[size][size];
     }
 
-    public int getSize() {
-        return size;
+    public void setSlot(int row, int col, int id) {
+        if (row>=0&&row<size&&col>=0&&col<size) grid[row][col] = id;
     }
-
-    public void setSlot(int row, int col, int blockId) {
-        if (row < 0 || row >= size || col < 0 || col >= size) return;
-        grid[row][col] = blockId;
+    public int  getSlot(int row, int col) {
+        return (row>=0&&row<size&&col>=0&&col<size) ? grid[row][col] : 0;
     }
-
-    public int getSlot(int row, int col) {
-        if (row < 0 || row >= size || col < 0 || col >= size) return 0;
-        return grid[row][col];
-    }
-
-    public void clearSlot(int row, int col) {
-        setSlot(row, col, 0);
-    }
-
-    public void clear() {
-        for (int r = 0; r < size; r++) {
-            for (int c = 0; c < size; c++) {
-                grid[r][c] = 0;
-            }
-        }
-    }
+    public void clearSlot(int row, int col) { setSlot(row, col, 0); }
+    public void clear()  { for (int r=0;r<size;r++) for(int c=0;c<size;c++) grid[r][c]=0; }
 
     public int[] getResult() {
+        Map<String,int[]> recipes = (size == 3) ? RECIPES_3x3 : RECIPES_2x2;
         String key = gridKey(grid, size);
-
-        if (RECIPES.containsKey(key)) {
-            return RECIPES.get(key);
-        }
-
-        String mirrorKey = gridKey(mirrorH(grid, size), size);
-
-        return RECIPES.get(mirrorKey);
+        if (recipes.containsKey(key)) return recipes.get(key);
+        String mKey = gridKey(mirror(grid, size), size);
+        return recipes.getOrDefault(mKey, null);
     }
 
-    private static void register(int[][] pattern, int size,
-                                 int resultId, int qty) {
-        RECIPES.put(
-            gridKey(pattern, size),
-            new int[]{resultId, qty}
-        );
+    private static void reg2(int[][] p, int id, int qty) {
+        RECIPES_2x2.put(gridKey(p, 2), new int[]{id, qty});
     }
-
-    private static String gridKey(int[][] g, int size) {
-        StringBuilder sb = new StringBuilder();
-
-        for (int r = 0; r < size; r++) {
-            for (int c = 0; c < size; c++) {
-                sb.append(g[r][c]).append(',');
-            }
-        }
-
+    private static void reg3(int[][] p, int id, int qty) {
+        RECIPES_3x3.put(gridKey(p, 3), new int[]{id, qty});
+    }
+    private static String gridKey(int[][] g, int s) {
+        var sb = new StringBuilder();
+        for (int r=0;r<s;r++) for (int c=0;c<s;c++) sb.append(g[r][c]).append(',');
         return sb.toString();
     }
-
-    private static int[][] mirrorH(int[][] g, int size) {
-        int[][] m = new int[size][size];
-
-        for (int r = 0; r < size; r++) {
-            for (int c = 0; c < size; c++) {
-                m[r][c] = g[r][size - 1 - c];
-            }
-        }
-
+    private static int[][] mirror(int[][] g, int s) {
+        int[][] m = new int[s][s];
+        for (int r=0;r<s;r++) for (int c=0;c<s;c++) m[r][c]=g[r][s-1-c];
         return m;
     }
 }
