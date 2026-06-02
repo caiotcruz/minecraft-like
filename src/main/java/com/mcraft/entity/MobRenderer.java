@@ -67,14 +67,15 @@ public class MobRenderer {
         switch (mob.getType()) {
             case CHICKEN -> renderChicken(x, y, z, h);
             case COW     -> renderCow    (x, y, z, h);
+            case SHEEP   -> renderSheep(x, y, z, h);
             case ZOMBIE  -> renderZombie (x, y, z, h);
             case CREEPER -> renderCreeper(x, y, z, h);
         }
     }
 
     private void renderChicken(float x, float y, float z, float h) {
-        float[] body = hurt(0.95f, 0.95f, 0.95f, h);  // branco → vermelho
-        float[] leg  = hurt(1.0f,  0.62f, 0.12f, h);  // laranja → vermelho
+        float[] body = hurt(0.95f, 0.95f, 0.95f, h);
+        float[] leg  = hurt(1.0f,  0.62f, 0.12f, h);
 
         box(x-.175f, y+.15f, z-.125f, x+.175f, y+.45f, z+.125f, body[0],body[1],body[2]);
         box(x-.110f, y+.45f, z-.130f, x+.110f, y+.67f, z+.090f, body[0],body[1],body[2]);
@@ -103,6 +104,20 @@ public class MobRenderer {
         box(x+.22f, y, z-.18f, x+.38f, y+.55f, z-.04f, legs[0], legs[1], legs[2]); 
         box(x-.38f, y, z+.04f, x-.22f, y+.55f, z+.18f, legs[0], legs[1], legs[2]); 
         box(x+.22f, y, z+.04f, x+.38f, y+.55f, z+.18f, legs[0], legs[1], legs[2]);
+    }
+
+    private void renderSheep(float x, float y, float z, float h) {
+        float[] wool  = hurt(0.92f, 0.90f, 0.88f, h); 
+        float[] face  = hurt(0.65f, 0.58f, 0.52f, h); 
+        float[] legs  = hurt(0.52f, 0.46f, 0.40f, h); 
+
+        box(x-.44f, y+.52f, z-.24f, x+.44f, y+1.08f, z+.24f, wool[0], wool[1], wool[2]);
+        box(x-.20f, y+.50f, z-.40f, x+.20f, y+.82f, z-.24f,  face[0], face[1], face[2]);
+        box(x-.10f, y+.54f, z-.46f, x+.10f, y+.70f, z-.40f,  0.78f, 0.70f, 0.65f);
+        box(x-.36f, y,      z-.18f, x-.18f, y+.54f, z-.05f,  legs[0], legs[1], legs[2]);
+        box(x+.18f, y,      z-.18f, x+.36f, y+.54f, z-.05f,  legs[0], legs[1], legs[2]);
+        box(x-.36f, y,      z+.05f, x-.18f, y+.54f, z+.18f,  legs[0], legs[1], legs[2]);
+        box(x+.18f, y,      z+.05f, x+.36f, y+.54f, z+.18f,  legs[0], legs[1], legs[2]);
     }
 
     private void renderZombie(float x, float y, float z, float h) {

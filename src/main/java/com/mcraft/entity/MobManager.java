@@ -74,21 +74,24 @@ public class MobManager {
 
         if (sy <= 0 || sy >= Chunk.HEIGHT - 3) return;
         if (!world.getBlock(sx, sy, sz).solid) return;
-        if (world.getBlock(sx, sy+1, sz).solid) return;
+        if (world.getBlock(sx, sy + 1, sz).solid) return;
 
         Mob.Type type;
 
         if (isNight) {
-            type = switch (rng.nextInt(4)) {
+            type = switch (rng.nextInt(5)) {
                 case 0 -> Mob.Type.ZOMBIE;
                 case 1 -> Mob.Type.CREEPER;
                 case 2 -> Mob.Type.CHICKEN;
-                default -> Mob.Type.COW;
+                case 3 -> Mob.Type.COW;
+                default -> Mob.Type.SHEEP;
             };
         } else {
-            type = rng.nextBoolean()
-                ? Mob.Type.CHICKEN
-                : Mob.Type.COW;
+            type = switch (rng.nextInt(3)) {
+                case 0 -> Mob.Type.CHICKEN;
+                case 1 -> Mob.Type.COW;
+                default -> Mob.Type.SHEEP;
+            };
         }
 
         mobs.add(new Mob(type, sx + 0.5f, sy + 1, sz + 0.5f));

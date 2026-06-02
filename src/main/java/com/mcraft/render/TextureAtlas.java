@@ -188,6 +188,13 @@ public class TextureAtlas {
             };
         }
 
+        //Lã
+        if (col == 0 && row == 6) {
+            boolean fiber = ((px * 3 + py * 7 + n) % 4 == 0);
+            int base = fiber ? (210 + n * 3) : (238 + n * 2);
+            return new int[]{ clamp(base), clamp(base - 2), clamp(base - 4), 255 };
+        }
+
         if (col == 1 && row == 2) { 
             boolean speck = (px % 4 == 2 && py % 3 == 1)
                         || (px % 6 == 4 && py % 6 == 4);

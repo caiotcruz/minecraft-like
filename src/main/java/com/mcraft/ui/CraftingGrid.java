@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class CraftingGrid {
 
-    public final int size; // 2 ou 3
+    public final int size;
     private final int[][] grid;
 
     private static final Map<String, int[]> RECIPES_2x2 = new HashMap<>();
@@ -56,9 +56,9 @@ public class CraftingGrid {
             {9, 9, 9}
         }, 54, 1); 
 
-        // Cama: 3 lã (topo) + 3 pranchas (base) — placeholder com pedra
+        // Cama
         reg3(new int[][]{
-            {3, 3, 3},  // stone como placeholder para lã
+            {25, 25, 25},
             {9, 9, 9},
             {0, 0, 0}
         }, Block.BED.id, 1);

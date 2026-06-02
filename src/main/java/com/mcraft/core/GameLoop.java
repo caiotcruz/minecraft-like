@@ -823,7 +823,7 @@ public class GameLoop {
     }
 
     private void applyMobDamage(float dt) {
-        float px = player.getX(), pz = player.getZ();
+        float px = player.getX(), pz = player.getZ(), py = player.getY();
         boolean hit = false;
 
         for (com.mcraft.entity.Mob mob : mobs.getMobs()) {
@@ -835,7 +835,13 @@ public class GameLoop {
             float dz = mob.getZ() - pz;
             float dist = (float) Math.sqrt(dx*dx + dz*dz);
 
-            if (dist < 1.2f) {
+            float mobBottom  = mob.getY();
+            float mobTop     = mob.getY() + mob.getHeight();
+            float playerBottom = py;
+            float playerTop    = py + Player.HEIGHT;
+            boolean yOverlap = (mobTop > playerBottom - 0.3f) && (mobBottom < playerTop + 0.3f);
+
+            if (dist < 1.2f && yOverlap) {
                 hit = player.takeDamage(2);
                 float kx = player.getX() - mob.getX();
                 float kz = player.getZ() - mob.getZ();

@@ -9,6 +9,7 @@ public class Mob extends Entity {
     public enum Type {
         CHICKEN    ( "Galinha", MobCategory.PASSIVE, 0.4f, 0.7f, 2.5f, 8f, new float[]{1f, 1f, 1f, 1f}),
         COW        ( "Vaca", MobCategory.PASSIVE, 0.9f, 1.4f, 2.0f, 10f, new float[]{0.3f, 0.2f, 0.1f, 1f}),
+        SHEEP      ( "Ovelha", MobCategory.PASSIVE ,0.9f, 1.3f, 2.0f, 10f, new float[]{0.92f, 0.90f, 0.88f, 1f}),
         ZOMBIE     ( "Zumbi", MobCategory.HOSTILE, 0.6f, 1.8f, 2.2f, 16f, new float[]{0.2f, 0.5f, 0.2f, 1f}),
         CREEPER    ( "Creeper", MobCategory.HOSTILE, 0.6f, 1.7f, 2.0f, 12f, new float[]{0.2f, 0.8f, 0.2f, 1f});
 
@@ -27,7 +28,7 @@ public class Mob extends Entity {
     private final Type    type;
     private final Random  rng = new Random();
 
-    public enum AIState { WANDER, SEEK }
+    public enum AIState { WANDER, SEEK, FLEE }
     private AIState  state       = AIState.WANDER;
     private float    wanderTimer = 0;
     private float    wanderDirX  = 0;
@@ -39,6 +40,9 @@ public class Mob extends Entity {
     private float hurtTimer   = 0f;
     private static final float HURT_DURATION = 0.25f;
 
+    private float fleeTimer = 0f;
+    private static final float FLEE_DURATION = 6.0f;
+
 
     public Mob(Type type, float x, float y, float z) {
         super(x, y, z, type.w, type.h);
@@ -46,6 +50,7 @@ public class Mob extends Entity {
         this.health = switch (type) {
             case CHICKEN -> 4;
             case COW     -> 10;
+            case SHEEP   -> 10;
             case ZOMBIE  -> 20;
             case CREEPER -> 20;
         };
@@ -53,24 +58,47 @@ public class Mob extends Entity {
     }
 
 
-    public void update(float dt, World world,
-                        float playerX, float playerY, float playerZ) {
+    @Override
+    public void update(float dt, World world, float playerX, float playerY, float playerZ) {
+
+        if (hurtTimer > 0) {
+            hurtTimer = Math.max(0, hurtTimer - dt);
+        }
+
         float dx = playerX - x;
         float dz = playerZ - z;
-        float distToPlayer = (float) Math.sqrt(dx*dx + dz*dz);
+        float distToPlayer = (float) Math.sqrt(dx * dx + dz * dz);
 
-        state = (distToPlayer < type.senseRadius) ? AIState.SEEK : AIState.WANDER;
+        if (isPassive()) {
 
-        if (hurtTimer > 0) hurtTimer = Math.max(0, hurtTimer - dt);
+            if (state == AIState.FLEE) {
+                fleeTimer -= dt;
+
+                if (fleeTimer <= 0f) {
+                    state = AIState.WANDER;
+                }
+            } else {
+                state = AIState.WANDER;
+            }
+
+        } else {
+            state = (distToPlayer < type.senseRadius)
+                    ? AIState.SEEK
+                    : AIState.WANDER;
+        }
 
         switch (state) {
             case WANDER -> updateWander(dt);
             case SEEK   -> updateSeek(dx, dz, distToPlayer);
+            case FLEE   -> updateFlee(dx, dz, distToPlayer);
         }
 
         if (onGround && isMoving()) {
-            if (hasBlockAhead(world) && hasClearanceAbove(world) &&hasGroundAhead(world)) {
-                velY = 7.5f; 
+            if (hasBlockAhead(world)
+                    && hasClearanceAbove(world)
+                    && hasGroundAhead(world)) {
+
+                velY = 7.5f;
             }
         }
 
@@ -96,6 +124,13 @@ public class Mob extends Entity {
         float nz = dz / dist;
         velX = nx * type.speed;
         velZ = nz * type.speed;
+    }
+
+    private void updateFlee(float dx, float dz, float dist) {
+        if (dist < 0.5f) { velX = 0; velZ = 0; return; }
+        float nx = -dx / dist, nz = -dz / dist;
+        velX = nx * type.speed * 1.35f;
+        velZ = nz * type.speed * 1.35f;
     }
 
     private void pickNewWanderDir() {
@@ -181,6 +216,9 @@ public class Mob extends Entity {
                 { Block.LEATHER.id,  1 + rng.nextInt(3) }, 
                 { Block.RAW_BEEF.id, 1 + rng.nextInt(3) }   
             };
+            case SHEEP -> new int[][]{
+                {Block.WOOL.id, 1 + rng.nextInt(3)} 
+            };
             case ZOMBIE -> new int[][]{
                 { Block.ROTTEN_FLESH.id, rng.nextInt(3) }   
             };
@@ -194,7 +232,11 @@ public class Mob extends Entity {
         if (dead) return;
         health    -= amount;
         hurtTimer  = HURT_DURATION;
-        if (health <= 0) dead = true;
+        if (health <= 0) { dead = true; return; }
+        if (isPassive()) {
+            state     = AIState.FLEE;
+            fleeTimer = FLEE_DURATION;
+        }
     }
 
 

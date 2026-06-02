@@ -26,7 +26,8 @@ public enum Block {
     CACTUS         (21, "cactus", 6, 4, true, 0.5f),
     SNOWY_GRASS    (22, "snowy_grass", 7, 4, true,  0.9f), 
     ICE            (23, "ice",         8, 4, true,  0.2f), 
-    BED            (24, "bed",         9, 4, true,  0.5f); 
+    BED            (24, "bed",         9, 4, true,  0.5f),
+    WOOL           (25, "wool",        0, 6, true, 0.8f);
 
     public final int     id;
     public final String  name;

@@ -48,6 +48,7 @@ public class Player {
         inventory.addItem(com.mcraft.world.Block.STONE.id, 64);
         inventory.addItem(com.mcraft.world.Block.DIRT.id,  64);
         inventory.addItem(com.mcraft.world.Block.BED.id,  1);
+        inventory.addItem(com.mcraft.world.Block.WOOL.id,  64);
     }
 
     public void update(float dx, float dz, boolean jump, float dt) {
