@@ -29,14 +29,14 @@ public class CraftingScreen extends InventoryScreen {
         int ax = craft3X(2) + SLOT_PX + 12;
         int ay = craft3Y(1) + SLOT_PX / 2 - 5;
 
-        drawRect(ax,      ay + 3, 20, 4,  0.85f, 0.85f, 0.1f, 1f);
-        drawRect(ax + 14, ay,     6, 10, 0.85f, 0.85f, 0.1f, 1f);
+        addRect(ax,      ay + 3, 20, 4,  0.85f, 0.85f, 0.1f, 1f);
+        addRect(ax + 14, ay,     6, 10, 0.85f, 0.85f, 0.1f, 1f);
 
         drawSlotBg(result3X(), result3Y(), false);
 
         int[] result = craft3x3.getResult();
         if (result != null) {
-            drawRect(result3X(), result3Y(), SLOT_PX, SLOT_PX, 0.3f, 0.7f, 0.3f, 0.35f);
+            addRect(result3X(), result3Y(), SLOT_PX, SLOT_PX, 0.3f, 0.7f, 0.3f, 0.35f);
         }
     }
 
@@ -61,13 +61,13 @@ public class CraftingScreen extends InventoryScreen {
     public boolean onClick(int mx, int my) {
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 3; c++) {
-                if (hitTest(mx, my, craft3X(c), craft3Y(r), SLOT_PX, SLOT_PX)) {
+                if (hit(mx, my, craft3X(c), craft3Y(r), SLOT_PX, SLOT_PX)) {
                     handleCraftSlotClick3x3(r, c);
                     return true;
                 }
             }
         }
-        if (hitTest(mx, my, result3X(), result3Y(), SLOT_PX, SLOT_PX)) {
+        if (hit(mx, my, result3X(), result3Y(), SLOT_PX, SLOT_PX)) {
             handleResult3x3();
             return true;
         }
@@ -120,7 +120,7 @@ public class CraftingScreen extends InventoryScreen {
     }
 
     private int result3X() { 
-        return craft3X(3) + 12; 
+        return craft3X(3) + 40; 
     }
 
     private int result3Y() { 

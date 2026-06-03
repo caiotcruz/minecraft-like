@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import com.mcraft.render.Camera;
 import com.mcraft.render.Frustum;
 import com.mcraft.render.Shader;
+import com.mcraft.ui.Inventory;
 
 public class World {
 
@@ -41,10 +42,17 @@ public class World {
     private final Set<Long> pendingGeneration = ConcurrentHashMap.newKeySet();
     private final ConcurrentLinkedQueue<Chunk> readyChunks = new ConcurrentLinkedQueue<>();
 
+    private final java.util.Map<Long, Inventory> chestInventories = new java.util.HashMap<>();
 
     private final ExecutorService chunkGenPool = Executors.newFixedThreadPool(
         Math.max(1, Runtime.getRuntime().availableProcessors() - 1)
     );
+
+    private static long blockKey(int x, int y, int z) {
+        return ((long)(x & 0x3FFFFFF))
+            | (((long)(y & 0x1FF)) << 26)
+            | (((long)(z & 0x3FFFFFF)) << 35);
+    }
 
     
     public World(long seed, WorldIO worldIO) {
@@ -104,6 +112,10 @@ public class World {
         if (lx == Chunk.SIZE - 1) markDirty(cx + 1, cz);
         if (lz == 0)              markDirty(cx, cz - 1);
         if (lz == Chunk.SIZE - 1) markDirty(cx, cz + 1);
+    }
+
+    public Inventory getChestInventory(int x, int y, int z) {
+        return chestInventories.computeIfAbsent(blockKey(x, y, z), k -> new Inventory());
     }
 
     private void markDirty(int cx, int cz) {

@@ -40,7 +40,9 @@ import com.mcraft.render.Camera;
 import com.mcraft.render.Shader;
 import com.mcraft.render.SkyRenderer;
 import com.mcraft.render.TextureAtlas;
+import com.mcraft.ui.ChestScreen;
 import com.mcraft.ui.CraftingScreen;
+import com.mcraft.ui.Inventory;
 import com.mcraft.ui.InventoryScreen;
 import com.mcraft.world.Biome;
 import com.mcraft.world.Block;
@@ -92,7 +94,6 @@ public class GameLoop {
     private float unloadTimer = 0f;
     private static final float UNLOAD_INTERVAL = 8f;
 
-    @SuppressWarnings("unused")
     private Biome currentBiome = Biome.PLAINS;
 
     private InventoryScreen inventoryScreen;
@@ -100,6 +101,9 @@ public class GameLoop {
 
     private CraftingScreen craftingScreen;
     private boolean craftingOpen = false;
+
+    private ChestScreen chestScreen;
+    private boolean     chestOpen = false;
 
     private boolean         prevEKeyDown    = false;
 
@@ -190,10 +194,14 @@ public class GameLoop {
             player.getInventory(), hudShader, atlas, ortho2D
         );
 
+        chestScreen = new ChestScreen(
+            window.getWidth(), window.getHeight(),
+            player.getInventory(), hudShader, atlas, ortho2D
+        );
 
         glfwSetMouseButtonCallback(window.getHandle(), (win, button, action, mods) -> {
 
-            if (!inventoryOpen && !craftingOpen) return;
+            if (!inventoryOpen && !craftingOpen && !chestOpen) return;
 
             if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 
@@ -214,11 +222,17 @@ public class GameLoop {
                         (int) cx[0],
                         (int) cy[0]
                     );
+                } else if (chestOpen) {
+                    consumed = chestScreen.onClick(
+                        (int) cx[0],
+                        (int) cy[0]
+                    );
                 }
 
                 if (!consumed) {
                     closeInventory();
                     closeCrafting();
+                    closeChest();
                 }
             }
         });
@@ -229,6 +243,7 @@ public class GameLoop {
 
     private void openInventory() {
         craftingOpen = false;
+        chestOpen = false;
         inventoryOpen = true;
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
@@ -240,6 +255,7 @@ public class GameLoop {
 
     private void openCrafting(){
         inventoryOpen = false;
+        chestOpen = false;
         craftingOpen = true;
 
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -248,6 +264,19 @@ public class GameLoop {
         int cy = window.getHeight() / 2;
         glfwSetCursorPos(window.getHandle(), cx, cy);
         craftingScreen.updateMouse(cx, cy);
+    }
+
+    private void openChest() {
+        inventoryOpen = false;
+        craftingOpen = false;
+        chestOpen = true;
+
+        glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+        int cx = window.getWidth()/2;
+        int cy = window.getHeight()/2;
+        glfwSetCursorPos(window.getHandle(), cx, cy);
+        chestScreen.updateMouse(cx, cy);
     }
 
     private void closeInventory() {
@@ -261,6 +290,13 @@ public class GameLoop {
     private void closeCrafting(){
         craftingOpen = false;
         craftingScreen.onClose();
+        glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        input.resetFirstMouse();
+    }
+
+    private void closeChest() {
+        chestOpen = false;
+        chestScreen.onClose();
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         input.resetFirstMouse();
     }
@@ -305,6 +341,9 @@ public class GameLoop {
             } 
             if (inventoryOpen) {
                 inventoryScreen.render();
+            }
+            if (chestOpen){
+                chestScreen.render();
             }
         }
 
@@ -455,11 +494,21 @@ public class GameLoop {
             craftingScreen.updateMouse((int) cx[0], (int) cy[0]);
         }
 
+        if (chestOpen) {
+            double[] cx = new double[1];
+            double[] cy = new double[1];
+
+            glfwGetCursorPos(window.getHandle(), cx, cy);
+
+            chestScreen.updateMouse((int) cx[0], (int) cy[0]);
+
+        }
+
         float dx = 0f;
         float dz = 0f;
         boolean jump = false;
 
-        if (!inventoryOpen && !craftingOpen) {
+        if (!inventoryOpen && !craftingOpen && !chestOpen) {
 
             if (input.isKeyDown(GLFW_KEY_W)) dz -= 1;
             if (input.isKeyDown(GLFW_KEY_S)) dz += 1;
@@ -508,7 +557,7 @@ public class GameLoop {
 
         boolean moving = dx != 0 || dz != 0;
 
-        if (moving && !inventoryOpen && !craftingOpen) {
+        if (moving && !inventoryOpen && !craftingOpen && !chestOpen) {
 
             stepTimer -= dt;
 
@@ -535,7 +584,7 @@ public class GameLoop {
 
     private void handleCameraInput() {
 
-        if (inventoryOpen || craftingOpen) {
+        if (inventoryOpen || craftingOpen || chestOpen) {
 
             double[] cx = new double[1];
             double[] cy = new double[1];
@@ -615,7 +664,7 @@ public class GameLoop {
 
     private void handlePlayerInteraction(float dt) {
 
-        if (inventoryOpen || craftingOpen) {
+        if (inventoryOpen || craftingOpen || chestOpen) {
 
             breakElapsed  = 0f;
             breakDuration = 0f;
@@ -796,6 +845,11 @@ public class GameLoop {
                 } else if (hitBlock == Block.CRAFTING_TABLE) {
                     openCrafting();
                     return; 
+                } else if (hitBlock == Block.CHEST) {
+                    Inventory ci = world.getChestInventory(hit.blockX, hit.blockY, hit.blockZ);
+                    chestScreen.openFor(ci);
+                    openChest();
+                    return;
                 } else{
                     int blockId = player.getInventory().getSelectedBlockId();
 
@@ -852,7 +906,10 @@ public class GameLoop {
                 closeInventory();
             } else if (craftingOpen){
                 closeCrafting();
-            } else {
+            } else if (chestOpen){
+                closeChest();
+            } 
+            else {
                 openInventory();
             }
         }
@@ -928,6 +985,9 @@ public class GameLoop {
         }
         if (craftingOpen){
             craftingScreen.onClose();
+        }
+        if (chestOpen){
+            chestScreen.onClose();
         }
         blockShader.delete();
         world.saveAll(world.getWorldIO());

@@ -77,7 +77,7 @@ public class CraftingGrid {
             {9, 9, 9},
             {9, 0, 9},
             {9, 9, 9}
-        }, 54, 1); 
+        }, 31, 1); 
 
         // Cama
         reg3(new int[][]{
