@@ -162,6 +162,33 @@ public class TextureAtlas {
             return new int[]{ clamp(r), clamp(g), clamp(r - 20), 255};
         }
 
+        // GRASS_SIDE
+        if (col == 0 && row == 15) {
+
+            if (py < 4) {
+                int g = 110 + n * 3;
+                int r = g - 30 - (n & 3);
+
+                return new int[]{
+                    clamp(r),
+                    clamp(g),
+                    clamp(r - 20),
+                    255
+                };
+            }
+
+            int r = 134 + (n > 8 ? 1 : -1) * (n & 7);
+            int g = 90  + (n & 5);
+            int b = 50  + (n & 3);
+
+            return new int[]{
+                clamp(r),
+                clamp(g),
+                clamp(b),
+                255
+            };
+        }
+
         // STONE
         if (col == 1 && row == 0) {
             int v = 118 + n * 4;
@@ -270,11 +297,56 @@ public class TextureAtlas {
         
         // CRAFTING_TABLE 
         if (col == 0 && row == 3) {
-            boolean grid = (px % 15 == 0) || (py % 15 == 0) || (py == 4 && px > 2 && px < 13);
-            int r = grid ? 80 : 120 + (n & 7);
-            int g = grid ? 50 : 80  + (n & 5);
-            int b = grid ? 25 : 42  + (n & 3);
-            return new int[]{ r, g, b, 255 };
+
+            int r = 125 + (n & 7);
+            int g = 85  + (n & 5);
+            int b = 50  + (n & 3);
+
+            if (px <= 1 || px >= 14 || py <= 1 || py >= 14) {
+                return new int[]{70, 45, 20, 255};
+            }
+
+            boolean gridArea =
+                    px >= 3 && px <= 12 &&
+                    py >= 3 && py <= 12;
+
+            if (gridArea) {
+
+                r = 105 + (n & 5);
+                g = 70  + (n & 4);
+                b = 38  + (n & 3);
+
+                if (px == 6 || px == 9) {
+                    return new int[]{55, 35, 18, 255};
+                }
+
+                if (py == 6 || py == 9) {
+                    return new int[]{55, 35, 18, 255};
+                }
+
+                return new int[]{r, g, b, 255};
+            }
+
+            return new int[]{r, g, b, 255};
+        }
+
+        //CRAFTING_TABLE LATERAL
+        if (col == 2 && row == 15) {
+
+            boolean plank =
+                py == 5 ||
+                py == 10;
+
+            if (plank) {
+                return new int[]{90,60,30,255};
+            }
+
+            return new int[]{
+                125 + (n & 7),
+                85  + (n & 5),
+                50  + (n & 3),
+                255
+            };
         }
 
         // CHEST
@@ -286,6 +358,17 @@ public class TextureAtlas {
             int g = border ? 35 : 60 + (n & 5);
             int b = border ? 15 : 30 + (n & 3);
             return new int[]{ r, g, b, 255 };
+        }
+
+        //CHEST SIDES
+        if (col == 4 && row == 15){
+            boolean border = px == 0 || px == 15 || py == 0 || py == 15;
+
+            int r = border ? 60 : 100 + (n & 7);
+            int g = border ? 35 : 60  + (n & 5);
+            int b = border ? 15 : 30  + (n & 3);
+
+            return new int[]{r,g,b,255};
         }
 
         // BED
@@ -302,15 +385,33 @@ public class TextureAtlas {
             } 
             
             else {
-                boolean woodBase = (py >= 13);
-                if (woodBase) {
-                    int shading = (px % 4 == 0 || py == 13) ? -20 : 0;
-                    return new int[]{ clamp(130 + shading), clamp(82 + shading), clamp(40 + shading), 255 };
-                }
-                
                 int shading = (px % 4 == 0) ? -15 : 0;
                 return new int[]{ clamp(160 + shading), clamp(30 + shading), clamp(30 + shading), 255 };
             }
+        }
+
+        // BED_SIDE
+        if (col == 5 && row == 15) {
+
+            if (py < 10) {
+                int shading = (px % 4 == 0) ? -15 : 0;
+
+                return new int[]{
+                    clamp(160 + shading),
+                    clamp(30 + shading),
+                    clamp(30 + shading),
+                    255
+                };
+            }
+
+            int shading = (px % 4 == 0 || py == 10) ? -20 : 0;
+
+            return new int[]{
+                clamp(130 + shading),
+                clamp(82 + shading),
+                clamp(40 + shading),
+                255
+            };
         }
 
         //  ROW 4 — FERRAMENTAS E ARMAS
@@ -419,16 +520,53 @@ public class TextureAtlas {
 
         // SNOWY_GRASS 
         if (col == 1 && row == 6) { 
-            if (py < 4) {
-                int v = 225 + n * 2;
-                return new int[]{ clamp(v), clamp(v), clamp(v + 5), 255 };
+            int v = 225 + n * 2;
+            return new int[]{ clamp(v), clamp(v), clamp(v + 5), 255 };
+        }
+
+        // SNOWY_GRASS_SIDE
+        if (col == 6 && row == 15) {
+
+            if (py < 3) {
+                int v = 230 + (n & 3);
+
+                return new int[] {
+                    clamp(v),
+                    clamp(v),
+                    clamp(v + 5),
+                    255
+                };
             }
-            if (py > 11) {
-                int d = 85 + n * 2;
-                return new int[]{ d, d - 10, d - 20, 255 };
+
+            if (py < 5) {
+                int v = 205 + (n & 3);
+
+                return new int[] {
+                    clamp(v),
+                    clamp(v),
+                    clamp(v + 3),
+                    255
+                };
             }
-            int g = 95 + n * 3;
-            return new int[]{ clamp(g - 35), clamp(g), clamp(g - 25), 255 };
+
+            if (py < 6){
+                int g = 105 + (n & 3) * 4; 
+                int r = g - 35;
+                
+                if ((px + n) % 4 == 0) {
+                    return new int[]{ 190, 190, 195, 255 };
+                }
+
+                return new int[] {
+                    clamp(r),
+                    clamp(g),
+                    clamp(r - 15),
+                    255
+                };
+            }
+
+            int d = 85 + n * 2;
+            return new int[]{ d, d - 10, d - 20, 255 };
         }
 
         // ICE

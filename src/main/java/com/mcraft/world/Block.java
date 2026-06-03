@@ -50,6 +50,16 @@ public enum Block {
     SNOWY_GRASS    (22, "snowy_grass",      1,  6, true,  0.9f),
     ICE            (23, "ice",              2,  6, true,  0.2f);
 
+    /**
+    * ROW 15 - Faces Auxiliaras
+    * GRASS_SIDE                0 15
+    * ---------------------     1 15
+    * CRAFTING_TABLE LATERAL    2 15
+    * ---------                 3 15
+    * CHEST SIDES               4 15
+    * BED_SIDE                  5 15
+    * SNOWY_GRASS_SIDE          6 15
+    */
 
     public final int     id;
     public final String  name;
@@ -87,17 +97,40 @@ public enum Block {
 
         if (this == GRASS) {
             switch (face) {
-                case 0 -> { col = 0;  row = 0; } 
-                case 1 -> { col = 2;  row = 0; } 
-                default ->  { col = 3; row = 0; }  
+                case 0 -> { col = 0; row = 0; }
+                case 1 -> { col = 2; row = 0; }
+                default -> { col = 0; row = 15; }
+            }
+        }
+
+        if (this == SNOWY_GRASS) {
+            switch (face) {
+                case 0 -> { col = 1; row = 6; }
+                case 1 -> { col = 2; row = 0; }
+                default -> { col = 6; row = 15; }
             }
         }
 
         if (this == CRAFTING_TABLE) {
             switch (face) {
-                case 0 -> { col = 11; row = 2; } 
-                case 2, 5 -> { col = 12; row = 2; }
-                default -> { col = 13; row = 2; } 
+                case 0 -> { col = 0; row = 3; }
+                default -> { col = 2; row = 15; }
+            }
+        }
+
+        if (this == CHEST) {
+            switch (face) {
+                case 1 -> { col = 3; row = 0; } 
+                case 3 -> { col = 1;  row = 3; }
+                default -> { col = 4; row = 15; } 
+            }
+        }
+
+        if (this == BED) {
+            switch (face) {
+                case 0 -> { col = 2;    row = 3; }
+                case 1 -> { col = 3; row = 0; } 
+                default -> { col = 5; row = 15; } 
             }
         }
 
