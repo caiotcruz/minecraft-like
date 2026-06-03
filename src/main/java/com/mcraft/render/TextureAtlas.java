@@ -257,6 +257,37 @@ public class TextureAtlas {
             return new int[]{ 20, clamp(g), 20, 255 };
         }
 
+        // DENSE_GRASS
+        if (col == 4 && row == 1) {
+            int g = 62 + n * 7;
+            int r = clamp(g - 48 - (n & 5));
+            int b = clamp(g - 55);
+            return new int[]{ r, g, b, 255 };
+        }
+
+        // DENSE_GRASS_SIDE
+        if (col == 1 && row == 15) {
+            if (py < 5) {
+                int hash = ((px * 13 ^ py * 17) * 1664525 + 1013904223) & 0xFF;
+                float hf = (hash / 255.0f - 0.5f) * 0.1f;
+                int g = clamp((int)((62 + n * 7) * (1 + hf)));
+                int r = clamp(g - 48);
+                return new int[]{ r, g, clamp(g - 55), 255 };
+            }
+            
+            float t = (py - 5) / 10.0f;
+            int hash = ((px * 11 ^ py * 19) * 1664525 + 1013904223) & 0xFF;
+            float hf = (hash / 255.0f - 0.5f) * 0.12f;
+            
+            int g = clamp((int)((55 - t * 15 + hf * 15) + n * 3));
+            
+            int r = clamp((int)((35 + t * t * 40 + hf * 15) + n * 3));
+            
+            int b = clamp((int)((20 + t * 15)));
+            
+            return new int[]{ r, g, b, 255 };
+        }
+
 
         // ROW 2 - MINÉRIOS
         

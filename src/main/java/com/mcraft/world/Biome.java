@@ -8,7 +8,7 @@ public enum Biome {
     FOREST   ("Forest",  Block.GRASS, Block.DIRT,      62,  65,  20,  6,  999, 0x98C8A0),
     MOUNTAINS("Mounts",  Block.STONE, Block.STONE,     62,  66,  52,  1,   95, 0xC8D8E8),
     TAIGA    ("Taiga",   Block.SNOWY_GRASS, Block.DIRT,62,  65,  20,  5,  105, 0xA8C0B8),
-    RAINFOREST ("RainForest",Block.GRASS, Block.DIRT,  62,  65,  22, 12,  999, 0x48A060),
+    RAINFOREST ("RainForest",Block.DENSE_GRASS, Block.DIRT,  62,  65,  22, 12,  999, 0x48A060),
     TUNDRA   ("Tundra",  Block.SNOW,  Block.DIRT,      62,  63,  10,  0,   64, 0xC8D8E0),
     OCEAN    ("Ocean",   Block.SAND,  Block.SAND,      62,  34,   8,  0,  999, 0x607898);
 

@@ -303,7 +303,7 @@ public class WorldGen {
                     plantCactus(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
                 }
                 case RAINFOREST -> {
-                    if (surface != (byte)Block.GRASS.id) continue;
+                    if (surface != (byte)Block.DENSE_GRASS.id) continue;
                     if (ty < height - 16) 
                         plantRainforestTree(blocks, tx, ty, tz, size, height, chunkX, chunkZ, t);
                 }

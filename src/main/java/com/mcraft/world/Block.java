@@ -17,6 +17,7 @@ public enum Block {
     WOOD_LOG       ( 5, "wood_log",         1,  1, true,  2.00f),
     LEAVES         ( 6, "leaves",           2,  1, true,  0.35f),
     CACTUS         (21, "cactus",           3,  1, true,  0.50f),
+    DENSE_GRASS    (32, "dense_grass",      4,  1, true,  0.9f),
 
     // ROW 2 — MINÉRIOS
     COAL_ORE       (11, "coal_ore",         0,  2, true,  3.0f),
@@ -53,7 +54,7 @@ public enum Block {
     /**
     * ROW 15 - Faces Auxiliaras
     * GRASS_SIDE                0 15
-    * ---------------------     1 15
+    * DENSE_FRASS_SIDE          1 15
     * CRAFTING_TABLE LATERAL    2 15
     * ---------                 3 15
     * CHEST SIDES               4 15
@@ -108,6 +109,14 @@ public enum Block {
                 case 0 -> { col = 1; row = 6; }
                 case 1 -> { col = 2; row = 0; }
                 default -> { col = 6; row = 15; }
+            }
+        }
+
+        if (this == DENSE_GRASS) {
+            switch (face) {
+                case 0 -> { col = 4; row = 1; }
+                case 1 -> { col = 2; row = 0; } 
+                default ->  { col = 1; row = 15; } 
             }
         }
 
