@@ -8,7 +8,7 @@ public class WorldGen {
     private final int[] permTemp; 
     private final int[] permHumid;
     private final int[] permCont;
-    private static final int BLEND_RADIUS = 40;
+    private static final int BLEND_RADIUS = 70;
 
 
     private static final int[][] GRAD2 = {
@@ -243,22 +243,64 @@ public class WorldGen {
     }
 
     private int blendedSurfaceY(double wx, double wz) {
+        
+        Biome center = getBiome(wx, wz);
+
+        if (center == Biome.MOUNTAINS) {
+            return mountainRampHeight(wx, wz);
+        }
+            
         int R = BLEND_RADIUS;
+        int H = R / 2;
         double[][] pts = {
             {wx,   wz  }, {wx+R, wz  }, {wx-R, wz  },
             {wx,   wz+R}, {wx,   wz-R},
-            {wx+R, wz+R}, {wx-R, wz+R},
-            {wx+R, wz-R}, {wx-R, wz-R}
+            {wx+H, wz+H}, {wx-H, wz+H}, {wx+H, wz-H}, {wx-H, wz-H},
+            {wx+R, wz+H}, {wx-R, wz+H}, {wx+H, wz+R}, {wx+H, wz-R}
         };
-        double[] weights = {6.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 0.5};
+        double[] ws = {7.0, 1.5, 1.5, 1.5, 1.5, 0.8, 0.8, 0.8, 0.8, 0.4, 0.4, 0.4, 0.4};
 
+        
         double hSum = 0, wSum = 0;
         for (int i = 0; i < pts.length; i++) {
-            hSum += sampleHeight(pts[i][0], pts[i][1]) * weights[i];
-            wSum += weights[i];
+            hSum += sampleHeight(pts[i][0], pts[i][1]) * ws[i];
+            wSum += ws[i];
+        }
+        return Math.max(2, Math.min(Chunk.HEIGHT - 2, (int)(hSum / wSum)));
+    }
+
+    private int mountainRampHeight(double wx, double wz) {
+        double localNoise = fbm(wx, wz, 5, 120.0, 0.5);
+        int    localH     = Biome.MOUNTAINS.baseHeight
+                        + (int)(localNoise * Biome.MOUNTAINS.heightVar);
+
+        int R = BLEND_RADIUS;
+        int[][] dirs = {{R,0},{-R,0},{0,R},{0,-R}};
+
+        double neighborHSum  = 0;
+        int    neighborCount = 0;
+
+        for (int[] d : dirs) {
+            Biome nb = getBiome(wx + d[0], wz + d[1]);
+            if (nb != Biome.MOUNTAINS) {
+                double nn = fbm(wx+d[0], wz+d[1], 5, 120.0, 0.5);
+                neighborHSum += nb.baseHeight + nn * nb.heightVar;
+                neighborCount++;
+            }
         }
 
-        return Math.max(2, Math.min(Chunk.HEIGHT - 2, (int)(hSum / wSum)));
+        if (neighborCount == 0) {
+            return Math.max(2, Math.min(Chunk.HEIGHT - 2, localH));
+        }
+
+        float neighborH = (float)(neighborHSum / neighborCount);
+
+        float mountainFraction = 1.0f - (float) neighborCount / dirs.length;
+
+        float t = mountainFraction * mountainFraction * (3 - 2 * mountainFraction);
+
+        int blended = (int)(neighborH * (1 - t) + localH * t);
+        return Math.max(2, Math.min(Chunk.HEIGHT - 2, blended));
     }
 
     private int sampleHeight(double wx, double wz) {
