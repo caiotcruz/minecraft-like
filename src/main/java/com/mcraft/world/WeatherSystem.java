@@ -16,7 +16,7 @@ import static org.lwjgl.opengl.GL30.*;
 public class WeatherSystem {
 
     private static final int MAX_PARTICLES = 800;
-    private static final float SPAWN_RADIUS = 20f;
+    private static final float SPREAD = 35f;
     private static final float RAIN_SPEED   = 28f;
     private static final float SNOW_SPEED   = 4f;
 
@@ -38,7 +38,11 @@ public class WeatherSystem {
 
     public WeatherSystem() {
         initGPU();
-        for (int i = 0; i < MAX_PARTICLES; i++) respawn(i, 0, 0, 0, true);
+        for (int i = 0; i < MAX_PARTICLES; i++) {
+            px[i] = (rng.nextFloat() - 0.5f) * SPREAD * 2;
+            py[i] = rng.nextFloat() * SPREAD;          
+            pz[i] = (rng.nextFloat() - 0.5f) * SPREAD * 2;
+        }
     }
 
 
@@ -62,24 +66,44 @@ public class WeatherSystem {
             : 0f;
         intensity += (targetIntensity - intensity) * dt * 0.5f;
 
-        if (intensity < 0.01f) return;
+        if (current == WeatherType.CLEAR || intensity < 0.05f) return;
 
         float speed = (current == WeatherType.SNOW) ? SNOW_SPEED : RAIN_SPEED;
         float driftX = (current == WeatherType.SNOW) ? (float)Math.sin(System.currentTimeMillis()*0.0003) * 1.5f : 0;
 
         for (int i = 0; i < MAX_PARTICLES; i++) {
-            py[i] -= speed * dt;
-            px[i] += driftX * dt;
 
-            if (py[i] < cy - 10) respawn(i, cx, cy, cz, false);
+            py[i] -= speed * dt;
+            if (current == WeatherType.SNOW) {
+
+                px[i] += driftX * dt;
+                px[i] += (float)(
+                    Math.sin(py[i] * 0.5 + i * 0.37)
+                    * 0.35 * dt
+                );
+
+                pz[i] += (float)(
+                    Math.cos(py[i] * 0.3 + i * 0.51)
+                    * 0.35 * dt
+                );
+            }
+
+            boolean outY = py[i] < cy - 4f;
+            boolean outX = Math.abs(px[i] - cx) > SPREAD * 1.1f;
+            boolean outZ = Math.abs(pz[i] - cz) > SPREAD * 1.1f;
+
+            if (outY || outX || outZ) {
+                resetParticle(i, cx, cy, cz);
+            }
         }
     }
 
-    private void respawn(int i, float cx, float cy, float cz, boolean randomHeight) {
-        px[i] = cx + (rng.nextFloat() - 0.5f) * SPAWN_RADIUS * 2;
-        py[i] = randomHeight ? (cy + rng.nextFloat() * 20 - 5) : (cy + 18);
-        pz[i] = cz + (rng.nextFloat() - 0.5f) * SPAWN_RADIUS * 2;
+    private void resetParticle(int i, float cx, float cy, float cz) {
+        px[i] = cx + (rng.nextFloat() - 0.5f) * SPREAD * 2;
+        py[i] = cy + SPREAD + rng.nextFloat() * SPREAD;
+        pz[i] = cz + (rng.nextFloat() - 0.5f) * SPREAD * 2;
     }
+
 
 
     public void render(Camera camera, Shader skyShader, float[] proj, float[] view) {
@@ -134,8 +158,16 @@ public class WeatherSystem {
 
             if (qc >= MAX_QUADS) break;
 
-            float hs = pw * 0.5f;
-            float ht = ph * 0.5f;
+            float dx = px[i] - camera.getX();
+            float dy = py[i] - camera.getY();
+            float dz = pz[i] - camera.getZ();
+
+            float dist = (float)Math.sqrt(dx*dx + dy*dy + dz*dz);
+
+            float scale = Math.max(0.55f, 1.0f - dist / 80f);
+
+            float hs = pw * scale * 0.5f;
+            float ht = ph * scale * 0.5f;
 
             float rux = right[0] * hs;
             float ruy = right[1] * hs;

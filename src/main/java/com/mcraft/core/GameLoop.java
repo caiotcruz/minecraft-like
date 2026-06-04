@@ -10,6 +10,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F4;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
@@ -543,13 +544,14 @@ public class GameLoop {
                 );
             }
 
-            //Alterar Weather
-            WeatherType biomeWeather = WeatherType.forBiome(currentBiome);
+            if (input.isKeyDown(GLFW_KEY_F4)) {
+                WeatherType biomeWeather = WeatherType.forBiome(currentBiome);
 
-            if (weather.getCurrent() == biomeWeather) {
-                weather.setCurrent(WeatherType.CLEAR);
-            } else {
-                weather.setCurrent(biomeWeather);
+                if (weather.getCurrent() == biomeWeather) {
+                    weather.setCurrent(WeatherType.CLEAR);
+                } else {
+                    weather.setCurrent(biomeWeather);
+                }
             }
         }
 
