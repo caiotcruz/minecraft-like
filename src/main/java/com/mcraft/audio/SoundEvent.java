@@ -30,7 +30,10 @@ public enum SoundEvent {
     //Ambient / Music
     AMBIENT_CAVE      ("sounds/ambient/cave/cave1.ogg"),
     MUSIC_DAY         ("sounds/ambient/music/music_day.ogg"),
-    MUSIC_NIGHT       ("sounds/ambient/music/music_night.ogg");
+    MUSIC_NIGHT       ("sounds/ambient/music/music_night.ogg"),
+
+    //Tools
+    TOOL_BREAKING ("sounds/tool/tool_break.ogg");
 
     public final String path;
     SoundEvent(String p) { this.path = p; }

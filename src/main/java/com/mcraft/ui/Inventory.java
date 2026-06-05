@@ -1,5 +1,7 @@
 package com.mcraft.ui;
 
+import com.mcraft.world.Block;
+
 public class Inventory {
 
     public static final int HOTBAR_SIZE = 9;
@@ -7,7 +9,16 @@ public class Inventory {
 
     private final int[] itemId  = new int[TOTAL_SLOTS];
     private final int[] itemQty = new int[TOTAL_SLOTS];
+    private final int[] itemDurability = new int[TOTAL_SLOTS];
     private int selectedSlot = 0;
+
+    private static final java.util.Map<Integer, Integer> MAX_DUR =
+        java.util.Map.of(
+            Block.WOODEN_PICKAXE.id, 60,
+            Block.WOODEN_AXE.id,     10,
+            Block.WOODEN_SHOVEL.id,  60,
+            Block.WOODEN_SWORD.id,   60
+        );
 
     public void clearSlot(int index) {
         if (index < 0 || index >= TOTAL_SLOTS) return;
@@ -19,6 +30,7 @@ public class Inventory {
         if (index < 0 || index >= TOTAL_SLOTS) return;
         itemId [index] = id;
         itemQty[index] = qty;
+        itemDurability[index] = MAX_DUR.getOrDefault(id, -1);
     }
 
     public void swapSlots(int a, int b) {
@@ -43,6 +55,20 @@ public class Inventory {
     }
 
     public void addItem(int blockId, int qty) {
+        int maxDur = MAX_DUR.getOrDefault(blockId, -1);
+
+        if (maxDur >= 0) {
+            for (int i = 0; i < TOTAL_SLOTS; i++) {
+                if (itemId[i] == 0) {
+                    itemId  [i] = blockId;
+                    itemQty [i] = 1;
+                    itemDurability[i] = maxDur;
+                    return;
+                }
+            }
+            return;
+        }
+
         for (int i = 0; i < TOTAL_SLOTS && qty > 0; i++) {
             if (itemId[i] == blockId && itemQty[i] < 64) {
                 int add = Math.min(qty, 64 - itemQty[i]);
@@ -88,5 +114,26 @@ public class Inventory {
 
     public int[] getCounts() {
         return itemQty;
+    }
+
+    public static int getMaxDurability(int blockId) {
+        return MAX_DUR.getOrDefault(blockId, -1);
+    }
+    
+    public int getItemDurability(int slot) {
+        if (slot < 0 || slot >= TOTAL_SLOTS) return -1;
+        return itemDurability[slot];
+    }
+
+    public boolean damageTool(int slot) {
+        if (slot < 0 || slot >= TOTAL_SLOTS) return false;
+        if (itemDurability[slot] < 0) return false; 
+
+        itemDurability[slot]--;
+        if (itemDurability[slot] <= 0) {
+            clearSlot(slot);
+            return true; 
+        }
+        return false;
     }
 }

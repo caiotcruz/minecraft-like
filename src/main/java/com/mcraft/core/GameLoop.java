@@ -719,6 +719,7 @@ public class GameLoop {
 
             if (mobDist < blockDist) {
 
+                int toolSlot = player.getInventory().getSelectedSlot();
                 int toolId = player.getInventory().getSelectedBlockId();
                 Block tool = Block.fromId(toolId); 
                 int damage = 2;
@@ -739,6 +740,10 @@ public class GameLoop {
                 float klen = (float) Math.sqrt(kx*kx + kz*kz);
                 if (klen > 0.001f) {
                     targetMob.applyKnockback(kx/klen, kz/klen, 9.0f);
+                }
+
+                if (Inventory.getMaxDurability(toolId) > 0) {
+                    player.getInventory().damageTool(toolSlot);
                 }
 
                 leftWasDown  = leftDown;
@@ -784,6 +789,15 @@ public class GameLoop {
                 if (breakElapsed >= breakDuration) {
 
                     world.setBlock(breakX, breakY, breakZ, 0);
+
+                    int toolSlot = player.getInventory().getSelectedSlot();
+
+                    if (mult > 1.0f) {
+                        boolean broke = player.getInventory().damageTool(toolSlot);
+                        if (broke) {
+                            sound.play(SoundEvent.TOOL_BREAKING, player.getX(), player.getY(), player.getZ(), 1f, 1f);
+                        }
+                    }
 
                     player.getInventory().addItem(target.id, 1);
 
@@ -933,7 +947,7 @@ public class GameLoop {
         }
         if (toolId == Block.WOODEN_SHOVEL.id) {
             return switch (target) {
-                case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS -> 2.5f;
+                case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> 2.5f;
                 default -> 1.0f;
             };
         }

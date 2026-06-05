@@ -229,11 +229,49 @@ public class HUD {
             Block block = Block.fromId(blockId);
             float[] uvs = block.getUVs(0);
 
-            int sx = startX + i * (SLOT_SIZE + PADDING) + pad;
+            int slotX = startX + i * (SLOT_SIZE + PADDING);
+
+            int sx = slotX + pad;
             int sy = startY + pad;
             int sz = SLOT_SIZE - pad * 2;
 
             drawTexRect(sx, sy, sz, sz, uvs[0], uvs[1], uvs[4], uvs[5]);
+
+            int durVal = inventory.getItemDurability(i);
+            int maxDur = Inventory.getMaxDurability(blockId);
+
+            if (durVal >= 0 && maxDur > 0 && durVal < maxDur) {
+                float pct = (float) durVal / maxDur;
+
+                int barW = sz; 
+                int barH = 2;
+                
+                int barX = sx; 
+                int barY = startY + SLOT_SIZE - 7; 
+
+                addRect(barX - 1, barY - 1, barW + 2, barH + 2, 0f, 0f, 0f, 1f); 
+                addRect(barX, barY, barW, barH, 0.15f, 0.15f, 0.15f, 1f);
+
+                float r = 0f, g = 0f, b = 0f;
+
+                if (pct > 0.5f) {
+                    r = 0.0f;
+                    g = 1.0f;
+                    b = 0.0f;
+                } else if (pct > 0.2f) {
+                    r = 1.0f;
+                    g = 0.9f;
+                    b = 0.0f;
+                } else {
+                    r = 1.0f;
+                    g = 0.0f; 
+                    b = 0.0f;
+                }
+
+                int fillW = Math.max(1, (int)(barW * pct));
+
+                addRect(barX, barY, fillW, barH, r, g, b, 1f);
+            }
         }
     }
 
