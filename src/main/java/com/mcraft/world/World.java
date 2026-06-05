@@ -331,14 +331,32 @@ public class World {
     }  
 
     public void saveAll(WorldIO worldIO) {
+
+        int saved = 0;
+
         for (Chunk chunk : chunks.values()) {
             try {
                 worldIO.saveChunk(chunk);
+                saved++;
+
             } catch (IOException e) {
-                System.err.println("[Save] Falha: " + e.getMessage());
+                System.err.println("[Save] Falha ao salvar chunk: " + e.getMessage());
             }
         }
-        System.out.println("[Save] " + chunks.size() + " chunks salvos.");
+
+        try {
+            worldIO.saveChests(chestInventories);
+
+        } catch (IOException e) {
+            System.err.println("[Save] Falha ao salvar baús: " + e.getMessage());
+        }
+
+        System.out.println(
+            "[Save] " + saved +
+            " chunks salvos e " +
+            chestInventories.size() +
+            " baús persistidos."
+        );
     }
 
     public void deleteAllMeshes() {
@@ -353,6 +371,15 @@ public class World {
 
     public Map<Long, Chunk> getLoadedChunks() {
         return Collections.unmodifiableMap(chunks);
+    }
+
+    public Map<Long, Inventory> getChestInventories() {
+        return chestInventories;
+    }
+
+    public void setChestInventories(Map<Long, Inventory> loaded) {
+        chestInventories.clear();
+        chestInventories.putAll(loaded);
     }
 
     public int getSurfaceY(float wx, float wz) {

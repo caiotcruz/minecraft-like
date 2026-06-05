@@ -1,9 +1,12 @@
 package com.mcraft.world;
 
 import com.mcraft.player.Player;
+import com.mcraft.ui.Inventory;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class WorldIO {
@@ -29,6 +32,7 @@ public class WorldIO {
     public void save(World world, Player player, DayNightCycle dayNight) throws IOException {
 
         saveWorldMeta(world.getSeed(), player, dayNight);
+        boolean chestsSaved = false;
 
         int saved = 0;
         int failed = 0;
@@ -52,10 +56,22 @@ public class WorldIO {
             }
         }
 
+        try {
+            saveChests(world.getChestInventories());
+            chestsSaved = true;
+        } catch (IOException e) {
+
+            System.err.printf(
+                "[Save] Falha ao salvar baús -> %s%n",
+                e.getMessage()
+            );
+        }
+
         System.out.printf(
-            "[Save] %d chunks salvos, %d falhas em '%s'%n",
+            "[Save] %d chunks salvos, %d falhas, baús=%s em '%s'%n",
             saved,
             failed,
+            chestsSaved ? "OK" : "ERRO",
             saveDir
         );
     }
@@ -126,6 +142,84 @@ public class WorldIO {
 
             out.write(blocks);
         }
+    }
+
+    public void saveChests(Map<Long, Inventory> chestInventories) throws IOException {
+
+        Files.createDirectories(saveDir);
+
+        Path path = saveDir.resolve("chests.dat");
+
+        try (DataOutputStream out = new DataOutputStream(
+                new BufferedOutputStream(
+                    Files.newOutputStream(
+                        path,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.TRUNCATE_EXISTING,
+                        StandardOpenOption.WRITE
+                    )
+                ))) {
+
+            out.writeInt(chestInventories.size());
+
+            for (Map.Entry<Long, Inventory> entry : chestInventories.entrySet()) {
+
+                out.writeLong(entry.getKey());
+
+                Inventory inv = entry.getValue();
+
+                out.writeInt(Inventory.TOTAL_SLOTS);
+
+                for (int s = 0; s < Inventory.TOTAL_SLOTS; s++) {
+                    out.writeInt(inv.getItemId(s));
+                    out.writeInt(inv.getItemQty(s));
+                }
+            }
+        }
+    }
+
+    public Map<Long, Inventory> loadChests() {
+        Path path = saveDir.resolve("chests.dat");
+        Map<Long, Inventory> map = new HashMap<>();
+
+        if (!Files.exists(path)) return map;
+
+        try (DataInputStream in = new DataInputStream(
+                new BufferedInputStream(Files.newInputStream(path)))) {
+
+            int numChests = in.readInt();
+
+            for (int c = 0; c < numChests; c++) {
+
+                long key = in.readLong();
+
+                int numSlots = in.readInt();
+
+                if (numSlots < 0 || numSlots > Inventory.TOTAL_SLOTS) {
+                    throw new IOException(
+                        "Quantidade de slots inválida: " + numSlots
+                    );
+                }
+
+                Inventory inv = new Inventory();
+
+                for (int s = 0; s < numSlots && s < Inventory.TOTAL_SLOTS; s++) {
+                    int id  = in.readInt();
+                    int qty = in.readInt();
+
+                    if (id != 0) {
+                        inv.setSlot(s, id, qty);
+                    }
+                }
+
+                map.put(key, inv);
+            }
+
+        } catch (IOException e) {
+            System.err.println("[WorldIO] Erro ao carregar baús: " + e.getMessage());
+        }
+
+        return map;
     }
 
     public boolean hasSave() {

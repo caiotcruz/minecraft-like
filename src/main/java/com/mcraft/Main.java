@@ -95,6 +95,8 @@ public class Main {
             loop.getPlayer()
                 .getCamera()
                 .setRotation(yaw, pitch);
+            
+            loop.getWorld().setChestInventories(io.loadChests());
         }
 
         loop.run();
