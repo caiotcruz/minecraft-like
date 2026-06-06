@@ -217,6 +217,18 @@ public class WeatherSystem {
         glDisable(GL_BLEND);
     }
 
+    public int getCurrentOrdinal() {return current.ordinal();}
+    public void setCurrentOrdinal(int ordinal) {
+        WeatherType[] values = WeatherType.values();
+
+        if (ordinal < 0 || ordinal >= values.length) {
+            this.current = WeatherType.CLEAR;
+            return;
+        }
+
+        this.current = values[ordinal];
+    }
+
     public WeatherType getCurrent() { return current; }
     public void setCurrent(WeatherType newWeather){
         this.current = newWeather;
@@ -226,6 +238,17 @@ public class WeatherSystem {
         this.intensity = intensity;
     }
     public float getIntensity()     { return intensity; }
+
+    public float getChangeTimer() {return changeTimer;}
+    public void setChangeTimer(float changeTimer){
+        this.changeTimer = changeTimer;
+    }
+
+    public void restoreState(int ordinal, float intensity, float changeTimer){
+        this.setCurrentOrdinal(ordinal);
+        this.setIntensity(intensity);
+        this.setChangeTimer(changeTimer);
+    }
 
     private void initGPU() {
         vao = glGenVertexArrays(); vbo = glGenBuffers(); ebo = glGenBuffers();

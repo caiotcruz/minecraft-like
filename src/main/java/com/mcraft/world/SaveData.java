@@ -18,4 +18,8 @@ public class SaveData {
     public int[] inventoryCounts;
 
     public int selectedSlot;
+
+    public int weatherType;
+    public float weatherIntensity;
+    public float weatherChangeTimer;
 }

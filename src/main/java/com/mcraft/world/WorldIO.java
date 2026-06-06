@@ -29,9 +29,9 @@ public class WorldIO {
         }
     }
 
-    public void save(World world, Player player, DayNightCycle dayNight) throws IOException {
+    public void save(World world, Player player, DayNightCycle dayNight, WeatherSystem weatherSystem) throws IOException {
 
-        saveWorldMeta(world.getSeed(), player, dayNight);
+        saveWorldMeta(world.getSeed(), player, dayNight, weatherSystem);
         boolean chestsSaved = false;
 
         int saved = 0;
@@ -76,7 +76,7 @@ public class WorldIO {
         );
     }
 
-    private void saveWorldMeta(long seed, Player player, DayNightCycle dayNight) throws IOException {
+    private void saveWorldMeta(long seed, Player player, DayNightCycle dayNight, WeatherSystem weatherSystem) throws IOException {
 
         Files.createDirectories(saveDir);
 
@@ -85,32 +85,36 @@ public class WorldIO {
         try (DataOutputStream out = new DataOutputStream(
                 new BufferedOutputStream(Files.newOutputStream(metaPath)))) {
 
-            out.writeInt(2);
+                out.writeInt(2);
 
-            out.writeLong(seed);
+                out.writeLong(seed);
 
-            out.writeFloat(player.getX());
-            out.writeFloat(player.getY());
-            out.writeFloat(player.getZ());
+                out.writeFloat(player.getX());
+                out.writeFloat(player.getY());
+                out.writeFloat(player.getZ());
 
-            out.writeFloat(player.getCamera().getYaw());
-            out.writeFloat(player.getCamera().getPitch());
+                out.writeFloat(player.getCamera().getYaw());
+                out.writeFloat(player.getCamera().getPitch());
 
-            out.writeFloat(dayNight.getTime());
-            out.writeInt(dayNight.getDay());
+                out.writeFloat(dayNight.getTime());
+                out.writeInt(dayNight.getDay());
 
-            int[] items  = player.getInventory().getItems();
-            int[] counts = player.getInventory().getCounts();
+                int[] items  = player.getInventory().getItems();
+                int[] counts = player.getInventory().getCounts();
 
-            out.writeInt(items.length);
+                out.writeInt(items.length);
 
-            for (int i = 0; i < items.length; i++) {
-                out.writeInt(items[i]);
-                out.writeInt(counts[i]);
+                for (int i = 0; i < items.length; i++) {
+                    out.writeInt(items[i]);
+                    out.writeInt(counts[i]);
+                }
+
+                out.writeInt(player.getInventory().getSelectedSlot());
+
+                out.writeInt(weatherSystem.getCurrentOrdinal());
+                out.writeFloat(weatherSystem.getIntensity());
+                out.writeFloat(weatherSystem.getChangeTimer());
             }
-
-            out.writeInt(player.getInventory().getSelectedSlot());
-        }
     }
 
     public void saveChunk(Chunk chunk) throws IOException {
@@ -262,6 +266,10 @@ public class WorldIO {
                 }
 
                 data.selectedSlot = in.readInt();
+
+                data.weatherType = in.readInt();
+                data.weatherIntensity = in.readFloat();
+                data.weatherChangeTimer = in.readFloat();
             }
             return data;
         }

@@ -1028,4 +1028,8 @@ public class GameLoop {
     public DayNightCycle getDayNight() {
         return dayNight;
     }
+
+    public WeatherSystem getWeatherSystem(){
+        return this.weather;
+    }
 }

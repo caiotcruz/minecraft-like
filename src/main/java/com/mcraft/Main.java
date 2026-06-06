@@ -28,6 +28,10 @@ public class Main {
         int day = 1;
         SaveData saveData = null;
 
+        int currentOrdinal = 0;
+        float intensity = 0;
+        float changeTimer = 0;
+
         if (io.hasSave()) {
 
             try {
@@ -45,6 +49,10 @@ public class Main {
 
                 timeOfDay = saveData.timeOfDay;
                 day = saveData.day;
+
+                currentOrdinal = saveData.weatherType;
+                intensity = saveData.weatherIntensity;
+                changeTimer = saveData.weatherChangeTimer;
 
                 System.out.println("[Load] Mundo carregado: seed=" + seed);
 
@@ -97,6 +105,8 @@ public class Main {
                 .setRotation(yaw, pitch);
             
             loop.getWorld().setChestInventories(io.loadChests());
+
+            loop.getWeatherSystem().restoreState(currentOrdinal, intensity, changeTimer);
         }
 
         loop.run();
@@ -106,7 +116,8 @@ public class Main {
             io.save(
                 loop.getWorld(),
                 loop.getPlayer(),
-                loop.getDayNight()
+                loop.getDayNight(),
+                loop.getWeatherSystem()
             );
 
             System.out.println("[Save] Mundo salvo com sucesso.");
