@@ -101,12 +101,14 @@ public class WorldIO {
 
                 int[] items  = player.getInventory().getItems();
                 int[] counts = player.getInventory().getCounts();
+                int[] durabilities = player.getInventory().getDurabilities();
 
                 out.writeInt(items.length);
 
                 for (int i = 0; i < items.length; i++) {
                     out.writeInt(items[i]);
                     out.writeInt(counts[i]);
+                    out.writeInt(durabilities[i]);
                 }
 
                 out.writeInt(player.getInventory().getSelectedSlot());
@@ -259,10 +261,12 @@ public class WorldIO {
 
                 data.inventoryItems  = new int[size];
                 data.inventoryCounts = new int[size];
+                data.inventoryDurabilities = new int[size];
 
                 for (int i = 0; i < size; i++) {
                     data.inventoryItems[i]  = in.readInt();
                     data.inventoryCounts[i] = in.readInt();
+                    data.inventoryDurabilities[i] = in.readInt();
                 }
 
                 data.selectedSlot = in.readInt();

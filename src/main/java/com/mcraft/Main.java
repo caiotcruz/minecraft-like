@@ -94,6 +94,7 @@ public class Main {
             loop.getPlayer().getInventory().load(
                 saveData.inventoryItems,
                 saveData.inventoryCounts,
+                saveData.inventoryDurabilities,
                 saveData.selectedSlot
             );
 

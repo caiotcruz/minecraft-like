@@ -16,6 +16,7 @@ public class SaveData {
 
     public int[] inventoryItems;
     public int[] inventoryCounts;
+    public int[] inventoryDurabilities;
 
     public int selectedSlot;
 

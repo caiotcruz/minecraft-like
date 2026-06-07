@@ -115,10 +115,11 @@ public class Inventory {
         }
     }
 
-    public void load(int[] items, int[] counts, int selectedSlot) {
+    public void load(int[] items, int[] counts, int[] durability, int selectedSlot) {
 
         System.arraycopy(items, 0, this.getItems(), 0, items.length);
         System.arraycopy(counts, 0, this.getCounts(), 0, counts.length);
+        System.arraycopy(durability, 0, this.getDurabilities(), 0, durability.length);
 
         this.selectedSlot = selectedSlot;
     }
@@ -137,6 +138,10 @@ public class Inventory {
 
     public int[] getCounts() {
         return itemQty;
+    }
+
+    public int[] getDurabilities(){
+        return itemDurability;
     }
 
     public static int getMaxDurability(int blockId) {
