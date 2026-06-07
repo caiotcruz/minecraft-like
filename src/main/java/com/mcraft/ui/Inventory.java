@@ -33,6 +33,18 @@ public class Inventory {
         itemDurability[index] = MAX_DUR.getOrDefault(id, -1);
     }
 
+    public void setSlotFull(int index, int id, int qty, int durability) {
+        if (index < 0 || index >= TOTAL_SLOTS) return;
+        itemId  [index] = id;
+        itemQty [index] = qty;
+        if (durability < 0 && isTool(id)) {
+            itemDurability[index] = MAX_DUR.getOrDefault(id, -1);
+        } else {
+            itemDurability[index] = durability;
+        }
+    }
+
+
     public void swapSlots(int a, int b) {
         int tmpId  = itemId [a]; int tmpQty = itemQty[a];
         itemId [a] = itemId [b]; itemQty[a] = itemQty[b];
@@ -82,7 +94,18 @@ public class Inventory {
         }
     }
 
-    public void removeItem(int blockId, int qty) {
+    public void addToolWithDurability(int blockId, int durability) {
+        for (int i = 0; i < TOTAL_SLOTS; i++) {
+            if (itemId[i] == 0) {
+                itemId         [i] = blockId;
+                itemQty        [i] = 1;
+                itemDurability [i] = durability;
+                return;
+            }
+        }
+    }
+
+        public void removeItem(int blockId, int qty) {
         for (int i = 0; i < TOTAL_SLOTS && qty > 0; i++) {
             if (itemId[i] == blockId) {
                 int remove = Math.min(qty, itemQty[i]);
@@ -135,5 +158,9 @@ public class Inventory {
             return true; 
         }
         return false;
+    }
+
+    public static boolean isTool(int blockId) {
+        return MAX_DUR.containsKey(blockId);
     }
 }

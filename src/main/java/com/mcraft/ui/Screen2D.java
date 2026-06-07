@@ -13,12 +13,6 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
-/**
- * Classe base para todas as telas de UI 2D (inventário, baú, bancada...).
- *
- * Concentra toda a infraestrutura de GPU (VAO/VBO/EBO, batch, primitivas)
- * para que as subclasses não precisem duplicar esse código.
- */
 public abstract class Screen2D {
 
     protected static final int SLOT_PX = 36;
@@ -33,6 +27,7 @@ public abstract class Screen2D {
 
     protected int heldId  = 0;
     protected int heldQty = 0;
+    protected int heldDur = -1;
     protected int mouseX, mouseY;
 
     private static final int MAX_QUADS   = 512;
@@ -143,33 +138,39 @@ public abstract class Screen2D {
     protected void handleInvSlotClick(Inventory inv, int slotIdx) {
         int slotId  = inv.getItemId (slotIdx);
         int slotQty = inv.getItemQty(slotIdx);
+        int slotDur = inv.getItemDurability(slotIdx);
 
         if (heldId == 0) {
             if (slotId != 0) {
                 heldId  = slotId;
                 heldQty = slotQty;
+                heldDur = slotDur;
                 inv.clearSlot(slotIdx);
             }
         } else {
             if (slotId == 0) {
-                inv.setSlot(slotIdx, heldId, heldQty);
-                heldId = 0; heldQty = 0;
-            } else if (slotId == heldId && slotQty < 64) {
+                inv.setSlotFull(slotIdx, heldId, heldQty, heldDur);
+                heldId = 0; heldQty = 0; heldDur = -1;
+            } else if (slotId == heldId && slotQty < 64 && !Inventory.isTool(heldId)) {
                 int add = Math.min(heldQty, 64 - slotQty);
                 inv.setSlot(slotIdx, slotId, slotQty + add);
                 heldQty -= add;
                 if (heldQty <= 0) { heldId = 0; heldQty = 0; }
             } else {
-                inv.setSlot(slotIdx, heldId, heldQty);
-                heldId = slotId; heldQty = slotQty;
+                inv.setSlotFull(slotIdx, heldId, heldQty, heldDur);
+                heldId = slotId; heldQty = slotQty; heldDur = slotDur;
             }
         }
     }
 
     protected void returnHeldItem(Inventory inv) {
         if (heldId != 0) {
-            inv.addItem(heldId, heldQty);
-            heldId = 0; heldQty = 0;
+            if (Inventory.isTool(heldId)) {
+                inv.addToolWithDurability(heldId, heldDur);
+            } else {
+                inv.addItem(heldId, heldQty);
+            }
+            heldId = 0; heldQty = 0; heldDur = -1;
         }
     }
 
