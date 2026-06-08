@@ -44,11 +44,13 @@ public class World {
 
     private final java.util.Map<Long, Inventory> chestInventories = new java.util.HashMap<>();
 
+    private final Map<Long, FurnaceState> furnaceStates = new HashMap<>();
+
     private final ExecutorService chunkGenPool = Executors.newFixedThreadPool(
         Math.max(1, Runtime.getRuntime().availableProcessors() - 1)
     );
 
-    private static long blockKey(int x, int y, int z) {
+    protected static long blockKey(int x, int y, int z) {
         return ((long)(x & 0x3FFFFFF))
             | (((long)(y & 0x1FF)) << 26)
             | (((long)(z & 0x3FFFFFF)) << 35);
@@ -351,11 +353,20 @@ public class World {
             System.err.println("[Save] Falha ao salvar baús: " + e.getMessage());
         }
 
+        try {
+            worldIO.saveFurnaces(furnaceStates);
+
+        } catch (IOException e) {
+            System.err.println("[Save] Falha ao salvar fornalhas: " + e.getMessage());
+        }
+
         System.out.println(
             "[Save] " + saved +
-            " chunks salvos e " +
+            " chunks salvos, " +
             chestInventories.size() +
-            " baús persistidos."
+            " baús persistidos e " +
+            furnaceStates.size() + 
+            " fornalhas persistidas."
         );
     }
 
@@ -380,6 +391,17 @@ public class World {
     public void setChestInventories(Map<Long, Inventory> loaded) {
         chestInventories.clear();
         chestInventories.putAll(loaded);
+    }
+
+    public FurnaceState getFurnaceState(int x, int y, int z) {
+        return furnaceStates.computeIfAbsent(blockKey(x, y, z), k -> new FurnaceState());
+    }
+
+    public Map<Long, FurnaceState> getFurnaceStates() { return furnaceStates; }
+
+    public void setFurnaceStates(Map<Long, FurnaceState> loaded) {
+        furnaceStates.clear();
+        furnaceStates.putAll(loaded);
     }
 
     public int getSurfaceY(float wx, float wz) {

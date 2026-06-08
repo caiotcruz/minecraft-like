@@ -41,50 +41,57 @@ public class CraftingGrid {
 
         // Picareta de madeira
         reg3(new int[][]{
-            {9, 9, 9},
-            {0, 30, 0},
-            {0, 30, 0}
+            {Block.PLANKS.id, Block.PLANKS.id, Block.PLANKS.id},
+            {     0,          Block.STICK.id,      0          },
+            {     0,          Block.STICK.id,      0          }
         }, Block.WOODEN_PICKAXE.id, 1);
 
         // Machado de madeira
         reg3(new int[][]{
-            {9, 9, 0},
-            {9, 30, 0},
-            {0, 30, 0}
+            {Block.PLANKS.id, Block.PLANKS.id, 0},
+            {Block.PLANKS.id, Block.STICK.id,  0},
+            {0,               Block.STICK.id,  0}
         }, Block.WOODEN_AXE.id, 1);
         reg3(new int[][]{
-            {0, 9, 9},
-            {0, 30, 9},
-            {0, 30, 0}
+            {0, Block.PLANKS.id, Block.PLANKS.id},
+            {0, Block.STICK.id,  Block.PLANKS.id},
+            {0, Block.STICK.id,        0        }
         }, Block.WOODEN_AXE.id, 1);
 
         // Pá de madeira
         reg3(new int[][]{
-            {0, 9, 0},
-            {0, 30, 0},
-            {0, 30, 0}
+            {0, Block.PLANKS.id, 0},
+            {0, Block.STICK.id, 0},
+            {0, Block.STICK.id, 0}
         }, Block.WOODEN_SHOVEL.id, 1);
 
         // Espada de madeira
         reg3(new int[][]{
-            {0, 9, 0},
-            {0, 9, 0},
-            {0, 30, 0} 
+            {0, Block.PLANKS.id, 0},
+            {0, Block.PLANKS.id, 0},
+            {0, Block.STICK.id,  0} 
         }, Block.WOODEN_SWORD.id, 1);
 
         // Baú
         reg3(new int[][]{
-            {9, 9, 9},
-            {9, 0, 9},
-            {9, 9, 9}
+            {Block.PLANKS.id, Block.PLANKS.id, Block.PLANKS.id},
+            {Block.PLANKS.id,         0,       Block.PLANKS.id},
+            {Block.PLANKS.id, Block.PLANKS.id, Block.PLANKS.id}
         }, 31, 1); 
 
         // Cama
         reg3(new int[][]{
-            {25, 25, 25},
-            {9, 9, 9},
-            {0, 0, 0}
+            {Block.WOOL.id, Block.WOOL.id, Block.WOOL.id},
+            {Block.PLANKS.id, Block.PLANKS.id, Block.PLANKS.id},
+            {      0,              0,              0}
         }, Block.BED.id, 1);
+
+        // Fornalha
+        reg3 (new int[][]{
+            {Block.STONE.id, Block.STONE.id, Block.STONE.id},
+            {Block.STONE.id,       0,        Block.STONE.id},
+            {Block.STONE.id, Block.STONE.id, Block.STONE.id}
+        }, Block.FURNACE.id, 1);
     }
 
     public CraftingGrid(int size) {

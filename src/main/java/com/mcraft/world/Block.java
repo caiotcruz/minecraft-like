@@ -29,10 +29,9 @@ public enum Block {
     CRAFTING_TABLE (10, "crafting_table",   0,  3, true,  1.50f),
     CHEST          (31, "chest",            1,  3, true,  1.50f),
     BED            (24, "bed",              2,  3, true,  0.50f),
+    FURNACE        (33, "furnace",          3,  3, true,  1.50f),
 
     // ROW 4 — FERRAMENTAS E ARMAS
-    STICK          (30, "stick",            0,  4, false, 0f),
-
     WOODEN_PICKAXE (26, "wooden_pickaxe",   1,  4, false, 0f),
     WOODEN_AXE     (27, "wooden_axe",       2,  4, false, 0f),
     WOODEN_SHOVEL  (28, "wooden_shovel",    3,  4, false, 0f),
@@ -49,14 +48,21 @@ public enum Block {
     // ROW 6 — BIOMAS FRIOS
     SNOW           (20, "snow",             0,  6, true,  0.2f),
     SNOWY_GRASS    (22, "snowy_grass",      1,  6, true,  0.9f),
-    ICE            (23, "ice",              2,  6, true,  0.2f);
+    ICE            (23, "ice",              2,  6, true,  0.2f),
+
+    // ROW 7 - MATERIAIS
+    STICK          (30, "stick",            0,  7, false, 0f),
+    COAL           (34, "coal",             1,  7, false, 0f),
+    IRON_INGOT     (35, "iron_ingot",       2,  7, false, 0f),
+    GOLD_INGOT     (36, "gold_ingot",       3,  7, false, 0f),
+    DIAMOND        (37, "diamond",          4,  7, false, 0f);
 
     /**
     * ROW 15 - Faces Auxiliaras
     * GRASS_SIDE                0 15
     * DENSE_FRASS_SIDE          1 15
     * CRAFTING_TABLE LATERAL    2 15
-    * ---------                 3 15
+    * FURNACE_SIDE              3 15
     * CHEST SIDES               4 15
     * BED_SIDE                  5 15
     * SNOWY_GRASS_SIDE          6 15
@@ -90,6 +96,14 @@ public enum Block {
         if (id < 0 || id >= BY_ID.length) return AIR;
         Block b = BY_ID[id];
         return (b != null) ? b : AIR;
+    }
+
+    public int getDropId() {
+        return switch (this) {
+            case COAL_ORE -> Block.COAL.id;
+            case DIAMOND_ORE -> Block.DIAMOND.id;
+            default       -> this.id;
+        };
     }
 
     public float[] getUVs(int face) {
@@ -140,6 +154,14 @@ public enum Block {
                 case 0 -> { col = 2;    row = 3; }
                 case 1 -> { col = 3; row = 0; } 
                 default -> { col = 5; row = 15; } 
+            }
+        }
+
+        if (this == FURNACE) {
+            switch (face) {
+                case 1 -> { col = 1; row = 0;  }
+                case 3 -> { col = 3; row = 3;  }
+                default -> { col = 3; row = 15; }
             }
         }
 

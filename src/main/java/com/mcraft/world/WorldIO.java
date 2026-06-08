@@ -33,6 +33,7 @@ public class WorldIO {
 
         saveWorldMeta(world.getSeed(), player, dayNight, weatherSystem);
         boolean chestsSaved = false;
+        boolean furnacesSaved = false;
 
         int saved = 0;
         int failed = 0;
@@ -67,11 +68,23 @@ public class WorldIO {
             );
         }
 
+        try {
+            saveFurnaces(world.getFurnaceStates());
+            furnacesSaved = true;
+        } catch (IOException e) {
+
+            System.err.printf(
+                "[Save] Falha ao salvar fornalhas -> %s%n",
+                e.getMessage()
+            );
+        }
+
         System.out.printf(
             "[Save] %d chunks salvos, %d falhas, baús=%s em '%s'%n",
             saved,
             failed,
             chestsSaved ? "OK" : "ERRO",
+            furnacesSaved ? "OK" : "ERRO",
             saveDir
         );
     }
@@ -184,6 +197,30 @@ public class WorldIO {
         }
     }
 
+    public void saveFurnaces(Map<Long, FurnaceState> states) throws IOException {
+        if (states.isEmpty()) return;
+        Path path = saveDir.resolve("furnaces.dat");
+        try (DataOutputStream out = new DataOutputStream(
+                new BufferedOutputStream(Files.newOutputStream(path)))) {
+            out.writeInt(states.size());
+            for (Map.Entry<Long, FurnaceState> e : states.entrySet()) {
+                long key = e.getKey();
+                out.writeInt((int)( key        & 0x3FFFFFF));
+                out.writeInt((int)((key >> 26) & 0x1FF));
+                out.writeInt((int)((key >> 35) & 0x3FFFFFF));
+                FurnaceState s = e.getValue();
+                out.writeInt  (s.inputId);   
+                out.writeInt  (s.inputQty);
+                out.writeInt  (s.fuelId);    
+                out.writeInt  (s.fuelQty);
+                out.writeInt  (s.outputId);  
+                out.writeInt  (s.outputQty);
+                out.writeFloat(s.smeltProgress);
+                out.writeFloat(s.fuelRemaining);
+            }
+        }
+    }
+
     public Map<Long, Inventory> loadChests() {
         Path path = saveDir.resolve("chests.dat");
         Map<Long, Inventory> map = new HashMap<>();
@@ -225,6 +262,29 @@ public class WorldIO {
             System.err.println("[WorldIO] Erro ao carregar baús: " + e.getMessage());
         }
 
+        return map;
+    }
+
+    public Map<Long, FurnaceState> loadFurnaces() {
+        Path path = saveDir.resolve("furnaces.dat");
+        Map<Long, FurnaceState> map = new HashMap<>();
+        if (!Files.exists(path)) return map;
+        try (DataInputStream in = new DataInputStream(
+                new BufferedInputStream(Files.newInputStream(path)))) {
+            int count = in.readInt();
+            for (int i = 0; i < count; i++) {
+                int wx = in.readInt(), wy = in.readInt(), wz = in.readInt();
+                FurnaceState s = new FurnaceState();
+                s.inputId      = in.readInt(); s.inputQty      = in.readInt();
+                s.fuelId       = in.readInt(); s.fuelQty       = in.readInt();
+                s.outputId     = in.readInt(); s.outputQty     = in.readInt();
+                s.smeltProgress = in.readFloat();
+                s.fuelRemaining = in.readFloat();
+                map.put(World.blockKey(wx, wy, wz), s);
+            }
+        } catch (IOException e) {
+            System.err.println("[WorldIO] Erro ao carregar fornalhas: " + e.getMessage());
+        }
         return map;
     }
 

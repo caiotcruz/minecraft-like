@@ -445,50 +445,130 @@ public class TextureAtlas {
             };
         }
 
-        //  ROW 4 — FERRAMENTAS E ARMAS
-        
-        // STICK
-        if (col == 0 && row == 4) { 
-             boolean shaft = (px >= 5 && px <= 9 && py >= 1 && py <= 13);
-            if (shaft) return new int[]{ 140, 90, 45, 255 };
-            return new int[]{ 0, 0, 0, 0 };
+        //FURNACE
+        if (col == 3 && row == 3) { 
+            boolean rim    = (px <= 1 || px >= 14 || py <= 1 || py >= 14);
+            boolean mouth  = (px >= 3 && px <= 12 && py >= 4 && py <= 12);
+            boolean inside = (px >= 5 && px <= 10 && py >= 6 && py <= 10);
+            
+            if (rim)    return new int[]{ 80, 80, 80, 255 }; 
+            if (inside) return new int[]{ 240, 110, 15, 255 }; 
+            if (mouth)  return new int[]{ 25, 25, 25, 255 };
+            
+            int stoneV = 105 + (n & 3) * 3;
+            return new int[]{ stoneV, stoneV, stoneV, 255 };
         }
 
+        // FURNACE_SIDE
+        if (col == 3 && row == 15) {
+            boolean edge = (px <= 1 || px >= 14 || py <= 1 || py >= 14);
+            
+            if (edge) {
+                return new int[]{ 80, 80, 80, 255 };
+            }
+            
+            int stoneV = 100 + (n & 3) * 4;
+            return new int[]{ stoneV, stoneV, stoneV + (n & 1) * 2, 255 };
+        }
+
+        //  ROW 4 — FERRAMENTAS E ARMAS
+
         // WOODEN_PICKAXE
-        if (col == 1 && row == 4) { 
-           boolean head = (py <= 4) && (Math.abs(px - (4 - py)) < 3);
-            boolean shaft2 = (px >= 6 && px <= 9 && py > 4 && py <= 14);
-            if (head)   return new int[]{ 165, 105, 55, 255 };
-            if (shaft2) return new int[]{ 130, 82, 40, 255 };
+        if (col == 1 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 11);
+            
+            boolean head = (px + py >= 21 && px + py <= 23) && (px >= 8 && py <= 7);
+            if ((px == 14 && py == 8) || (px == 7 && py == 1)) head = true;
+            
+            boolean outline = (px + py == 20 || px + py == 24 || (px == 6 && py == 1) || (px == 14 && py == 9));
+
+            if (outline && (head || shaft || (px == (15 - py) - 1) || (px == (15 - py) + 1))) {
+                if (!shaft && !head) return new int[]{ 45, 25, 10, 255 };
+            }
+
+            if (head) {
+                boolean edgeLight = (px + py == 21); 
+                int r = edgeLight ? 195 + (n & 3) * 5 : 150 + (n & 3) * 4;
+                return new int[]{ r, clamp(r - 50), clamp(r - 95), 255 };
+            }
+
+            if (shaft) return new int[]{ 110, 70, 30, 255 };
+
             return new int[]{ 0, 0, 0, 0 };
         }
 
         // WOODEN_AXE
-        if (col == 2 && row == 4) {
-            boolean blade = (px <= 8 && py <= 6 && py > 0) && (px + py >= 3);
-            boolean shaft2 = (px >= 8 && px <= 10 && py > 4 && py <= 14);
-            if (blade)  return new int[]{ 165, 105, 55, 255 };
-            if (shaft2) return new int[]{ 130, 82, 40, 255 };
+       if (col == 2 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 12);
+            
+            boolean blade = (px >= 9 && px <= 14 && py >= 1 && py <= 6) && (px >= (15 - py));
+            if (py == 1 && px == 9) blade = false;
+            if (px == 14 && py == 6) blade = false;
+
+            if (blade) {
+                boolean cuttingEdge = (px == 14 || py == 1);
+                int r = cuttingEdge ? 195 + (n & 3) * 5 : 145 + (n & 3) * 4;
+                return new int[]{ r, clamp(r - 45), clamp(r - 90), 255 };
+            }
+
+            if (shaft) {
+                return new int[]{ 100, 62, 25, 255 };
+            }
+
+            boolean outline = (px == 8 && py >= 2 && py <= 5) || (py == 7 && px >= 10 && px <= 13);
+            if (outline) return new int[]{ 50, 30, 10, 255 };
+
             return new int[]{ 0, 0, 0, 0 };
         }
 
         // WOODEN_SHOVEL
         if (col == 3 && row == 4) {
-            boolean head2 = (px >= 5 && px <= 10 && py <= 5);
-            boolean shaft3 = (px >= 7 && px <= 8 && py > 4 && py <= 14);
-            if (head2)  return new int[]{ 165, 105, 55, 255 };
-            if (shaft3) return new int[]{ 130, 82, 40, 255 };
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 10);
+            
+            boolean head = (px >= 10 && px <= 15 && py >= 0 && py <= 5) && (px + py >= 13);
+            
+            if (py == 0 && px < 13) head = false;
+            if (px == 15 && py > 2) head = false;
+            if (py == 5 || px == 10) head = false;
+
+            if (head) {
+                boolean centerLine = (px == (15 - py)) || (px == (16 - py));
+                int r = centerLine ? 190 + (n & 3) * 5 : 140 + (n & 3) * 4;
+                return new int[]{ r, clamp(r - 45), clamp(r - 90), 255 };
+            }
+
+            if (shaft) return new int[]{ 110, 70, 30, 255 };
+
+            if ((px == 9 && py == 5) || (px == 10 && py == 6)) return new int[]{ 45, 25, 10, 255 };
+
             return new int[]{ 0, 0, 0, 0 };
         }
-
+        
         // WOODEN_SWORD 
         if (col == 4 && row == 4) {
-            boolean blade2 = (px >= 6 && px <= 9 && py <= 10);
-            boolean guard  = (px >= 4 && px <= 11 && py >= 8 && py <= 9);
-            boolean hilt   = (px >= 6 && px <= 9 && py >= 10 && py <= 14);
-            if (guard)  return new int[]{ 165, 105, 55, 255 };
-            if (blade2) return new int[]{ 220, 220, 225, 255 };
-            if (hilt)   return new int[]{ 130, 82, 40, 255 };
+            boolean blade = (px == py || px == py + 1 || px == py - 1) && (px >= 5 && px <= 14 && py >= 5 && py <= 14);
+            if (px == 14 && py == 14) blade = true;
+            if ((px == 5 && py == 5) || (px == 14 && py == 13) || (px == 13 && py == 14)) blade = true;
+
+            boolean guard = (px + py == 9 || px + py == 10) && (px >= 2 && px <= 7 && py >= 2 && py <= 7) && !blade;
+
+            boolean hilt = (px == py) && (px >= 1 && px <= 3);
+
+            if (blade) {
+                boolean edge = (px == py);
+                int r = edge ? 190 + (n & 3) * 5 : 145 + (n & 3) * 4;
+                return new int[]{ r, clamp(r - 45), clamp(r - 90), 255 };
+            }
+
+            if (guard) {
+                int r = 100 + (n & 3) * 3;
+                return new int[]{ r, clamp(r - 55), clamp(r - 80), 255 };
+            }
+
+            if (hilt) {
+                return new int[]{ 70, 42, 15, 255 }; 
+            }
+
             return new int[]{ 0, 0, 0, 0 };
         }
 
@@ -497,47 +577,129 @@ public class TextureAtlas {
         
         // FEATHER
         if (col == 0 && row == 5) { 
-            boolean shaft = (px == 7 || px == 8) && py >= 2 && py <= 13;
-            boolean barb  = Math.abs(px - 7) <= (14 - py) / 2 && py >= 2 && py <= 14;
-            if (shaft) return new int[]{ 200, 200, 210, 255 };
-            if (barb)  return new int[]{ 235, 235, 245, 255 };
+            int curve = (py < 6) ? 8 : (py < 11) ? 7 : 6;
+            boolean shaft = (px == curve) && py >= 2 && py <= 13;
+            
+            int spread = (py >= 3 && py <= 11) ? (py < 7 ? 3 : 4) : (py == 2 || py == 12) ? 1 : 0;
+            boolean barb = (px >= curve - spread && px <= curve + spread) && (py >= 2 && py <= 13);
+            
+            if (barb && !shaft) {
+                if ((px + py * 2) % 5 == 0 && py > 4) return new int[]{ 0, 0, 0, 0 };
+            }
+
+            if (shaft) return new int[]{ 215, 215, 220, 255 };
+            if (barb) {
+                int v = 240 - (13 - py) * 2 + (n & 3) * 3;
+                return new int[]{ clamp(v), clamp(v), clamp(v + 5), 255 };
+            }
+            
             return new int[]{ 0, 0, 0, 0 };
         }
 
         // LEATHER
         if (col == 1 && row == 5) { 
-            if (px > 1 && px < 14 && py > 1 && py < 14) {
-                int v = 130 + n * 5;
-                return new int[]{ v, clamp(v - 40), clamp(v - 80), 255 };
+            boolean inLeather = (px >= 2 && px <= 13 && py >= 2 && py <= 13);
+            if (inLeather) {
+                boolean cornerCut = (py == 2 || py == 13) && (px <= 3 || px >= 12);
+                boolean sideCut   = (px == 2 || px == 13) && (py <= 3 || py >= 12);
+                boolean centerIn  = (py >= 7 && py <= 8) && (px == 2 || px == 13); 
+                if (cornerCut || sideCut || centerIn) inLeather = false;
             }
-            return new int[]{ 0, 0, 0, 0 };
+
+            if (!inLeather) return new int[]{ 0, 0, 0, 0 };
+
+            boolean edge = (px == 3 || px == 12 || py == 3 || py == 13 || (px <= 4 && py <= 4));
+            
+            int v = 125 + (n & 7) * 4;
+            int r = v;
+            int g = v - 45;
+            int b = v - 85;
+
+            if (edge) {
+                r -= 35; g -= 30; b -= 20;
+            }
+
+            return new int[]{ clamp(r), clamp(g), clamp(b), 255 };
         }
 
         // RAW_BEEF
         if (col == 2 && row == 5) {
-            boolean dark = ((px + py) % 4 == 0);
-            if (dark) return new int[]{ 140, 30, 30, 255 };
-            return new int[]{ 195, 60, 50, 255 };
+            boolean inBeef = (py >= 3 && py <= 12 && px >= 2 && px <= 13);
+            if (inBeef) {
+                if ((py == 3 || py == 12) && (px <= 4 || px >= 11)) inBeef = false;
+            }
+            if (!inBeef) return new int[]{ 0, 0, 0, 0 };
+
+            boolean fatBorder = (py == 3 && px >= 5) || (px == 13 && py <= 8) || (py == 4 && px >= 10);
+            if (fatBorder) {
+                int w = 225 + (n & 3) * 5;
+                return new int[]{ w, w - 5, w - 20, 255 };
+            }
+
+            boolean bone = (px >= 3 && px <= 4 && py >= 10 && py <= 11);
+            if (bone) return new int[]{ 235, 235, 220, 255 };
+
+            boolean fiber = (px % 3 == 0);
+            int r = fiber ? 150 + (n & 3) * 5 : 185 + (n & 3) * 6;
+            int g = fiber ? 25 : 45;
+            int b = fiber ? 25 : 35;
+
+            return new int[]{ clamp(r), clamp(g), clamp(b), 255 };
         }
 
         // ROTTEN_FLESH
         if (col == 3 && row == 5) {
-            boolean vein = (px % 5 == 2) || (py % 5 == 3);
-            if (vein) return new int[]{ 40, 60, 30, 255 };
-            return new int[]{ 80, 100, 50, 255 };
+            boolean inFlesh = (py >= 3 && py <= 12 && px >= 3 && px <= 13);
+            if (inFlesh) {
+                if ((px * py + n) % 7 == 0) inFlesh = false;
+            }
+            if (!inFlesh) return new int[]{ 0, 0, 0, 0 };
+
+            boolean necroticVein = ((px + py) % 5 == 0 && px > 4) || (px == 7) || (py == 8 && px <= 10);
+            if (necroticVein) {
+                return new int[]{ 55 + (n & 3) * 4, 75 + (n & 3) * 3, 35, 255 };
+            }
+
+            int r = 95 + (n & 3) * 5;
+            int g = 70 + (n & 3) * 3;
+            int b = 40;
+            
+            return new int[]{ clamp(r), clamp(g), clamp(b), 255 };
         }
 
         // GUNPOWDER
         if (col == 4 && row == 5) {
-            boolean grain = ((px * 13 + py * 7) % 6 == 0);
-            return grain ? new int[]{ 55, 55, 55, 255 } : new int[]{ 35, 35, 35, 255 };
+            int heightOffset = (py - 4);
+            boolean inPile = (py >= 4 && py <= 13) && (px >= 8 - heightOffset / 2 && px <= 8 + heightOffset / 2);
+            
+            if (!inPile) return new int[]{ 0, 0, 0, 0 };
+
+            boolean darkGrain = ((px * 7 + py * 13) % 4 == 0);
+            boolean sulfurGrain = ((px * 11 + py * 3) % 7 == 0);
+            
+            if (darkGrain)   return new int[]{ 40, 40, 40, 255 };
+            if (sulfurGrain) return new int[]{ 110, 110, 110, 255 };
+
+            int v = 70 + (n & 3) * 5;
+            if (px > 8) v -= 15;
+
+            return new int[]{ clamp(v), clamp(v), clamp(v), 255 };
         }
 
         // WOOL
         if (col == 5 && row == 5) {
-            boolean fiber = ((px * 3 + py * 7 + n) % 4 == 0);
-            int base = fiber ? (210 + n * 3) : (238 + n * 2);
-            return new int[]{ clamp(base), clamp(base - 2), clamp(base - 4), 255 };
+            boolean fiberLight = ((px / 3 + py / 3) % 2 == 0) && ((px + py + (n & 1)) % 3 == 0);
+            boolean fiberShadow = ((px / 3 - py / 3) % 2 == 0) && ((px - py) % 4 == 0);
+
+            int base = 230 + (n & 3) * 4; 
+
+            if (fiberLight) {
+                base = Math.min(255, base + 15);
+            } else if (fiberShadow) {
+                base = Math.max(160, base - 35);
+            }
+
+            return new int[]{ base, clamp(base - 2), clamp(base - 6), 255 };
         }
 
 
@@ -607,6 +769,123 @@ public class TextureAtlas {
             int v = 195 + n * 3;
             return new int[]{ clamp(v - 10), clamp(v), clamp(v + 15), 210 };
         }
+
+        // MATERIAIS
+
+        // STICK
+        if (col == 0 && row == 7) { 
+            // Desenha uma linha diagonal de espessura 2 (de baixo-esquerda para cima-direita)
+            int diff = px - py;
+            boolean shaft = (diff >= -1 && diff <= 1) && (px >= 2 && px <= 13);
+            
+            if (!shaft) return new int[]{ 0, 0, 0, 0 };
+
+            // Linha superior do graveto recebe uma luz de destaque (madeira clara)
+            boolean lightWood = (diff == -1 || (px == py && n > 8));
+            if (lightWood) {
+                int r = 165 + (n & 3) * 4;
+                return new int[]{ r, clamp(r - 45), clamp(r - 90), 255 }; // Marrom claro iluminado
+            }
+
+            // Lado inferior recebe sombra de relevo (casca de árvore escura)
+            int r = 110 + (n & 3) * 3;
+            if (diff == 1) r -= 30;
+
+            return new int[]{ clamp(r), clamp(r - 50), clamp(r - 80), 255 };
+        }
+
+        // COAL
+        if (col == 1 && row == 7) {
+            boolean inCoal = (py >= 3 && py <= 12 && px >= 3 && px <= 12)
+                        && !(py == 3 && (px == 3 || px == 12)) 
+                        && !(py == 12 && (px == 3 || px == 12))
+                        && !(py == 4 && px == 3);
+                        
+            if (!inCoal) return new int[]{ 0, 0, 0, 0 };
+
+            boolean ridge = (px == py + 1) || (px == 5 && py >= 4 && py <= 9) || (py == 9 && px >= 4 && px <= 10);
+            if (ridge) {
+                int v = 45 + (n & 3) * 4;
+                return new int[]{ v, v, v + 2, 255 };
+            }
+
+            int c = 16 + (n & 3) * 3;
+            return new int[]{ c, c, c + 2, 255 };
+        }
+
+         // IRON_INGOT
+        if (col == 2 && row == 7) {
+            int inset = (py < 5) ? 4 : (py > 10) ? 4 : (py == 5 || py == 10) ? 3 : 2;
+            boolean inIngot = (py >= 4 && py <= 11) && (px >= inset && px <= (15 - inset));
+            
+            if (!inIngot) return new int[]{ 0, 0, 0, 0 };
+
+            boolean borderLight = (py == 4) || (px == inset);
+            boolean flash       = (px == py + 2) || (px == py + 3);
+            
+            if (borderLight || flash) {
+                int light = 230 + (n & 3) * 6;
+                return new int[]{ clamp(light), clamp(light), clamp(light), 255 };
+            }
+
+            boolean shadow = (py == 11) || (px == 15 - inset);
+            int baseV = 150 + (n & 3) * 5;
+            if (shadow) baseV -= 45;
+
+            return new int[]{ clamp(baseV), clamp(baseV - 5), clamp(baseV - 5), 255 };
+        }
+
+        // GOLD_INGOT
+        if (col == 3 && row == 7) {
+            int inset = (py < 5) ? 4 : (py > 10) ? 4 : (py == 5 || py == 10) ? 3 : 2;
+            boolean inIngot = (py >= 4 && py <= 11) && (px >= inset && px <= (15 - inset));
+            
+            if (!inIngot) return new int[]{ 0, 0, 0, 0 };
+
+            boolean borderLight = (py == 4) || (px == inset);
+            boolean flash       = (px == py + 2) || (px == py + 3);
+            
+            if (borderLight || flash) {
+                int r = 255;
+                int g = 240 + (n & 3) * 4;
+                return new int[]{ r, clamp(g), 160, 255 };
+            }
+
+            boolean shadow = (py == 11) || (px == 15 - inset);
+            
+            int r = 220 + (n & 3) * 5;
+            int g = 165 + (n & 3) * 4;
+            
+            if (shadow) {
+                r -= 60; 
+                g -= 50;
+            }
+
+            return new int[]{ clamp(r), clamp(g), 15, 255 };
+        }
+
+        // DIAMOND
+        if (col == 4 && row == 7) {
+            if (py < 2 || py > 13) return new int[]{ 0, 0, 0, 0 };
+            
+            int widthOffset = (py < 6) ? (6 - py) : (py - 6) / 2;
+            int minX = 2 + widthOffset;
+            int maxX = 13 - widthOffset;
+            
+            boolean inGem = (px >= minX && px <= maxX);
+            if (!inGem) return new int[]{ 0, 0, 0, 0 };
+
+            boolean shine = (px == py) || (py == 3 && px >= 4 && px <= 11) || (px == 7 || px == 8);
+            if (shine) {
+                int v = 230 + (n & 3) * 5;
+                return new int[]{ clamp(v - 50), clamp(v), clamp(v), 255 };
+            }
+
+            int cianoG = 170 + n * 4;
+            int cianoB = 210 + n * 3;
+            return new int[]{ clamp(cianoG - 110), clamp(cianoG), clamp(cianoB), 255 };
+        }
+
 
         // FALLBACK
         float hue = (col * 16 + row) / 256.0f;

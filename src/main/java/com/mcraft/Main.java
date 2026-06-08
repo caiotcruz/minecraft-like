@@ -87,7 +87,7 @@ public class Main {
             spawnX,
             spawnY,
             spawnZ
-        );
+        ); 
 
         if (saveData != null) {
 
@@ -106,6 +106,7 @@ public class Main {
                 .setRotation(yaw, pitch);
             
             loop.getWorld().setChestInventories(io.loadChests());
+            loop.getWorld().setFurnaceStates(io.loadFurnaces());
 
             loop.getWeatherSystem().restoreState(currentOrdinal, intensity, changeTimer);
         }

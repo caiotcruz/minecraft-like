@@ -227,7 +227,6 @@ public class HUD {
             if (blockId == 0) continue;
 
             Block block = Block.fromId(blockId);
-            float[] uvs = block.getUVs(0);
 
             int slotX = startX + i * (SLOT_SIZE + PADDING);
 
@@ -235,7 +234,7 @@ public class HUD {
             int sy = startY + pad;
             int sz = SLOT_SIZE - pad * 2;
 
-            drawTexRect(sx, sy, sz, sz, uvs[0], uvs[1], uvs[4], uvs[5]);
+            drawBlockIcon( block, sx, sy, sz);
 
             int durVal = inventory.getItemDurability(i);
             int maxDur = Inventory.getMaxDurability(blockId);
@@ -304,17 +303,20 @@ public class HUD {
         }
     }
 
+    private void drawBlockIcon(Block block, int x, int y, int size) {
+        if (block == null || block == Block.AIR) return;
+        float ts = 1f / 16f;
+        float u0 = block.texCol * ts, v0 = block.texRow * ts;
+        addQuad(x, y, x+size, y+size, u0, v0, u0+ts, v0+ts, 1, 1, 1, 1);
+    }
+
+
     private void drawRect(int x, int y, int w, int h,
                            float r, float g, float b, float a) {
         float x0 = x, y0 = y, x1 = x + w, y1 = y + h;
         float[] uv = {0, 0, 1, 0, 1, 1, 0, 1};
 
         addQuad(x0, y0, x1, y1, uv[0], uv[1], uv[4], uv[5], r, g, b, a);
-    }
-
-    private void drawTexRect(int x, int y, int w, int h,
-                              float u0, float v0, float u1, float v1) {
-        addQuad(x, y, x + w, y + h, u0, v0, u1, v1, 1, 1, 1, 1);
     }
 
     private void drawHearts(int health, int maxHealth) {

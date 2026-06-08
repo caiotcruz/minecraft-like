@@ -43,11 +43,13 @@ import com.mcraft.render.SkyRenderer;
 import com.mcraft.render.TextureAtlas;
 import com.mcraft.ui.ChestScreen;
 import com.mcraft.ui.CraftingScreen;
+import com.mcraft.ui.FurnaceScreen;
 import com.mcraft.ui.Inventory;
 import com.mcraft.ui.InventoryScreen;
 import com.mcraft.world.Biome;
 import com.mcraft.world.Block;
 import com.mcraft.world.DayNightCycle;
+import com.mcraft.world.FurnaceState;
 import com.mcraft.world.WeatherSystem;
 import com.mcraft.world.WeatherType;
 import com.mcraft.world.World;
@@ -105,6 +107,9 @@ public class GameLoop {
 
     private ChestScreen chestScreen;
     private boolean     chestOpen = false;
+
+    private FurnaceScreen furnaceScreen;
+    private boolean       furnaceOpen = false;
 
     private boolean         prevEKeyDown    = false;
 
@@ -200,9 +205,14 @@ public class GameLoop {
             player.getInventory(), hudShader, atlas, ortho2D
         );
 
+        furnaceScreen = new FurnaceScreen(
+            window.getWidth(), window.getHeight(),
+            player.getInventory(), hudShader, atlas, ortho2D
+        );        
+
         glfwSetMouseButtonCallback(window.getHandle(), (win, button, action, mods) -> {
 
-            if (!inventoryOpen && !craftingOpen && !chestOpen) return;
+            if (!inventoryOpen && !craftingOpen && !chestOpen && !furnaceOpen) return;
 
             if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 
@@ -228,12 +238,18 @@ public class GameLoop {
                         (int) cx[0],
                         (int) cy[0]
                     );
+                } else if (furnaceOpen) {
+                    consumed = furnaceScreen.onClick(
+                        (int) cx[0],
+                        (int) cy[0]
+                    );
                 }
 
                 if (!consumed) {
                     closeInventory();
                     closeCrafting();
                     closeChest();
+                    closeFurnace();
                 }
             }
         });
@@ -245,6 +261,7 @@ public class GameLoop {
     private void openInventory() {
         craftingOpen = false;
         chestOpen = false;
+        furnaceOpen = false;
         inventoryOpen = true;
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
@@ -257,6 +274,7 @@ public class GameLoop {
     private void openCrafting(){
         inventoryOpen = false;
         chestOpen = false;
+        furnaceOpen = false;
         craftingOpen = true;
 
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -270,6 +288,7 @@ public class GameLoop {
     private void openChest() {
         inventoryOpen = false;
         craftingOpen = false;
+        furnaceOpen = false;
         chestOpen = true;
 
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -278,6 +297,20 @@ public class GameLoop {
         int cy = window.getHeight()/2;
         glfwSetCursorPos(window.getHandle(), cx, cy);
         chestScreen.updateMouse(cx, cy);
+    }
+
+    private void openFurnace() {
+        inventoryOpen = false;
+        chestOpen = false;
+        craftingOpen = false;
+        furnaceOpen = true;
+
+        glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+        int cx = window.getWidth()  / 2;
+        int cy = window.getHeight() / 2;
+        glfwSetCursorPos(window.getHandle(), cx, cy);
+        furnaceScreen.updateMouse(cx, cy);
     }
 
     private void closeInventory() {
@@ -298,6 +331,13 @@ public class GameLoop {
     private void closeChest() {
         chestOpen = false;
         chestScreen.onClose();
+        glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        input.resetFirstMouse();
+    }
+
+    private void closeFurnace() {
+        furnaceOpen = false;
+        furnaceScreen.onClose();
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         input.resetFirstMouse();
     }
@@ -345,6 +385,9 @@ public class GameLoop {
             }
             if (chestOpen){
                 chestScreen.render();
+            }
+            if (furnaceOpen){
+                furnaceScreen.render();
             }
         }
 
@@ -405,6 +448,10 @@ public class GameLoop {
 
         handlePlayerInteraction(dt);
 
+        for (FurnaceState fs : world.getFurnaceStates().values()) {
+            fs.tick(TICK_STEP);
+        }
+
         for (int k = 0; k < 9; k++) {
             if (input.isKeyDown(GLFW_KEY_1 + k)) {
                 player.getInventory().setSelectedSlot(k);
@@ -412,6 +459,10 @@ public class GameLoop {
         }
 
         if (input.isKeyDown(GLFW_KEY_ESCAPE)) {
+            if (furnaceOpen)   { closeFurnace();       return; }
+            if (chestOpen)     { closeChest();         return; }
+            if (craftingOpen)  { closeCrafting();      return; }
+            if (inventoryOpen) { closeInventory();     return; }
             glfwSetWindowShouldClose(window.getHandle(), true);
         }
     }
@@ -505,11 +556,20 @@ public class GameLoop {
 
         }
 
+        if (furnaceOpen) {
+            double[] cx = new double[1];
+            double[] cy = new double[1];
+
+            glfwGetCursorPos(window.getHandle(), cx, cy);
+
+            furnaceScreen.updateMouse((int) cx[0], (int) cy[0]);
+        }
+
         float dx = 0f;
         float dz = 0f;
         boolean jump = false;
 
-        if (!inventoryOpen && !craftingOpen && !chestOpen) {
+        if (!inventoryOpen && !craftingOpen && !chestOpen && !furnaceOpen) {
 
             if (input.isKeyDown(GLFW_KEY_W)) dz -= 1;
             if (input.isKeyDown(GLFW_KEY_S)) dz += 1;
@@ -586,7 +646,7 @@ public class GameLoop {
 
     private void handleCameraInput() {
 
-        if (inventoryOpen || craftingOpen || chestOpen) {
+        if (inventoryOpen || craftingOpen || chestOpen || furnaceOpen) {
 
             double[] cx = new double[1];
             double[] cy = new double[1];
@@ -666,7 +726,7 @@ public class GameLoop {
 
     private void handlePlayerInteraction(float dt) {
 
-        if (inventoryOpen || craftingOpen || chestOpen) {
+        if (inventoryOpen || craftingOpen || chestOpen || furnaceOpen) {
 
             breakElapsed  = 0f;
             breakDuration = 0f;
@@ -789,6 +849,7 @@ public class GameLoop {
                 if (breakElapsed >= breakDuration) {
 
                     world.setBlock(breakX, breakY, breakZ, 0);
+                    int dropId = target.getDropId();
 
                     int toolSlot = player.getInventory().getSelectedSlot();
 
@@ -799,7 +860,9 @@ public class GameLoop {
                         }
                     }
 
-                    player.getInventory().addItem(target.id, 1);
+                    if (dropId != 0) {
+                        player.getInventory().addItem(dropId, 1);
+                    }
 
                     sound.playRandom(
                         sound.breakSound(target),
@@ -866,7 +929,12 @@ public class GameLoop {
                     chestScreen.openFor(ci);
                     openChest();
                     return;
-                } else{
+                } else if (hitBlock == Block.FURNACE){
+                    FurnaceState fs = world.getFurnaceState(hit.blockX, hit.blockY, hit.blockZ);
+                    furnaceScreen.openFor(fs);
+                    openFurnace();
+                    return;
+                }  else{
                     int blockId = player.getInventory().getSelectedBlockId();
 
                     if (blockId != 0) {
@@ -924,7 +992,9 @@ public class GameLoop {
                 closeCrafting();
             } else if (chestOpen){
                 closeChest();
-            } 
+            } else if (furnaceOpen){
+                closeFurnace();
+            }
             else {
                 openInventory();
             }
@@ -1004,6 +1074,9 @@ public class GameLoop {
         }
         if (chestOpen){
             chestScreen.onClose();
+        }
+        if (furnaceOpen){
+            furnaceScreen.onClose();
         }
         blockShader.delete();
         world.saveAll(world.getWorldIO());

@@ -59,7 +59,7 @@ public class ChestScreen extends Screen2D {
         if (idx < 9) {
             return secY + TITLE_H + 3 * S + PAD;
         }
-        int row = (idx - 9) / 9; // 0, 1 ou 2
+        int row = (idx - 9) / 9;
         return secY + TITLE_H + row * S;
     }
 
