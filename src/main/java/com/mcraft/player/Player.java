@@ -21,10 +21,10 @@ public class Player {
     private float regenTimer     = 0f;
     private static final float REGEN_INTERVAL  = 5.0f;
 
-    private float fallStart = Float.NaN;
-    private boolean wasFalling = false;
+    private boolean dead = false;
 
-     private boolean dead = false;
+    private float peakY      = Float.NaN;
+    private boolean wasInAir = false;
 
     private static final float GRAVITY    = -25.0f;
     private static final float JUMP_FORCE =   9.0f;
@@ -74,7 +74,12 @@ public class Player {
             velY += GRAVITY * dt;
             velY = Math.max(velY, -50f);
 
-            if (!wasFalling) { fallStart = y; wasFalling = true; }
+            if (Float.isNaN(peakY)) {
+                peakY = y;
+            } else {
+                peakY = Math.max(peakY, y);
+            }
+            wasInAir = true;
         }
 
         if (jump && onGround) {
@@ -84,15 +89,19 @@ public class Player {
 
         moveAndCollide(dt);
 
-        if (onGround && wasFalling && !Float.isNaN(fallStart)) {
-            float dropped = fallStart - y; 
+        if (onGround && wasInAir && !Float.isNaN(peakY)) {
+            float dropped = peakY - y;
+
             if (dropped > 3.0f) {
-                int dmg = (int)((dropped - 3.0f) * 1.2f); 
+                int dmg = (int)((dropped - 3.0f) * 2.0f);
                 if (dmg > 0) takeDamage(dmg);
             }
-            wasFalling = false; fallStart = Float.NaN;
+
+            peakY    = Float.NaN;
+            wasInAir = false;
         }
-        if (!onGround) wasFalling = true;
+        if (!onGround) wasInAir = true;
+        else wasInAir = false;
 
         camera.setPosition(x, y + EYE_HEIGHT, z);
     }
@@ -180,7 +189,7 @@ public class Player {
         this.x = spawnPointX; this.y = spawnPointY; this.z = spawnPointZ;
         velX = velY = velZ = 0;
         health = maxHealth;
-        dead = false; wasFalling = false; fallStart = Float.NaN;
+        dead = false; wasInAir = false; peakY = Float.NaN;
         invincibleTimer = 1.0f; 
         camera.setPosition(x, y + EYE_HEIGHT, z);
     }
