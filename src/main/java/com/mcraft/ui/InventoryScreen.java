@@ -130,6 +130,14 @@ public class InventoryScreen extends Screen2D {
             int id = inventory.getItemId(i);
             if (id == 0) continue;  
             drawBlockIcon(Block.fromId(id), slotX(i) + 2, slotY(i) + 2, SLOT_PX - 4);
+            int craftQty = craft.getSlotQty(i);
+            if (craftQty > 1) {
+                int nw = PixelFont.measureWidth(craftQty) * 2 + 2;
+                PixelFont.drawIntShadow(this::addRect,
+                    craftX(i) + SLOT_PX - nw - 2,
+                    craftY(i) + SLOT_PX - 12,
+                    2, craftQty, 1f, 1f, 1f);
+            }
         }
     }
 
@@ -148,6 +156,13 @@ public class InventoryScreen extends Screen2D {
         if (result != null && result[0] != 0) {
             drawBlockIcon(Block.fromId(result[0]),
                     resultX() + 2, resultY() + 2, SLOT_PX - 4);
+            int resultQty = craft.getResultQty();
+            if (resultQty > 1) {
+                PixelFont.drawIntShadow(this::addRect,
+                    resultX() + SLOT_PX - PixelFont.measureWidth(resultQty)*2 - 2,
+                    resultY() + SLOT_PX - 12,
+                    2, resultQty, 1f, 1f, 1f);
+}
         }
     }
 

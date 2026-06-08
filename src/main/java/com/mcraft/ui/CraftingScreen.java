@@ -44,16 +44,36 @@ public class CraftingScreen extends InventoryScreen {
     protected void drawTopSectionIcons() {
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 3; c++) {
-                int id = craft3x3.getSlot(r, c);
-                if (id != 0) {
-                    drawBlockIcon(Block.fromId(id), craft3X(c) + 2, craft3Y(r) + 2, SLOT_PX - 4);
+
+                int id  = craft3x3.getSlot(r, c);
+                int qty = craft3x3.getSlotQty(r, c);
+
+                if (id == 0) continue;
+
+                int sx = craft3X(c);
+                int sy = craft3Y(r);
+
+                drawBlockIcon( Block.fromId(id), sx + 2, sy + 2, SLOT_PX - 4 );
+
+                if (qty > 1) {
+                    int nw = PixelFont.measureWidth(qty) * 2 + 2;
+                    PixelFont.drawIntShadow( this::addRect, sx + SLOT_PX - nw - 2, sy + SLOT_PX - 12, 2, qty, 1f, 1f, 1f );
                 }
             }
         }
 
         int[] result = craft3x3.getResult();
+
         if (result != null && result[0] != 0) {
-            drawBlockIcon(Block.fromId(result[0]), result3X() + 2, result3Y() + 2, SLOT_PX - 4);
+
+            drawBlockIcon( Block.fromId(result[0]), result3X() + 2, result3Y() + 2, SLOT_PX - 4 );
+
+            int resultQty = craft3x3.getResultQty();
+
+            if (resultQty > 1) {
+                int nw = PixelFont.measureWidth(resultQty) * 2 + 2;
+                PixelFont.drawIntShadow( this::addRect, result3X() + SLOT_PX - nw - 2, result3Y() + SLOT_PX - 12, 2, resultQty, 1f, 1f, 1f );
+            }
         }
     }
 

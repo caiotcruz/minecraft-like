@@ -106,8 +106,20 @@ public class FurnaceScreen extends Screen2D {
     }
 
     private void drawFurnaceIcons() {
-        if (state.inputId  != 0) drawBlockIcon(Block.fromId(state.inputId), inputSlotX()+2,  inputSlotY()+2,  SLOT_PX-4);
-        if (state.fuelId   != 0) drawBlockIcon(Block.fromId(state.fuelId), fuelSlotX()+2,   fuelSlotY()+2,   SLOT_PX-4);
+        if (state.inputId  != 0){
+            drawBlockIcon(Block.fromId(state.inputId), inputSlotX()+2,  inputSlotY()+2,  SLOT_PX-4);
+            if (state.inputQty > 1) {
+                int nw = PixelFont.measureWidth(state.inputQty) * 2 + 2;
+                PixelFont.drawIntShadow(this::addRect, inputSlotX() + SLOT_PX - nw - 2, inputSlotY() + SLOT_PX - 12, 2, state.inputQty, 1f, 1f, 1f);
+            }
+        } 
+        if (state.fuelId   != 0){
+            drawBlockIcon(Block.fromId(state.fuelId), fuelSlotX()+2,   fuelSlotY()+2,   SLOT_PX-4);
+            if (state.fuelQty > 1){
+                int nw = PixelFont.measureWidth(state.fuelQty) * 2 + 2;
+                PixelFont.drawIntShadow(this::addRect, fuelSlotX() + SLOT_PX - nw - 2, fuelSlotY() + SLOT_PX - 12, 2, state.fuelQty, 1f, 1f, 1f);
+            }
+        }
         if (state.outputId != 0) drawBlockIcon(Block.fromId(state.outputId), outputSlotX()+2, outputSlotY()+2, SLOT_PX-4);
         if (state.outputQty > 1) {
             PixelFont.drawIntShadow(this::addRect,

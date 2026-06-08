@@ -7,7 +7,8 @@ import java.util.Map;
 public class CraftingGrid {
 
     public final int size;
-    private final int[][] grid;
+    private final int[] gridId;
+    private final int[] gridQty;
 
     private static final Map<String, int[]> RECIPES_2x2 = new HashMap<>();
     private static final Map<String, int[]> RECIPES_3x3 = new HashMap<>();
@@ -96,40 +97,115 @@ public class CraftingGrid {
 
     public CraftingGrid(int size) {
         this.size = size;
-        this.grid = new int[size][size];
+
+        int slots = size * size;
+
+        this.gridId  = new int[slots];
+        this.gridQty = new int[slots];
+    }
+
+    private int idx(int row, int col) {
+        return row * size + col;
     }
 
     public void setSlot(int row, int col, int id) {
-        if (row>=0&&row<size&&col>=0&&col<size) grid[row][col] = id;
+        if (row >= 0 && row < size && col >= 0 && col < size) {
+            int i = idx(row, col);
+
+            gridId[i] = id;
+            gridQty[i] = (id == 0) ? 0 : 1;
+        }
     }
-    public int  getSlot(int row, int col) {
-        return (row>=0&&row<size&&col>=0&&col<size) ? grid[row][col] : 0;
+
+    public int getSlot(int row, int col) {
+        if (row < 0 || row >= size || col < 0 || col >= size)
+            return 0;
+
+        return gridId[idx(row, col)];
     }
-    public void clearSlot(int row, int col) { setSlot(row, col, 0); }
-    public void clear()  { for (int r=0;r<size;r++) for(int c=0;c<size;c++) grid[r][c]=0; }
+
+    public int getSlotQty(int row, int col) {
+        if (row < 0 || row >= size || col < 0 || col >= size)
+            return 0;
+
+        return gridQty[idx(row, col)];
+    }
+
+    public int getSlotId(int idx) {
+        return (idx >= 0 && idx < gridId.length)
+                ? gridId[idx]
+                : 0;
+    }
+
+    public int getSlotQty(int idx) {
+        return (idx >= 0 && idx < gridQty.length)
+                ? gridQty[idx]
+                : 0;
+    }
+
+    public int getResultQty() {
+        int[] result = getResult();
+        return (result != null) ? result[1] : 0;
+    }
+
+    public void clearSlot(int row, int col) {
+        int i = idx(row, col);
+
+        gridId[i] = 0;
+        gridQty[i] = 0;
+    }
+
+    public void clear() {
+        for (int i = 0; i < gridId.length; i++) {
+            gridId[i] = 0;
+            gridQty[i] = 0;
+        }
+    }
 
     public int[] getResult() {
-        Map<String,int[]> recipes = (size == 3) ? RECIPES_3x3 : RECIPES_2x2;
-        String key = gridKey(grid, size);
-        if (recipes.containsKey(key)) return recipes.get(key);
-        String mKey = gridKey(mirror(grid, size), size);
+        Map<String, int[]> recipes =
+            (size == 3) ? RECIPES_3x3 : RECIPES_2x2;
+
+        int[][] ids = toIdMatrix();
+
+        String key = gridKey(ids, size);
+
+        if (recipes.containsKey(key))
+            return recipes.get(key);
+
+        String mKey = gridKey(mirror(ids, size), size);
+
         return recipes.getOrDefault(mKey, null);
     }
-
     private static void reg2(int[][] p, int id, int qty) {
         RECIPES_2x2.put(gridKey(p, 2), new int[]{id, qty});
     }
+
     private static void reg3(int[][] p, int id, int qty) {
         RECIPES_3x3.put(gridKey(p, 3), new int[]{id, qty});
     }
+
     private static String gridKey(int[][] g, int s) {
         var sb = new StringBuilder();
         for (int r=0;r<s;r++) for (int c=0;c<s;c++) sb.append(g[r][c]).append(',');
         return sb.toString();
     }
+
     private static int[][] mirror(int[][] g, int s) {
         int[][] m = new int[s][s];
         for (int r=0;r<s;r++) for (int c=0;c<s;c++) m[r][c]=g[r][s-1-c];
         return m;
+    }
+
+    private int[][] toIdMatrix() {
+        int[][] ids = new int[size][size];
+
+        for (int r = 0; r < size; r++) {
+            for (int c = 0; c < size; c++) {
+                ids[r][c] = gridId[idx(r, c)];
+            }
+        }
+
+        return ids;
     }
 }
