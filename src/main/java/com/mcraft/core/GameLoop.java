@@ -641,7 +641,7 @@ public class GameLoop {
 
             //Diminuir a fome
             if (input.isKeyDown(GLFW_KEY_F5)) {
-                player.setHunger();
+                player.setHunger(player.getMaxHunger()/4);
             }
         }
 

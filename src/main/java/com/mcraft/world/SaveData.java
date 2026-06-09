@@ -8,6 +8,9 @@ public class SaveData {
     public float playerY;
     public float playerZ;
 
+    public int playerHealth;
+    public float playerHunger;
+
     public float yaw;
     public float pitch;
 

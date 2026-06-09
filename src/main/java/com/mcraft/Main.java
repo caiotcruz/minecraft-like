@@ -98,6 +98,9 @@ public class Main {
                 saveData.selectedSlot
             );
 
+            loop.getPlayer().setHealth(saveData.playerHealth);
+            loop.getPlayer().setHunger(saveData.playerHunger);
+
             loop.getDayNight().setTime(timeOfDay);
             loop.getDayNight().setDay(day);
 

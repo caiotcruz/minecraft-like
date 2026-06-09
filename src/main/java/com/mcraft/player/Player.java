@@ -297,9 +297,13 @@ public class Player {
         return sprinting; 
     }
 
-    public void setHunger() {
-        hunger = MAX_HUNGER/3;
+    public void setHunger(float hunger) {
+        this.hunger = hunger;
     } 
+
+    public void setHealth (int health) {
+        this.health = health;
+    }
     
     public Camera    getCamera()    { return camera; }
     public com.mcraft.ui.Inventory getInventory() { return inventory; }
