@@ -10,6 +10,7 @@ public class SaveData {
 
     public int playerHealth;
     public float playerHunger;
+    public float playerAir;
 
     public float yaw;
     public float pitch;

@@ -9,6 +9,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_CONTROL;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F4;
@@ -376,8 +377,10 @@ public class GameLoop {
             int eyeX = (int) Math.floor(camera.getX());
             int eyeY = (int) Math.floor(camera.getY());
             int eyeZ = (int) Math.floor(camera.getZ());
-            boolean underwater = (world.getBlock(eyeX, eyeY, eyeZ) == Block.WATER);
+            boolean underwater = (world.getBlock(eyeX, eyeY, eyeZ).id == Block.WATER.id);
             hud.setUnderwater(underwater);
+            player.setHeadInWater(underwater);
+            player.setInWater(underwater);
             hud.render(dt);
 
             if (craftingOpen){
@@ -573,6 +576,7 @@ public class GameLoop {
         float dx = 0f;
         float dz = 0f;
         boolean jump = false;
+        boolean dive = false;
 
         if (!inventoryOpen && !craftingOpen && !chestOpen && !furnaceOpen) {
 
@@ -582,8 +586,7 @@ public class GameLoop {
             if (input.isKeyDown(GLFW_KEY_D)) dx += 1;
 
             jump = input.isKeyDown(GLFW_KEY_SPACE);
-
-            //DEBUG
+            dive = !inventoryOpen && input.isKeyDown(GLFW_KEY_LEFT_SHIFT) && player.isInWater();
 
             //Coloar Noite
             if (input.isKeyDown(GLFW_KEY_F2)) {
@@ -652,7 +655,7 @@ public class GameLoop {
 
         player.setSprinting( !inventoryOpen && !craftingOpen && !chestOpen && !furnaceOpen && canSprint );
 
-        player.update(dx, dz, jump, dt);
+        player.update(dx, dz, jump, dive, dt);
 
         boolean moving = dx != 0 || dz != 0;
 
@@ -668,15 +671,27 @@ public class GameLoop {
 
                 Block ground = world.getBlock(bx, by, bz);
 
-                sound.playRandom(
-                    sound.stepSound(ground),
-                    player.getX(),
-                    player.getY(),
-                    player.getZ(),
-                    0.15f
-                );
+                if (player.isGrounded()){
+                    sound.playRandom(
+                        sound.stepSound(ground),
+                        player.getX(),
+                        player.getY(),
+                        player.getZ(),
+                        0.15f
+                    );
 
-                stepTimer = STEP_INTERVAL;
+                    stepTimer = STEP_INTERVAL;
+
+                } else if (player.isInWater()){
+                    sound.playRandom(
+                        sound.stepSound(Block.WATER),
+                        player.getX(),
+                        player.getY(),
+                        player.getZ(),
+                        0.15f
+                    );
+                    stepTimer = STEP_INTERVAL + 1;
+                }
             }
         }
     }   

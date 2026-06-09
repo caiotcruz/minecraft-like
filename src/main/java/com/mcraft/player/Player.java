@@ -39,6 +39,23 @@ public class Player {
     private static final float SPRINT_SPEED = 8.0f;
     private static final float EYE_HEIGHT =   1.62f;
 
+    private static final float WATER_GRAVITY_MULT   = 0.20f; 
+    private static final float WATER_TERMINAL_VEL   = -4.0f; 
+    private static final float WATER_SWIM_UP_FORCE  = 4.5f;  
+    private static final float WATER_DRAG           = 0.80f;
+    private static final float WATER_SPEED_MULT     = 0.65f;
+
+    private static final float MAX_AIR          = 300f;
+    private static final float AIR_DEPLETION    = 20f;
+    private static final float AIR_REFILL       = 60f;
+    private static final float DROWN_INTERVAL   = 1.0f;
+    private static final float DROWN_DAMAGE     = 2;
+
+    private float   air            = MAX_AIR;
+    private float   drownTimer     = 0f;
+    private boolean inWater        = false;
+    private boolean headInWater    = false;
+
     private static final float HUNGER_RATE_IDLE   = 1f / 60f;
     private static final float HUNGER_RATE_WALK   = 1f / 30f;
     private static final float HUNGER_RATE_SPRINT = 1f /  8f;
@@ -86,12 +103,21 @@ public class Player {
         inventory.addItem(com.mcraft.world.Block.IRON_ORE.id,  64);
     }
 
-    public void update(float dx, float dz, boolean jump, float dt) {
+    public void update(float dx, float dz, boolean jump, boolean dive, float dt) {
         if (dead) return;
         
         if (invincibleTimer > 0) invincibleTimer -= dt;
 
+        int bx = (int) Math.floor(x);
+        int bz = (int) Math.floor(z);
+        inWater     = world.getBlock(bx, (int) Math.floor(y + 0.30f), bz) == Block.WATER;
+        headInWater = world.getBlock(bx, (int) Math.floor(y + EYE_HEIGHT - 0.1f), bz) == Block.WATER;
+        
         float speed = sprinting ? SPRINT_SPEED : MOVE_SPEED;
+        if (inWater){
+            speed *= WATER_SPEED_MULT;
+        }
+
         float yaw  = camera.getYaw();   
         float cos  = (float) Math.cos(yaw);
         float sin  = (float) Math.sin(yaw);
@@ -107,6 +133,8 @@ public class Player {
 
         velX = movX;
         velZ = movZ;
+
+
 
         float movH = (float) Math.sqrt(velX * velX + velZ * velZ);
 
@@ -146,7 +174,18 @@ public class Player {
             sprinting = false;
         }
 
-        if (!onGround) {
+        if (inWater) {
+            velY += GRAVITY * WATER_GRAVITY_MULT * dt;
+            velY  = Math.max(velY, WATER_TERMINAL_VEL);
+
+            if (jump)  velY = WATER_SWIM_UP_FORCE;
+            if (dive)  velY = -WATER_SWIM_UP_FORCE;
+
+            velY *= (float) Math.pow(WATER_DRAG, dt * 10);
+
+            peakY    = Float.NaN;
+            wasInAir = false;
+        }else if (!onGround) {
             velY += GRAVITY * dt;
             velY = Math.max(velY, -50f);
 
@@ -158,14 +197,14 @@ public class Player {
             wasInAir = true;
         }
 
-        if (jump && onGround) {
+        if (jump && onGround && !inWater) {
             velY = JUMP_FORCE;
             onGround = false;
         }
 
         moveAndCollide(dt);
 
-        if (onGround && wasInAir && !Float.isNaN(peakY)) {
+        if (onGround && wasInAir && !Float.isNaN(peakY) && !inWater) {
             float dropped = peakY - y;
 
             if (dropped > 3.0f) {
@@ -176,8 +215,22 @@ public class Player {
             peakY    = Float.NaN;
             wasInAir = false;
         }
-        if (!onGround) wasInAir = true;
-        else wasInAir = false;
+        if (!onGround && !inWater) wasInAir = true;
+        else if (onGround) wasInAir = false;
+
+        if (headInWater) {
+            air = Math.max(0f, air - AIR_DEPLETION * dt);
+            if (air <= 0f) {
+                drownTimer += dt;
+                if (drownTimer >= DROWN_INTERVAL) {
+                    takeDamage((int) DROWN_DAMAGE);
+                    drownTimer = 0f;
+                }
+            }
+        } else {
+            air = Math.min(MAX_AIR, air + AIR_REFILL * dt);
+            drownTimer = 0f;
+        }
 
         camera.setPosition(x, y + EYE_HEIGHT, z);
     }
@@ -304,6 +357,18 @@ public class Player {
     public void setHealth (int health) {
         this.health = health;
     }
+
+    public void setInWater (boolean inWater) {
+        this.inWater = inWater;
+    }
+
+    public void setHeadInWater(boolean headInWater) {
+        this.headInWater = headInWater;
+    }
+
+    public void setAir (float air) {
+        this.air = air;
+    }
     
     public Camera    getCamera()    { return camera; }
     public com.mcraft.ui.Inventory getInventory() { return inventory; }
@@ -319,4 +384,8 @@ public class Player {
     public float     getMaxHunger() { return MAX_HUNGER; }
     public boolean   isHungry()   { return hunger < MAX_HUNGER; }
     public static boolean isFoodItem(int blockId) { return FOOD_VALUES.containsKey(blockId); }
-    }
+    public float   getAir()        { return air; }
+    public float   getMaxAir()     { return MAX_AIR; }
+    public boolean isInWater()     { return inWater; }
+    public boolean isHeadInWater() { return headInWater; }
+}

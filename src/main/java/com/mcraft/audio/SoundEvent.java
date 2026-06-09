@@ -26,6 +26,7 @@ public enum SoundEvent {
     STEP_SAND         ("sounds/step/grass1.ogg"),
     STEP_WOOD         ("sounds/step/grass1.ogg"),
     STEP_STONE        ("sounds/step/stone1.ogg"),
+    STEP_WATER        ("sounds/step/water1.ogg"),
     
     //Ambient / Music
     AMBIENT_CAVE      ("sounds/ambient/cave/cave1.ogg"),

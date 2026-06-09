@@ -100,6 +100,7 @@ public class Main {
 
             loop.getPlayer().setHealth(saveData.playerHealth);
             loop.getPlayer().setHunger(saveData.playerHunger);
+            loop.getPlayer().setAir(saveData.playerAir);
 
             loop.getDayNight().setTime(timeOfDay);
             loop.getDayNight().setDay(day);

@@ -108,6 +108,7 @@ public class WorldIO {
 
                 out.writeInt(player.getHealth());
                 out.writeFloat(player.getHunger());
+                out.writeFloat(player.getAir());
 
                 out.writeFloat(player.getCamera().getYaw());
                 out.writeFloat(player.getCamera().getPitch());
@@ -314,6 +315,7 @@ public class WorldIO {
 
             data.playerHealth = in.readInt();
             data.playerHunger = in.readFloat();
+            data.playerAir = in.readFloat();
 
             data.yaw   = in.readFloat();
             data.pitch = in.readFloat();

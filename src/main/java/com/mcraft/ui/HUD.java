@@ -175,6 +175,12 @@ public class HUD {
         flushBatch(false);
 
         beginBatch();
+        if (player.isHeadInWater() || player.getAir() < player.getMaxAir()) {
+            drawBubbles(player.getAir(), player.getMaxAir());
+        }
+        flushBatch(false);
+
+        beginBatch();
         drawDayCounter();
         if (notifTimer > 0) { drawNotification(dt); }
         flushBatch(false);
@@ -459,6 +465,33 @@ public class HUD {
             0.05f, 0.18f, 0.55f, edge * 0.8f);
     }
 
+    private void drawBubbles(float air, float maxAir) {
+        int totalBubbles = 10;
+        float airPerBubble = maxAir / totalBubbles;
+        int   fullBubbles  = (int)(air / airPerBubble);
+        float partial      = (air % airPerBubble) / airPerBubble;
+
+        int BW = 10, BH = 10, GAP = 2;
+        int totalW = totalBubbles * (BW + GAP) - GAP;
+
+        int hotbarY  = screenH - SLOT_SIZE - 10;
+        int heartsY  = hotbarY - 16 - 4;
+        int bubblesY = heartsY - BH - 2;
+        int startX   = (screenW - totalW) / 2;
+
+        for (int i = 0; i < totalBubbles; i++) {
+            int bx = startX + i * (BW + GAP);
+
+            if (i < fullBubbles) {
+                drawBubble(bx, bubblesY, BW, BH, 0.30f, 0.70f, 1.0f, 1.0f);
+            } else if (i == fullBubbles && partial > 0.05f) {
+                drawBubble(bx, bubblesY, BW, BH, 0.30f, 0.70f, 1.0f, partial);
+            } else {
+                drawBubble(bx, bubblesY, BW, BH, 0.20f, 0.30f, 0.50f, 0.35f);
+            }
+        }
+    }
+
     private void drawDayCounter() {
 
         boolean isNight = (currentGameTime > 0.76f || currentGameTime < 0.24f);
@@ -556,6 +589,16 @@ public class HUD {
         int mid = x + w / 2;
         addRect(x + s,   y,       Math.min(s*4, mid-x), s*2, r, g, b, 1f);
         addRect(x,       y + s*2, Math.min(s*5, mid-x), s*3, r, g, b, 1f);
+    }
+
+    private void drawBubble(int x, int y, int w, int h, float r, float g, float b, float a) {
+        int s = Math.max(1, w / 5);
+
+        addRect(x + s,    y,       s*3, s,   r, g, b, a);
+        addRect(x,        y + s,   s*5, s*3, r, g, b, a);
+        addRect(x + s,    y + s*4, s*3, s,   r, g, b, a);
+
+        addRect(x + s,    y + s,   s,   s,   1f, 1f, 1f, a * 0.7f);
     }
 
     private void addQuad(float x0, float y0, float x1, float y1,

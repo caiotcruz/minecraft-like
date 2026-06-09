@@ -133,6 +133,9 @@ public class SoundManager {
             case SAND ->
                 SoundEvent.STEP_SAND;
 
+            case WATER ->
+                SoundEvent.STEP_WATER;
+                
             default ->
                 SoundEvent.STEP_GRASS;
         };
