@@ -157,6 +157,11 @@ public class HUD {
         flushBatch(false);
 
         beginBatch();
+        float curHunger = player.getHunger();
+        drawHunger(curHunger, player.getMaxHunger());
+        flushBatch(false);
+
+        beginBatch();
         if (rainIntensity > 0.1f) {
             drawRainOverlay(curHealth, dt);
         }
@@ -324,13 +329,12 @@ public class HUD {
         int fullHearts  = health    / 2;
         boolean hasHalf = (health % 2) == 1;
 
-        int HW = 18, HH = 16, GAP = 2; 
-        int totalW = totalHearts * (HW + GAP) - GAP;
+        int HW = 18, HH = 16, GAP = 1; 
 
         int hotbarW = Inventory.HOTBAR_SIZE * (SLOT_SIZE + PADDING) - PADDING;
         int hotbarX = (screenW - hotbarW) / 2;
         int hotbarY = screenH - SLOT_SIZE - 10;
-        int startX  = hotbarX + (hotbarW - totalW) / 2;
+        int startX  = hotbarX;
         int startY  = hotbarY - HH - 4;
 
         for (int i = 0; i < totalHearts; i++) {
@@ -369,6 +373,38 @@ public class HUD {
         addRect(x,       y + s*2, mid-x, s*2, r, g, b, 1f);
         addRect(x + s,   y + s*4, mid-x-s, s*2, r, g, b, 1f);
         addRect(x + s*2, y + s*6, mid-x-s*2, s, r, g, b, 1f);
+    }
+
+    private void drawHunger(float hunger, float maxHunger) {
+        int totalIcons = (int)(maxHunger / 2);
+        int fullIcons  = (int)(hunger / 2);
+        boolean half   = ((int)hunger % 2) == 1;
+
+        int DW = 18, DH = 16, GAP = 1;
+        int totalW  = totalIcons * (DW + GAP) - GAP;
+
+        int hotbarW  = Inventory.HOTBAR_SIZE * (SLOT_SIZE + PADDING) - PADDING;
+        int hotbarX  = (screenW - hotbarW) / 2;
+        int hotbarY  = screenH - SLOT_SIZE - 10;
+        int startX   = hotbarX + hotbarW - totalW;
+        int startY   = hotbarY - DH - 4;
+
+        for (int i = 0; i < totalIcons; i++) {
+            int dx = startX + (totalIcons - 1 - i) * (DW + GAP);
+
+            float ratio = hunger / maxHunger;
+            float r = (ratio > 0.5f) ? 0.85f : 0.85f;
+            float g = (ratio > 0.5f) ? 0.65f : 0.30f;
+            float b = 0.12f;
+
+            drawDrumstick(dx, startY, DW, DH, 0.28f, 0.28f, 0.28f, 0.8f);
+
+            if (i < fullIcons) {
+                drawDrumstick(dx, startY, DW, DH, r, g, b, 1f);
+            } else if (i == fullIcons && half) {
+                drawDrumstickHalf(dx, startY, DW, DH, r, g, b);
+            }
+        }
     }
 
     private void drawDeathOverlay() {
@@ -499,6 +535,27 @@ public class HUD {
             int gh = 8 + (i % 3) * 4;
             addRect(gx, gy, 1, gh, 0.6f, 0.75f, 0.9f, intensity * 0.75f);
         }
+    }
+
+    private void drawDrumstick(int x, int y, int w, int h, float r, float g, float b, float a) {
+        int s = w / 9; 
+
+        addRect(x + s,    y,       s*4, s*2, r, g, b, a);
+        addRect(x,        y + s*2, s*5, s*3, r, g, b, a);
+
+        addRect(x + s*4,  y + s*4, s*2, s*2, r, g, b, a);
+        addRect(x + s*5,  y + s*5, s*2, s*2, r, g, b, a);
+        addRect(x + s*6,  y + s*6, s*2, s*2, r, g, b, a);
+
+        addRect(x + s*6,  y + s*7, s*3, s,   r, g, b, a);
+        addRect(x + s*7,  y + s*8, s*2, s,   r, g, b, a);
+    }
+
+    private void drawDrumstickHalf(int x, int y, int w, int h, float r, float g, float b) {
+        int s = w / 9;
+        int mid = x + w / 2;
+        addRect(x + s,   y,       Math.min(s*4, mid-x), s*2, r, g, b, 1f);
+        addRect(x,       y + s*2, Math.min(s*5, mid-x), s*3, r, g, b, 1f);
     }
 
     private void addQuad(float x0, float y0, float x1, float y1,

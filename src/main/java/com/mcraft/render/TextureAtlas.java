@@ -647,6 +647,33 @@ public class TextureAtlas {
             return new int[]{ clamp(r), clamp(g), clamp(b), 255 };
         }
 
+        // COOKED_BEEF
+        if (col == 6 && row == 5) {
+            boolean inBeef = (py >= 3 && py <= 12 && px >= 2 && px <= 13);
+            if (inBeef) {
+                if ((py == 3 || py == 12) && (px <= 4 || px >= 11)) inBeef = false;
+            }
+            if (!inBeef) return new int[]{ 0, 0, 0, 0 };
+
+            boolean fatBorder = (py == 3 && px >= 5) || (px == 13 && py <= 8) || (py == 4 && px >= 10);
+            if (fatBorder) {
+                int r = 185 + (n & 3) * 4;
+                int g = 135 + (n & 3) * 3;
+                return new int[]{ clamp(r), clamp(g), 30, 255 };
+            }
+
+            boolean bone = (px >= 3 && px <= 4 && py >= 10 && py <= 11);
+            if (bone) return new int[]{ 215, 215, 200, 255 };
+
+            boolean fiber = (px % 3 == 0);
+            
+            int r = fiber ? 90 + (n & 3) * 4  : 135 + (n & 3) * 5;
+            int g = fiber ? 40 + (n & 1) * 2  : 65 + (n & 3) * 3;
+            int b = fiber ? 15                : 25;
+
+            return new int[]{ clamp(r), clamp(g), clamp(b), 255 };
+        }
+
         // ROTTEN_FLESH
         if (col == 3 && row == 5) {
             boolean inFlesh = (py >= 3 && py <= 12 && px >= 3 && px <= 13);

@@ -1,7 +1,12 @@
 package com.mcraft.player;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import com.mcraft.render.Camera;
 import com.mcraft.ui.Inventory;
+import com.mcraft.world.Block;
 import com.mcraft.world.Chunk;
 import com.mcraft.world.World;
 
@@ -26,10 +31,36 @@ public class Player {
     private float peakY      = Float.NaN;
     private boolean wasInAir = false;
 
+    private boolean sprinting = false;
+
     private static final float GRAVITY    = -25.0f;
     private static final float JUMP_FORCE =   9.0f;
     private static final float MOVE_SPEED =   5.0f;
+    private static final float SPRINT_SPEED = 8.0f;
     private static final float EYE_HEIGHT =   1.62f;
+
+    private static final float HUNGER_RATE_IDLE   = 1f / 60f;
+    private static final float HUNGER_RATE_WALK   = 1f / 30f;
+    private static final float HUNGER_RATE_SPRINT = 1f /  8f;
+
+    private static final float STARVATION_DAMAGE_THRESHOLD = 0f;
+    private static final float STARVATION_DAMAGE_INTERVAL  = 4f;
+
+    private static final Map<Integer, Integer> FOOD_VALUES = new HashMap<>();
+    static {
+        FOOD_VALUES.put(Block.RAW_BEEF.id, 3);
+        FOOD_VALUES.put(Block.COOKED_BEEF.id, 9);
+        FOOD_VALUES.put(Block.ROTTEN_FLESH.id, 4);
+    }
+
+    private static final Set<Integer> POISON_FOODS = Set.of(
+        Block.ROTTEN_FLESH.id
+    );
+
+    private float hunger              = 20f;
+    private static final float MAX_HUNGER = 20f;
+    private float hungerDepletionAccum = 0f;  
+    private float starvationTimer      = 0f;
 
     private final Camera    camera;
     private final World     world;
@@ -60,6 +91,7 @@ public class Player {
         
         if (invincibleTimer > 0) invincibleTimer -= dt;
 
+        float speed = sprinting ? SPRINT_SPEED : MOVE_SPEED;
         float yaw  = camera.getYaw();   
         float cos  = (float) Math.cos(yaw);
         float sin  = (float) Math.sin(yaw);
@@ -68,10 +100,51 @@ public class Player {
         float movZ = dx * cos - dz * sin;
 
         float len = (float) Math.sqrt(movX * movX + movZ * movZ);
-        if (len > 1e-6f) { movX = movX / len * MOVE_SPEED; movZ = movZ / len * MOVE_SPEED; }
+        if (len > 1e-6f) { 
+            movX = movX/len * speed; 
+            movZ = movZ/len * speed; 
+        }
 
         velX = movX;
         velZ = movZ;
+
+        float movH = (float) Math.sqrt(velX * velX + velZ * velZ);
+
+        float hungerRate;
+
+        if (sprinting && movH > 0.5f) {
+            hungerRate = HUNGER_RATE_SPRINT;
+        } else if (movH > 0.1f) {
+            hungerRate = HUNGER_RATE_WALK;
+        } else {
+            hungerRate = HUNGER_RATE_IDLE;
+        }
+
+        hungerDepletionAccum += hungerRate * dt;
+
+        if (hungerDepletionAccum >= 1f) {
+            hunger = Math.max(0f, hunger - 1f);
+            hungerDepletionAccum -= 1f;
+        }
+
+        if (hunger <= STARVATION_DAMAGE_THRESHOLD) {
+
+            starvationTimer += dt;
+
+            if (starvationTimer >= STARVATION_DAMAGE_INTERVAL) {
+                takeDamage(1);
+                starvationTimer = 0f;
+            }
+
+            sprinting = false;
+
+        } else {
+            starvationTimer = 0f;
+        }
+
+        if (hunger < 3f) {
+            sprinting = false;
+        }
 
         if (!onGround) {
             velY += GRAVITY * dt;
@@ -197,12 +270,37 @@ public class Player {
         camera.setPosition(x, y + EYE_HEIGHT, z);
     }
 
+    public boolean eatFood(int blockId) {
+        Integer value = FOOD_VALUES.get(blockId);
+        if (value == null) return false;
+        if (hunger >= MAX_HUNGER) return false; 
+
+        hunger = Math.min(MAX_HUNGER, hunger + value);
+
+        if (POISON_FOODS.contains(blockId)) {
+            takeDamage(3);
+        }
+        return true;
+    }
+
     public void setSpawnPoint(float x, float y, float z) {
         this.spawnPointX = x;
         this.spawnPointY = y;
         this.spawnPointZ = z;
     }
 
+    public void setSprinting(boolean s) { 
+        this.sprinting = s; 
+    }
+
+    public boolean isSprinting() { 
+        return sprinting; 
+    }
+
+    public void setHunger() {
+        hunger = MAX_HUNGER/3;
+    } 
+    
     public Camera    getCamera()    { return camera; }
     public com.mcraft.ui.Inventory getInventory() { return inventory; }
     public float     getX()         { return x; }
@@ -213,4 +311,8 @@ public class Player {
     public boolean   isDead()       { return dead; }
     public int       getHealth()    { return health; }
     public int       getMaxHealth() { return maxHealth; }
-}
+    public float     getHunger()    { return hunger; }
+    public float     getMaxHunger() { return MAX_HUNGER; }
+    public boolean   isHungry()   { return hunger < MAX_HUNGER; }
+    public static boolean isFoodItem(int blockId) { return FOOD_VALUES.containsKey(blockId); }
+    }

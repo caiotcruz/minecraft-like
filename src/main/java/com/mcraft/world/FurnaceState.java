@@ -13,7 +13,8 @@ public class FurnaceState {
 
     private static final Map<Integer, Integer> RECIPES = Map.of(
         Block.IRON_ORE.id, Block.IRON_INGOT.id,
-        Block.GOLD_ORE.id, Block.GOLD_INGOT.id
+        Block.GOLD_ORE.id, Block.GOLD_INGOT.id,
+        Block.RAW_BEEF.id, Block.COOKED_BEEF.id
     );
 
     private static final Map<Integer, Float> FUEL = Map.of(

@@ -8,9 +8,12 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_CONTROL;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F4;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F5;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F6;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
@@ -425,7 +428,9 @@ public class GameLoop {
         hud.setGameTime(dayNight.getTime());
         hud.setDay(dayNight.getDay());
 
-        player.tickRegen(TICK_STEP);
+        if (player.getHunger() >= player.getMaxHunger()/2){
+            player.tickRegen(TICK_STEP);
+        }
 
         mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
         applyMobDamage(dt);
@@ -604,6 +609,26 @@ public class GameLoop {
                 );
             }
 
+            //spawn Cow
+            if (input.isKeyDown(GLFW_KEY_F6)) {
+
+                float[] front = camera.getFront();
+
+                float spawnX = player.getX() + front[0] * 3f;
+                float spawnY = player.getY();
+                float spawnZ = player.getZ() + front[2] * 3f;
+
+                mobs.getMobs().add(
+                    new Mob(
+                        Mob.Type.COW,
+                        spawnX,
+                        spawnY,
+                        spawnZ
+                    )
+                );
+            }
+
+            // Alterar Weather
             if (input.isKeyDown(GLFW_KEY_F4)) {
                 WeatherType biomeWeather = WeatherType.forBiome(currentBiome);
 
@@ -613,7 +638,19 @@ public class GameLoop {
                     weather.setCurrent(biomeWeather);
                 }
             }
+
+            //Diminuir a fome
+            if (input.isKeyDown(GLFW_KEY_F5)) {
+                player.setHunger();
+            }
         }
+
+        boolean ctrlDown   = input.isKeyDown(GLFW_KEY_LEFT_CONTROL) && !inventoryOpen;
+        boolean isMoving = dx != 0 || dz != 0;
+
+        boolean canSprint = ctrlDown && isMoving && player.getHunger() > 7f;
+
+        player.setSprinting( !inventoryOpen && !craftingOpen && !chestOpen && !furnaceOpen && canSprint );
 
         player.update(dx, dz, jump, dt);
 
@@ -810,6 +847,20 @@ public class GameLoop {
                 rightWasDown = rightDown;
 
                 return;
+            }
+        }
+
+        boolean rightJustPressed = rightDown && !rightWasDown;
+        if (rightJustPressed) {
+            int selId = player.getInventory().getSelectedBlockId();
+            if (Player.isFoodItem(selId)) {
+                boolean ate = player.eatFood(selId);
+                if (ate) {
+                    player.getInventory().consumeSelected(1);
+                    rightWasDown = rightDown;
+                    leftWasDown = leftDown;
+                    return;
+                }
             }
         }
 

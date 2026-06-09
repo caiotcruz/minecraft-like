@@ -41,6 +41,7 @@ public enum Block {
     FEATHER        (15, "feather",          0,  5, false, 0f),
     LEATHER        (16, "leather",          1,  5, false, 0f),
     RAW_BEEF       (17, "raw_beef",         2,  5, false, 0f),
+    COOKED_BEEF    (38, "cooked_beef",      6,  5, false, 0f),
     ROTTEN_FLESH   (18, "rotten_flesh",     3,  5, false, 0f),
     GUNPOWDER      (19, "gunpowder",        4,  5, false, 0f),
     WOOL           (25, "wool",             5,  5, true,  0.8f),
