@@ -218,7 +218,12 @@ public class GameLoop {
 
             if (!inventoryOpen && !craftingOpen && !chestOpen && !furnaceOpen) return;
 
-            if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            if (action == GLFW_PRESS) {
+
+                boolean isRightClick = (button == GLFW_MOUSE_BUTTON_RIGHT);
+                boolean isLeftClick  = (button == GLFW_MOUSE_BUTTON_LEFT);
+
+                if (!isLeftClick && !isRightClick) return;
 
                 double[] cx = new double[1];
                 double[] cy = new double[1];
@@ -230,22 +235,26 @@ public class GameLoop {
                 if (craftingOpen) {
                     consumed = craftingScreen.onClick(
                         (int) cx[0],
-                        (int) cy[0]
+                        (int) cy[0],
+                        isRightClick
                     );
                 } else if (inventoryOpen) {
                     consumed = inventoryScreen.onClick(
                         (int) cx[0],
-                        (int) cy[0]
+                        (int) cy[0],
+                        isRightClick
                     );
                 } else if (chestOpen) {
                     consumed = chestScreen.onClick(
                         (int) cx[0],
-                        (int) cy[0]
+                        (int) cy[0],
+                        isRightClick
                     );
                 } else if (furnaceOpen) {
                     consumed = furnaceScreen.onClick(
                         (int) cx[0],
-                        (int) cy[0]
+                        (int) cy[0],
+                        isRightClick
                     );
                 }
 

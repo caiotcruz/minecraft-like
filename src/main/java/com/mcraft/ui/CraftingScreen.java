@@ -79,51 +79,28 @@ public class CraftingScreen extends InventoryScreen {
 
     @Override
     public boolean onClick(int mx, int my) {
+        return onClick(mx, my, false);
+    }
+
+    public boolean onClick(int mx, int my, boolean isRightClick) {
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 3; c++) {
                 if (hit(mx, my, craft3X(c), craft3Y(r), SLOT_PX, SLOT_PX)) {
-                    handleCraftSlotClick3x3(r, c);
+                    int linearIndex = r * 3 + c;
+                    handleCraftSlotClick(craft3x3, linearIndex, isRightClick);
                     return true;
                 }
             }
         }
+
         if (hit(mx, my, result3X(), result3Y(), SLOT_PX, SLOT_PX)) {
-            handleResult3x3();
+            if (!isRightClick) {
+                handleResultSlotClick(craft3x3, inventory);
+            }
             return true;
         }
-        return super.onClick(mx, my);
-    }
 
-    private void handleCraftSlotClick3x3(int row, int col) {
-        int prev = craft3x3.getSlot(row, col);
-
-        if (heldId == 0) {
-            if (prev != 0) {
-                heldId  = prev;
-                heldQty = 1;
-                craft3x3.setSlot(row, col, 0);
-            }
-        } else {
-            if (prev == 0 || prev == heldId) {
-                craft3x3.setSlot(row, col, heldId);
-                heldQty--;
-                if (heldQty <= 0) { heldId = 0; heldQty = 0; }
-            } else {
-                craft3x3.setSlot(row, col, heldId);
-                heldId  = prev;
-                heldQty = 1;
-            }
-        }
-    }
-
-    private void handleResult3x3() {
-        int[] result = craft3x3.getResult();
-        if (result == null || heldId != 0 && heldId != result[0]) return;
-        int qty = (heldId == 0) ? 0 : heldQty;
-        heldId  = result[0];
-        heldQty = qty + result[1];
-        for (int r=0;r<3;r++) for (int c=0;c<3;c++)
-            if (craft3x3.getSlot(r,c) != 0) craft3x3.setSlot(r,c,0);
+        return super.onClick(mx, my, isRightClick);
     }
 
     @Override
@@ -150,14 +127,6 @@ public class CraftingScreen extends InventoryScreen {
     @Override
     public void onClose() {
         super.onClose(); 
-        for (int r = 0; r < 3; r++) {
-            for (int c = 0; c < 3; c++) {
-                int id = craft3x3.getSlot(r, c);
-                if (id != 0) {
-                    inventory.addItem(id, 1);
-                    craft3x3.setSlot(r, c, 0);
-                }
-            }
-        }
+        craft3x3.returnToInventory(inventory);
     }
 }

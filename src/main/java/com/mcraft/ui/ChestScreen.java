@@ -131,16 +131,84 @@ public class ChestScreen extends Screen2D {
 
     @Override
     public boolean onClick(int mx, int my) {
+       return onClick(mx, my, false);
+    }
+    
+    public boolean onClick(int mx, int my, boolean isRightClick) {
         for (int i = 0; i < 27; i++) {
             if (hit(mx, my, chestSlotX(i), chestSlotY(i), SLOT_PX, SLOT_PX)) {
-                handleInvSlotClick(chestInv, i);
+                int slotId  = chestInv.getItemId(i);
+                int slotQty = chestInv.getItemQty(i);
+                int slotDur = chestInv.getItemDurability(i);
+
+                if (isRightClick) {
+                    if (heldId == 0) {
+                        if (slotId != 0 && !Inventory.isTool(slotId)) {
+                            int takeQty = (slotQty + 1) / 2;
+                            heldId  = slotId;
+                            heldQty = takeQty;
+                            heldDur = slotDur;
+                            
+                            int remaining = slotQty - takeQty;
+                            if (remaining <= 0) chestInv.clearSlot(i);
+                            else chestInv.setSlotFull(i, slotId, remaining, slotDur);
+                        } else if (slotId != 0) { 
+                            heldId = slotId; heldQty = 1; heldDur = slotDur;
+                            chestInv.clearSlot(i);
+                        }
+                    } else {
+                        if (slotId == 0) {
+                            chestInv.setSlotFull(i, heldId, 1, heldDur);
+                            heldQty--;
+                            if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                        } else if (slotId == heldId && slotQty < 64 && !Inventory.isTool(heldId)) {
+                            chestInv.setSlot(i, slotId, slotQty + 1);
+                            heldQty--;
+                            if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                        }
+                    }
+                } else {
+                    handleInvSlotClick(chestInv, i);
+                }
                 return true;
             }
         }
 
         for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
             if (hit(mx, my, playerSlotX(i), playerSlotY(i), SLOT_PX, SLOT_PX)) {
-                handleInvSlotClick(playerInv, i);
+                int slotId  = playerInv.getItemId(i);
+                int slotQty = playerInv.getItemQty(i);
+                int slotDur = playerInv.getItemDurability(i);
+
+                if (isRightClick) {
+                    if (heldId == 0) {
+                        if (slotId != 0 && !Inventory.isTool(slotId)) {
+                            int takeQty = (slotQty + 1) / 2;
+                            heldId  = slotId;
+                            heldQty = takeQty;
+                            heldDur = slotDur;
+                            
+                            int remaining = slotQty - takeQty;
+                            if (remaining <= 0) playerInv.clearSlot(i);
+                            else playerInv.setSlotFull(i, slotId, remaining, slotDur);
+                        } else if (slotId != 0) {
+                            heldId = slotId; heldQty = 1; heldDur = slotDur;
+                            playerInv.clearSlot(i);
+                        }
+                    } else {
+                        if (slotId == 0) {
+                            playerInv.setSlotFull(i, heldId, 1, heldDur);
+                            heldQty--;
+                            if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                        } else if (slotId == heldId && slotQty < 64 && !Inventory.isTool(heldId)) {
+                            playerInv.setSlot(i, slotId, slotQty + 1);
+                            heldQty--;
+                            if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                        }
+                    }
+                } else {
+                    handleInvSlotClick(playerInv, i);
+                }
                 return true;
             }
         }

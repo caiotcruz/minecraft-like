@@ -129,40 +129,38 @@ public class InventoryScreen extends Screen2D {
         for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
             int id = inventory.getItemId(i);
             if (id == 0) continue;  
+            
             drawBlockIcon(Block.fromId(id), slotX(i) + 2, slotY(i) + 2, SLOT_PX - 4);
-            int craftQty = craft.getSlotQty(i);
-            if (craftQty > 1) {
-                int nw = PixelFont.measureWidth(craftQty) * 2 + 2;
-                PixelFont.drawIntShadow(this::addRect,
-                    craftX(i) + SLOT_PX - nw - 2,
-                    craftY(i) + SLOT_PX - 12,
-                    2, craftQty, 1f, 1f, 1f);
-            }
         }
     }
 
     protected void drawTopSectionIcons() {
-        for (int r = 0; r < 2; r++) {
-            for (int c = 0; c < 2; c++) {
-                int id = craft.getSlot(r, c);
-                if (id != 0) {
-                    drawBlockIcon(Block.fromId(id),
-                            craftX(c) + 2, craftY(r) + 2, SLOT_PX - 4);
-                }
+        for (int i = 0; i < craft.size * craft.size; i++) {
+            int id  = craft.getSlotId(i);
+            int qty = craft.getSlotQty(i);
+            if (id == 0) continue;
+
+            int row = i / craft.size;
+            int col = i % craft.size;
+            int cx = craftX(col);
+            int cy = craftY(row);
+
+            drawBlockIcon(Block.fromId(id), cx + 2, cy + 2, SLOT_PX - 4);
+            
+            if (qty > 1) {
+                int nw = PixelFont.measureWidth(qty) * 2 + 2;
+                PixelFont.drawIntShadow(this::addRect, cx + SLOT_PX - nw - 2, cy + SLOT_PX - 12, 2, qty, 1f, 1f, 1f);
             }
         }
 
         int[] result = craft.getResult();
         if (result != null && result[0] != 0) {
-            drawBlockIcon(Block.fromId(result[0]),
-                    resultX() + 2, resultY() + 2, SLOT_PX - 4);
+            drawBlockIcon(Block.fromId(result[0]), resultX() + 2, resultY() + 2, SLOT_PX - 4);
             int resultQty = craft.getResultQty();
             if (resultQty > 1) {
-                PixelFont.drawIntShadow(this::addRect,
-                    resultX() + SLOT_PX - PixelFont.measureWidth(resultQty)*2 - 2,
-                    resultY() + SLOT_PX - 12,
-                    2, resultQty, 1f, 1f, 1f);
-}
+                int nw = PixelFont.measureWidth(resultQty) * 2 + 2;
+                PixelFont.drawIntShadow(this::addRect, resultX() + SLOT_PX - nw - 2, resultY() + SLOT_PX - 12, 2, resultQty, 1f, 1f, 1f);
+            }
         }
     }
 
@@ -194,95 +192,61 @@ public class InventoryScreen extends Screen2D {
 
     @Override
     public boolean onClick(int mx, int my) {
+        return onClick(mx, my, false);
+    }
+
+    public boolean onClick(int mx, int my, boolean isRightClick) {
         for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
             if (hit(mx, my, slotX(i), slotY(i), SLOT_PX, SLOT_PX)) {
-                handleInvSlotClick(inventory, i);
+                if (isRightClick && heldId == 0 && inventory.getItemId(i) != 0 && !Inventory.isTool(inventory.getItemId(i))) {
+                    int currentQty = inventory.getItemQty(i);
+                    int takeQty = (currentQty + 1) / 2;
+                    heldId = inventory.getItemId(i);
+                    heldQty = takeQty;
+                    heldDur = inventory.getItemDurability(i);
+                    
+                    int remaining = currentQty - takeQty;
+                    if (remaining <= 0) {
+                        inventory.clearSlot(i);
+                    } else {
+                        inventory.setSlot(i, heldId, remaining);
+                    }
+                } else {
+                    handleInvSlotClick(inventory, i);
+                }
                 return true;
             }
         }
 
         if (isDefaultCraftActive()) {
-            for (int r = 0; r < 2; r++) {
-                for (int c = 0; c < 2; c++) {
-                    if (hit(mx, my, craftX(c), craftY(r), SLOT_PX, SLOT_PX)) {
-                        handleCraftSlotClick(r, c);
-                        return true;
-                    }
+            for (int i = 0; i < craft.size * craft.size; i++) {
+                int row = i / craft.size;
+                int col = i % craft.size;
+                if (hit(mx, my, craftX(col), craftY(row), SLOT_PX, SLOT_PX)) {
+                    handleCraftSlotClick(craft, i, isRightClick);
+                    return true;
                 }
             }
 
             if (hit(mx, my, resultX(), resultY(), SLOT_PX, SLOT_PX)) {
-                handleResultClick();
+                if (!isRightClick) {
+                    handleResultSlotClick(craft, inventory);
+                }
                 return true;
             }
         }
 
         if (hit(mx, my, panelX(), panelY(), panelW(), panelH())) {
-           return true;
+        return true;
         }
 
         return false;
     }
 
-    private void handleCraftSlotClick(int row, int col) {
-        int prev = craft.getSlot(row, col);
-
-        if (heldId == 0) {
-            if (prev != 0) {
-                heldId  = prev;
-                heldQty = 1;
-                craft.setSlot(row, col, 0);
-            }
-        } else {
-            if (prev == 0 || prev == heldId) {
-                craft.setSlot(row, col, heldId);
-                heldQty--;
-                if (heldQty <= 0) { heldId = 0; heldQty = 0; }
-            } else {
-                craft.setSlot(row, col, heldId);
-                heldId  = prev;
-                heldQty = 1; 
-            }
-        }
-    }
-
-    private void handleResultClick() {
-        int[] result = craft.getResult();
-        if (result == null) return;
-
-        int resultId  = result[0];
-        int resultQty = result[1];
-
-        boolean canTake = (heldId == 0)
-                       || (heldId == resultId && heldQty + resultQty <= 64);
-        if (!canTake) return;
-
-        heldId  = resultId;
-        heldQty = (heldId == resultId ? heldQty : 0) + resultQty;
-
-        for (int r = 0; r < 2; r++) {
-            for (int c = 0; c < 2; c++) {
-                if (craft.getSlot(r, c) != 0) {
-                    craft.setSlot(r, c, 0);
-                }
-            }
-        }
-    }
-
     @Override
     public void onClose() {
-        
         returnHeldItem(inventory);
-
-        for (int r = 0; r < 2; r++) {
-            for (int c = 0; c < 2; c++) {
-                int id = craft.getSlot(r, c);
-                if (id != 0) {
-                    inventory.addItem(id, 1);
-                    craft.setSlot(r, c, 0);
-                }
-            }
-        }
+        craft.returnToInventory(inventory);
     }
 
 }

@@ -9,6 +9,7 @@ public class CraftingGrid {
     public final int size;
     private final int[] gridId;
     private final int[] gridQty;
+    private final int[] gridDur;
 
     private static final Map<String, int[]> RECIPES_2x2 = new HashMap<>();
     private static final Map<String, int[]> RECIPES_3x3 = new HashMap<>();
@@ -102,6 +103,8 @@ public class CraftingGrid {
 
         this.gridId  = new int[slots];
         this.gridQty = new int[slots];
+        this.gridDur = new int[slots];
+        java.util.Arrays.fill(gridDur, -1);
     }
 
     private int idx(int row, int col) {
@@ -114,6 +117,19 @@ public class CraftingGrid {
 
             gridId[i] = id;
             gridQty[i] = (id == 0) ? 0 : 1;
+        }
+    }
+
+    public void setSlot(int row, int col, int id, int qty) {
+        setSlot(row, col, id, qty, -1);
+    }
+
+    public void setSlot(int row, int col, int id, int qty, int dur) {
+        if (row >= 0 && row < size && col >= 0 && col < size) {
+            int i = row * size + col;
+            gridId[i]  = id;
+            gridQty[i] = qty;
+            gridDur[i] = dur;
         }
     }
 
@@ -143,6 +159,10 @@ public class CraftingGrid {
                 : 0;
     }
 
+    public int getSlotDur(int idx) {
+        return (idx >= 0 && idx < gridDur.length) ? gridDur[idx] : -1;
+    }
+
     public int getResultQty() {
         int[] result = getResult();
         return (result != null) ? result[1] : 0;
@@ -153,6 +173,7 @@ public class CraftingGrid {
 
         gridId[i] = 0;
         gridQty[i] = 0;
+        gridDur[i] = -1;
     }
 
     public void clear() {
@@ -207,5 +228,31 @@ public class CraftingGrid {
         }
 
         return ids;
+    }
+
+    public void consumeIngredients() {
+        for (int i = 0; i < gridId.length; i++) {
+            if (gridId[i] != 0) {
+                gridQty[i]--;
+                if (gridQty[i] <= 0) {
+                    gridId[i] = 0;
+                    gridQty[i] = 0;
+                    gridDur[i] = -1;
+                }
+            }
+        }
+    }
+
+    public void returnToInventory(Inventory inv) {
+        for (int i = 0; i < gridId.length; i++) {
+            if (gridId[i] != 0) {
+                if (Inventory.isTool(gridId[i])) {
+                    inv.addToolWithDurability(gridId[i], gridDur[i]);
+                } else {
+                    inv.addItem(gridId[i], gridQty[i]);
+                }
+                gridId[i] = 0; gridQty[i] = 0; gridDur[i] = -1;
+            }
+        }
     }
 }

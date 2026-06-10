@@ -2,9 +2,6 @@
 
 ## Áudio
 
-- Sons de passos podem tocar durante pulos devido à instabilidade na detecção de chão.
-- O timing dos passos atualmente depende apenas do input de movimento.
-
 ## Física
 
 - Pequeno jitter de colisão nas bordas dos blocos.

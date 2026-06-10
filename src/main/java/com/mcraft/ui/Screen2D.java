@@ -135,6 +135,90 @@ public abstract class Screen2D {
         drawBlockIcon(Block.fromId(heldId), hx+2, hy+2, SLOT_PX-4);
     }
 
+    protected void handleCraftSlotClick(CraftingGrid grid, int slotIdx, boolean isRightClick) {
+        int slotId  = grid.getSlotId(slotIdx);
+        int slotQty = grid.getSlotQty(slotIdx);
+        int slotDur = grid.getSlotDur(slotIdx);
+        
+        int row = slotIdx / grid.size;
+        int col = slotIdx % grid.size;
+
+        if (heldId == 0) {
+            if (slotId != 0) {
+                if (isRightClick && !Inventory.isTool(slotId)) {
+                    int takeQty = (slotQty + 1) / 2;
+                    heldId  = slotId;
+                    heldQty = takeQty;
+                    heldDur = slotDur;
+                    
+                    int remaining = slotQty - takeQty;
+                    if (remaining <= 0) {
+                        grid.clearSlot(row, col);
+                    } else {
+                        grid.setSlot(row, col, slotId, remaining, slotDur);
+                    }
+                } else {
+                    heldId  = slotId;
+                    heldQty = slotQty;
+                    heldDur = slotDur;
+                    grid.clearSlot(row, col);
+                }
+            }
+            return;
+        }
+
+        if (slotId == 0) {
+            if (isRightClick && !Inventory.isTool(heldId)) {
+                grid.setSlot(row, col, heldId, 1, heldDur);
+                heldQty--;
+                if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+            } else {
+                grid.setSlot(row, col, heldId, heldQty, heldDur);
+                heldId = 0; heldQty = 0; heldDur = -1;
+            }
+            return;
+        }
+
+        if (slotId == heldId && !Inventory.isTool(heldId)) {
+            if (isRightClick) {
+                if (slotQty < 64) {
+                    grid.setSlot(row, col, slotId, slotQty + 1, -1);
+                    heldQty--;
+                    if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                }
+            } else {
+                int canAdd = Math.min(heldQty, 64 - slotQty);
+                grid.setSlot(row, col, slotId, slotQty + canAdd, -1);
+                heldQty -= canAdd;
+                if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+            }
+            return;
+        }
+
+        if (!isRightClick) {
+            grid.setSlot(row, col, heldId, heldQty, heldDur);
+            heldId  = slotId;
+            heldQty = slotQty;
+            heldDur = slotDur;
+        }
+    }
+
+    protected void handleResultSlotClick(CraftingGrid grid, Inventory inv) {
+        int[] result = grid.getResult();
+        if (result == null || result[0] == 0) return;
+
+        int resultId  = result[0];
+        int resultQty = result[1];
+
+        boolean canTake = (heldId == 0) || (heldId == resultId && heldQty + resultQty <= 64);
+        if (!canTake) return;
+
+        heldId  = resultId;
+        heldQty = (heldId == resultId ? heldQty : 0) + resultQty;
+
+        grid.consumeIngredients();
+    }
+
     protected void handleInvSlotClick(Inventory inv, int slotIdx) {
         int slotId  = inv.getItemId (slotIdx);
         int slotQty = inv.getItemQty(slotIdx);

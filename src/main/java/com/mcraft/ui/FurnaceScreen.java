@@ -179,24 +179,45 @@ public class FurnaceScreen extends Screen2D {
 
     @Override
     public boolean onClick(int mx, int my) {
+        return onClick(mx, my, false);
+    }
+
+    public boolean onClick(int mx, int my, boolean isRightClick) {
         if (hit(mx, my, inputSlotX(), inputSlotY(), SLOT_PX, SLOT_PX)) {
-            handleFurnaceInputClick();
+            handleFurnaceInputClick(isRightClick);
             return true;
         }
 
         if (hit(mx, my, fuelSlotX(), fuelSlotY(), SLOT_PX, SLOT_PX)) {
-            handleFurnaceFuelClick();
+            handleFurnaceFuelClick(isRightClick);
             return true;
         }
 
         if (hit(mx, my, outputSlotX(), outputSlotY(), SLOT_PX, SLOT_PX)) {
-            handleFurnaceOutputClick();
+            if (!isRightClick) {
+                handleFurnaceOutputClick();
+            }
             return true;
         }
 
         for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
             if (hit(mx, my, playerSlotX(i), playerSlotY(i), SLOT_PX, SLOT_PX)) {
-                handleInvSlotClick(playerInv, i);
+                if (isRightClick && heldId == 0 && playerInv.getItemId(i) != 0 && !Inventory.isTool(playerInv.getItemId(i))) {
+                    int currentQty = playerInv.getItemQty(i);
+                    int takeQty = (currentQty + 1) / 2;
+                    heldId = playerInv.getItemId(i);
+                    heldQty = takeQty;
+                    heldDur = playerInv.getItemDurability(i);
+                    
+                    int remaining = currentQty - takeQty;
+                    if (remaining <= 0) {
+                        playerInv.clearSlot(i);
+                    } else {
+                        playerInv.setSlot(i, heldId, remaining);
+                    }
+                } else {
+                    handleInvSlotClick(playerInv, i);
+                }
                 return true;
             }
         }
@@ -206,44 +227,105 @@ public class FurnaceScreen extends Screen2D {
         return false;
     }
 
-    private void handleFurnaceInputClick() {
+    private void handleFurnaceInputClick(boolean isRightClick) {
         if (heldId == 0) {
             if (state.inputId != 0) {
-                heldId = state.inputId; heldQty = state.inputQty; heldDur = -1;
-                state.inputId = 0; state.inputQty = 0;
                 state.smeltProgress = 0f;
+
+                if (isRightClick) {
+                    int takeQty = (state.inputQty + 1) / 2; 
+                    heldId = state.inputId;
+                    heldQty = takeQty;
+                    heldDur = -1;
+                    
+                    state.inputQty -= takeQty;
+                    if (state.inputQty <= 0) {
+                        state.inputId = 0;
+                        state.inputQty = 0;
+                    }
+                } else {
+                    heldId = state.inputId; 
+                    heldQty = state.inputQty; 
+                    heldDur = -1;
+                    state.inputId = 0; 
+                    state.inputQty = 0;
+                }
             }
-        } else {
+        } 
+        else {
             if (state.inputId == 0) {
-                state.inputId  = heldId;
-                state.inputQty = heldQty;
-                heldId = 0; heldQty = 0; heldDur = -1;
-            } else if (state.inputId == heldId && state.inputQty < 64) {
-                int add = Math.min(heldQty, 64 - state.inputQty);
-                state.inputQty += add;
-                heldQty -= add;
-                if (heldQty <= 0) { heldId = 0; heldDur = -1; }
+                if (isRightClick) {
+                    state.inputId = heldId;
+                    state.inputQty = 1;
+                    heldQty--;
+                    if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                } else {
+                    state.inputId  = heldId;
+                    state.inputQty = heldQty;
+                    heldId = 0; heldQty = 0; heldDur = -1;
+                }
+            } 
+            else if (state.inputId == heldId && state.inputQty < 64) {
+                if (isRightClick) {
+                    state.inputQty += 1;
+                    heldQty--;
+                    if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                } else {
+                    int add = Math.min(heldQty, 64 - state.inputQty);
+                    state.inputQty += add;
+                    heldQty -= add;
+                    if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                }
             }
         }
     }
 
-    private void handleFurnaceFuelClick() {
-        if (heldId == 0) {
-            if (state.fuelId != 0) {
-                heldId = state.fuelId; heldQty = state.fuelQty; heldDur = -1;
-                state.fuelId = 0; state.fuelQty = 0;
-            }
+    private void handleFurnaceFuelClick(boolean isRightClick) {
+        if (heldId == 0 && state.fuelId != 0) {
+            if (isRightClick) {
+                int takeQty = (state.fuelQty + 1) / 2; 
+                heldId = state.fuelId;
+                heldQty = takeQty;
+                heldDur = -1;
+                
+                state.fuelQty -= takeQty;
+                if (state.fuelQty <= 0) {
+                    state.fuelId = 0;
+                    state.fuelQty = 0;
+                }
+            } else {
+                heldId = state.fuelId; 
+                heldQty = state.fuelQty; 
+                heldDur = -1;
+                state.fuelId = 0; 
+                state.fuelQty = 0;
+            } 
         } else {
             if (FurnaceState.getFuelValue(heldId) > 0) {
+                
                 if (state.fuelId == 0) {
-                    state.fuelId  = heldId;
-                    state.fuelQty = heldQty;
-                    heldId = 0; heldQty = 0; heldDur = -1;
-                } else if (state.fuelId == heldId && state.fuelQty < 64) {
-                    int add = Math.min(heldQty, 64 - state.fuelQty);
-                    state.fuelQty += add;
-                    heldQty -= add;
-                    if (heldQty <= 0) { heldId = 0; heldDur = -1; }
+                    if (isRightClick) {
+                        state.fuelId = heldId;
+                        state.fuelQty = 1;
+                        heldQty--;
+                        if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                    } else {
+                        state.fuelId  = heldId;
+                        state.fuelQty = heldQty;
+                        heldId = 0; heldQty = 0; heldDur = -1;
+                    }
+                } 
+                else if (state.fuelId == heldId && state.fuelQty < 64) {
+                    if (isRightClick) {
+                        state.fuelQty += 1;
+                        heldQty--;
+                        if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                    } else {
+                        int add = Math.min(heldQty, 64 - state.fuelQty);
+                        state.fuelQty += add;
+                        heldQty -= add;
+                        if (heldQty <= 0) { heldId = 0; heldQty = 0; heldDur = -1; }
+                    }
                 }
             }
         }
