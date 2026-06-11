@@ -23,3 +23,6 @@
 
 - Items se perdem ao serem stackados diretamente da crafting table.
 
+## ILUMINAÇÃO
+
+- Iluminação não atravessa Chunks.

@@ -1,24 +1,30 @@
 #version 330 core
 
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec2 aUV;
-layout (location = 2) in float aLight;
+layout (location = 0) in vec3  aPos;
+layout (location = 1) in vec2  aUV;
+layout (location = 2) in float aLightDir;
+layout (location = 3) in float aSkyLight;
+layout (location = 4) in float aBlockLight;
 
-uniform mat4 uProjection;
-uniform mat4 uView;
-uniform mat4 uModel;       
+uniform mat4  uProjection;
+uniform mat4  uView;
+uniform mat4  uModel;
+uniform float uAmbientLight;
 
 out vec2  vUV;
 out float vLight;
-out float vFogDist;         
 
 void main() {
-    vec4 worldPos = uModel * vec4(aPos, 1.0);
-    vec4 viewPos  = uView  * worldPos;
+    gl_Position = uProjection * uView * uModel * vec4(aPos, 1.0);
+    vUV = aUV;
 
-    gl_Position = uProjection * viewPos;
+    float skyContrib = aSkyLight * uAmbientLight;
 
-    vUV      = aUV;
-    vLight   = aLight;
-    vFogDist = length(viewPos.xyz);  
+    float blockContrib = aBlockLight;
+
+    float effectiveLight = max(skyContrib, blockContrib);
+
+    effectiveLight = max(effectiveLight, 0.04);
+
+    vLight = aLightDir * effectiveLight;
 }

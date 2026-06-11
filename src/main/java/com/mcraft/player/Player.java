@@ -101,6 +101,7 @@ public class Player {
         inventory.addItem(com.mcraft.world.Block.GOLD_ORE.id,  64);
         inventory.addItem(com.mcraft.world.Block.DIAMOND_ORE.id,  64);
         inventory.addItem(com.mcraft.world.Block.IRON_ORE.id,  64);
+        inventory.addItem(com.mcraft.world.Block.TORCH.id,  64);
     }
 
     public void update(float dx, float dz, boolean jump, boolean dive, float dt) {

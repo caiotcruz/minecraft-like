@@ -34,6 +34,8 @@ import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 
+import java.util.List;
+
 import com.mcraft.audio.SoundEvent;
 import com.mcraft.audio.SoundManager;
 import com.mcraft.entity.Mob;
@@ -52,8 +54,10 @@ import com.mcraft.ui.Inventory;
 import com.mcraft.ui.InventoryScreen;
 import com.mcraft.world.Biome;
 import com.mcraft.world.Block;
+import com.mcraft.world.Chunk;
 import com.mcraft.world.DayNightCycle;
 import com.mcraft.world.FurnaceState;
+import com.mcraft.world.LightEngine;
 import com.mcraft.world.WeatherSystem;
 import com.mcraft.world.WeatherType;
 import com.mcraft.world.World;
@@ -456,6 +460,17 @@ public class GameLoop {
         }
 
         world.integrateReady();
+
+        int budget = 2;
+        List<Chunk> activeChunks = world.getLoadedChunksList(); 
+        for (int i = 0; i < activeChunks.size(); i++) {
+            if (budget <= 0) break;
+            Chunk chunk = activeChunks.get(i);
+            if (chunk.isLightDirty()) {
+                LightEngine.calculateChunkLight(chunk, world);
+                budget--;
+            }
+        }
 
         unloadTimer += dt;
         if (unloadTimer >= UNLOAD_INTERVAL) {

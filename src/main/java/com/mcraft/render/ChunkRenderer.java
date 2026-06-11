@@ -15,13 +15,23 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class ChunkRenderer {
 
-    private static final int VERT_FLOATS = 6; 
+    private static final int VERT_FLOATS = 8; 
 
     private int vao, vbo, ebo;
     private int indexCount;
 
     private int wVao, wVbo, wEbo;
     private int wIndexCount;
+
+    private static int MAX_QUADS = Chunk.SIZE * Chunk.HEIGHT * Chunk.SIZE * 6;
+    private static final FloatBuffer OPAQUE_V_BUF = BufferUtils.createFloatBuffer(MAX_QUADS * 4 * 8);
+    private static final IntBuffer   OPAQUE_I_BUF = BufferUtils.createIntBuffer(MAX_QUADS * 6);
+    private static final FloatBuffer WATER_V_BUF = BufferUtils.createFloatBuffer(MAX_QUADS * 4 * VERT_FLOATS);
+    private static final IntBuffer   WATER_I_BUF = BufferUtils.createIntBuffer(MAX_QUADS * 6);
+    private static final float[] LIGHT_CACHE = new float[16];
+    static {
+        for(int i=0; i<16; i++) LIGHT_CACHE[i] = i / 15.0f;
+    }
 
     private static final float BED_TOP_Y = 0.5625f;
 
@@ -59,11 +69,10 @@ public class ChunkRenderer {
         Chunk nW = world.getChunkIfLoaded(cx-1, cz  );
         Chunk nE = world.getChunkIfLoaded(cx+1, cz  );
 
-        int maxQ = cs * ch * cs * 6;
-        FloatBuffer vBuf = BufferUtils.createFloatBuffer(maxQ * 4 * VERT_FLOATS);
-        IntBuffer   iBuf = BufferUtils.createIntBuffer (maxQ * 6);
-        FloatBuffer wBuf = BufferUtils.createFloatBuffer(maxQ * 4 * VERT_FLOATS);
-        IntBuffer   wIdx = BufferUtils.createIntBuffer (maxQ * 6);
+        FloatBuffer vBuf = OPAQUE_V_BUF; vBuf.clear();
+        IntBuffer   iBuf = OPAQUE_I_BUF; iBuf.clear();
+        FloatBuffer wBuf = WATER_V_BUF; wBuf.clear();
+        IntBuffer   wIdx = WATER_I_BUF; wIdx.clear();
 
         int quadCount  = 0;
         int wQuadCount = 0;
@@ -79,59 +88,67 @@ public class ChunkRenderer {
 
                     for (int face = 0; face < 6; face++) {
                         int[] dir = FACE_DIR[face];
-                        Block neighbor = getNeighborFast(
-                            chunk, nN, nS, nW, nE,
-                            x + dir[0], y + dir[1], z + dir[2]
-                        );
+                        int nx = x + dir[0];
+                        int ny = y + dir[1];
+                        int nz = z + dir[2];
+
+                        Block neighbor = getNeighborFast(chunk, nN, nS, nW, nE, nx, ny, nz);
 
                         if (block.solid && neighbor.solid) continue;
                         if (isWater && (neighbor == Block.WATER || neighbor.solid)) continue;
 
-                        float[] uvs   = block.getUVs(face);
-                        float   light = FACE_LIGHT[face];
-                        float[][] vv  = FACE_VERTS[face];
+                        if (isWater && (nx < 0 || nx >= cs || nz < 0 || nz >= cs)) {
+                            boolean neighborLoaded = (nx < 0  && nN != null) ||
+                                                    (nx >= cs && nS != null) || 
+                                                    (nz < 0  && nW != null) ||
+                                                    (nz >= cs && nE != null);
+                            if (!neighborLoaded) continue;
+                        }
 
-                        if (block == Block.BED){
-                            vv = (block == Block.BED) ? BED_VERTS[face] : FACE_VERTS[face];
+                        float[] uvs   = block.getUVs(face);
+                        float[][] vv  = (block == Block.BED) ? BED_VERTS[face] : FACE_VERTS[face];
+
+                        int skyLight, blockLight;
+                        int lx = nx;
+                        int lz = nz;
+
+                        if (lx >= 0 && lx < cs && lz >= 0 && lz < cs) {
+                            skyLight   = chunk.getSkyLight(lx, ny, lz);
+                            blockLight = chunk.getBlockLight(lx, ny, lz);
+                        } else {
+                            int wx = (cx << 4) + nx;
+                            int wz = cz * cs + nz;
+                            skyLight   = world.getSkyLightAt(wx, ny, wz);
+                            blockLight = world.getBlockLightAt(wx, ny, wz);
+                        }
+
+                        float skyNorm = LIGHT_CACHE[skyLight];
+                        float blockNorm = blockLight / 15.0f;
+                        
+                        float lightDir  = FACE_LIGHT[face];
+                        if (isWater && face == 0) {
+                            lightDir *= 1.1f;
+                        }
+
+                        FloatBuffer target = isWater ? wBuf : vBuf;
+
+                        for (int v = 0; v < 4; v++) {
+                            target.put(x + vv[v][0]).put(y + vv[v][1]).put(z + vv[v][2]);
+                            target.put(uvs[v * 2]).put(uvs[v * 2 + 1]);
+                            target.put(lightDir);
+                            target.put(skyNorm);
+                            target.put(blockNorm);
                         }
 
                         if (isWater) {
-
-                            int nx = x + dir[0], ny = y + dir[1], nz = z + dir[2];
-
-                            boolean crossBorder = (nx < 0 || nx >= cs || nz < 0 || nz >= cs);
-
-                            if (crossBorder) {
-                                boolean neighborLoaded =
-                                    (nx < 0      && nN != null) ||
-                                    (nx >= cs    && nS != null) || 
-                                    (nz < 0      && nW != null) ||
-                                    (nz >= cs    && nE != null);
-
-                                if (!neighborLoaded) continue; 
-                            }
-
-                            neighbor = getNeighborFast(chunk, nN, nS, nW, nE, nx, ny, nz);
-                            if (neighbor == Block.WATER || neighbor.solid) continue;
-
-
-                            for (int v = 0; v < 4; v++) {
-                                float wl = (face == 0) ? light * 1.1f : light * 0.85f;
-                                wBuf.put(x+vv[v][0]).put(y+vv[v][1]).put(z+vv[v][2])
-                                    .put(uvs[v*2]).put(uvs[v*2+1]).put(wl);
-                            }
                             int base = wQuadCount * 4;
-                            wIdx.put(base).put(base+1).put(base+2)
-                                .put(base+2).put(base+3).put(base);
+                            wIdx.put(base).put(base + 1).put(base + 2)
+                                .put(base + 2).put(base + 3).put(base);
                             wQuadCount++;
                         } else {
-                            for (int v = 0; v < 4; v++) {
-                                vBuf.put(x+vv[v][0]).put(y+vv[v][1]).put(z+vv[v][2])
-                                    .put(uvs[v*2]).put(uvs[v*2+1]).put(light);
-                            }
                             int base = quadCount * 4;
-                            iBuf.put(base).put(base+1).put(base+2)
-                                .put(base+2).put(base+3).put(base);
+                            iBuf.put(base).put(base + 1).put(base + 2)
+                                .put(base + 2).put(base + 3).put(base);
                             quadCount++;
                         }
                     }
@@ -190,6 +207,10 @@ public class ChunkRenderer {
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(2, 1, GL_FLOAT, false, stride, 20L);
         glEnableVertexAttribArray(2);
+        glVertexAttribPointer(3, 1, GL_FLOAT, false, stride, 24L);
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(4, 1, GL_FLOAT, false, stride, 28L);
+        glEnableVertexAttribArray(4);
         glBindVertexArray(0);
     }
 

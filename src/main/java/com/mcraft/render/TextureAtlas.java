@@ -801,20 +801,17 @@ public class TextureAtlas {
 
         // STICK
         if (col == 0 && row == 7) { 
-            // Desenha uma linha diagonal de espessura 2 (de baixo-esquerda para cima-direita)
             int diff = px - py;
             boolean shaft = (diff >= -1 && diff <= 1) && (px >= 2 && px <= 13);
             
             if (!shaft) return new int[]{ 0, 0, 0, 0 };
 
-            // Linha superior do graveto recebe uma luz de destaque (madeira clara)
             boolean lightWood = (diff == -1 || (px == py && n > 8));
             if (lightWood) {
                 int r = 165 + (n & 3) * 4;
-                return new int[]{ r, clamp(r - 45), clamp(r - 90), 255 }; // Marrom claro iluminado
+                return new int[]{ r, clamp(r - 45), clamp(r - 90), 255 };
             }
 
-            // Lado inferior recebe sombra de relevo (casca de árvore escura)
             int r = 110 + (n & 3) * 3;
             if (diff == 1) r -= 30;
 
@@ -911,6 +908,49 @@ public class TextureAtlas {
             int cianoG = 170 + n * 4;
             int cianoB = 210 + n * 3;
             return new int[]{ clamp(cianoG - 110), clamp(cianoG), clamp(cianoB), 255 };
+        }
+
+        //ILUMINAÇÃO
+
+        //TORCH
+        if (col == 0 && row == 8) {
+            int stickWidth = (py >= 12) ? 1 : 2;
+            boolean stick = (py >= 5 && py <= 14) && (px >= 8 - stickWidth && px <= 7 + stickWidth);
+            
+            int flameWidth = (py == 0 || py == 4) ? 1 : (py == 1) ? 2 : 3;
+            boolean flame = (py >= 0 && py <= 4) && (px >= 8 - flameWidth && px <= 7 + flameWidth);
+            
+            if (!stick && !flame) return new int[]{ 0, 0, 0, 0 }; 
+
+            if (flame) {
+                boolean core = (py >= 1 && py <= 3) && (px >= 7 && px <= 8);
+                if (core) {
+                    int yVal = 240 + (n & 3) * 5;
+                    return new int[]{ 255, clamp(yVal), 160, 255 };
+                }
+                
+                int r = 245 + (n & 3) * 3;
+                int g = 100 + n * 4;
+                return new int[]{ clamp(r), clamp(g), 20, 230 }; 
+            }
+
+            if (py == 5 || py == 6) {
+                int coalV = 45 + (n & 3) * 4;
+                return new int[]{ coalV, coalV - 5, coalV - 5, 255 };
+            }
+
+            int v = 115 + (n & 3) * 4;
+            int r = v;
+            int g = (int)(v * 0.68f);
+            int b = (int)(v * 0.35f);
+
+            if (px == 8 - stickWidth) {
+                r += 25; g += 20;
+            } else if (px == 7 + stickWidth) { 
+                r -= 30; g -= 20; b -= 10;
+            }
+
+            return new int[]{ clamp(r), clamp(g), clamp(b), 255 };
         }
 
 

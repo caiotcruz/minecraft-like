@@ -108,8 +108,23 @@ public class World {
         int lz = Math.floorMod(z, Chunk.SIZE);
 
         Chunk chunk = getOrCreate(cx, cz);
+        
+        Block oldBlock = chunk.getBlock(lx, y, lz);
+
         chunk.setBlock(lx, y, lz, blockId);
 
+        if (oldBlock.lightEmission > 0) {
+            LightEngine.onBlockChanged(this, x, y, z); 
+        } else {
+            LightEngine.onBlockChanged(this, x, y, z);
+        }
+        
+        Block newBlock = Block.fromId(blockId);
+        if (newBlock.lightEmission > 0) {
+            LightEngine.propagateBlockLightFrom(this, x, y, z, newBlock.lightEmission);
+        }
+
+        markDirty(cx, cz); 
         if (lx == 0)              markDirty(cx - 1, cz);
         if (lx == Chunk.SIZE - 1) markDirty(cx + 1, cz);
         if (lz == 0)              markDirty(cx, cz - 1);
@@ -192,16 +207,18 @@ public class World {
 
     public void integrateReady() {
         Chunk c;
-        int maxPerFrame = 4; 
-        while (maxPerFrame-- > 0 && (c = readyChunks.poll()) != null) {
+        int max = 4;
+        while (max-- > 0 && (c = readyChunks.poll()) != null) {
             long k = key(c.getChunkX(), c.getChunkZ());
             chunks.put(k, c);
             pendingGeneration.remove(k);
 
-            markDirty(c.getChunkX() - 1, c.getChunkZ());
-            markDirty(c.getChunkX() + 1, c.getChunkZ());
-            markDirty(c.getChunkX(),     c.getChunkZ() - 1);
-            markDirty(c.getChunkX(),     c.getChunkZ() + 1);
+            LightEngine.calculateChunkLight(c, this);
+
+            markDirty(c.getChunkX()-1, c.getChunkZ());
+            markDirty(c.getChunkX()+1, c.getChunkZ());
+            markDirty(c.getChunkX(),   c.getChunkZ()-1);
+            markDirty(c.getChunkX(),   c.getChunkZ()+1);
         }
     }
 
@@ -384,6 +401,10 @@ public class World {
         return Collections.unmodifiableMap(chunks);
     }
 
+    public List<Chunk> getLoadedChunksList() {
+        return List.copyOf(chunks.values());
+    }
+
     public Map<Long, Inventory> getChestInventories() {
         return chestInventories;
     }
@@ -421,7 +442,39 @@ public class World {
         return 65; 
     }
 
+    public int getSkyLightAt(int x, int y, int z) {
+        Chunk c = getChunkFor(x, z);
+        if (c == null) return 15;
+        return c.getSkyLight(localX(x), y, localZ(z));
+    }
+
+    public int getBlockLightAt(int x, int y, int z) {
+        Chunk c = getChunkFor(x, z);
+        if (c == null) return 0;
+        return c.getBlockLight(localX(x), y, localZ(z));
+    }
+
+    public int getEffectiveLightAt(int x, int y, int z) {
+        return Math.max(getSkyLightAt(x,y,z), getBlockLightAt(x,y,z));
+    }
+
+    private Chunk getChunkFor(int wx, int wz) {
+        return chunks.get(key(Math.floorDiv(wx, Chunk.SIZE), Math.floorDiv(wz, Chunk.SIZE)));
+    }
+
+    public void setSkyLightAt(int x, int y, int z, int v) {
+        Chunk c = getChunkFor(x, z);
+        if (c != null) c.setSkyLight(localX(x), y, localZ(z), v);
+    }
+
+    public void setBlockLightAt(int x, int y, int z, int v) {
+        Chunk c = getChunkFor(x, z);
+        if (c != null) c.setBlockLight(localX(x), y, localZ(z), v);
+    }
+
     public long getSeed() { return seed; }
     public WorldIO getWorldIO() {return worldIO;}
     public WorldGen getWorldGen() { return gen; }
+    private int localX(int wx) { return wx - Math.floorDiv(wx, Chunk.SIZE) * Chunk.SIZE; }
+    private int localZ(int wz) { return wz - Math.floorDiv(wz, Chunk.SIZE) * Chunk.SIZE; }
 }

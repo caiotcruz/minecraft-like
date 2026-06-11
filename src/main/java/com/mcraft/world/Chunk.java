@@ -13,6 +13,9 @@ public class Chunk {
     private final int chunkX, chunkZ; 
     private boolean dirty = true;       
 
+    private final byte[] lightPacked = new byte[SIZE * HEIGHT * SIZE];
+    private boolean lightDirty = true;
+
     private final ChunkRenderer renderer = new ChunkRenderer();
 
     public Chunk(int chunkX, int chunkZ) {
@@ -21,8 +24,8 @@ public class Chunk {
     }
 
 
-    private static int idx(int x, int y, int z) {
-        return y * SIZE * SIZE + z * SIZE + x;
+    private int idx(int x, int y, int z) { 
+        return y*SIZE*SIZE + z*SIZE + x; 
     }
 
     public Block getBlock(int x, int y, int z) {
@@ -76,9 +79,49 @@ public class Chunk {
         dirty = true;     
     }
 
+    public int getSkyLight(int x, int y, int z) {
+        if (!inBounds(x,y,z)) return 0;
+        return (lightPacked[idx(x,y,z)] >> 4) & 0xF;
+    }
+
+    public int getBlockLight(int x, int y, int z) {
+        if (!inBounds(x,y,z)) return 0;
+        return lightPacked[idx(x,y,z)] & 0xF;
+    }
+
+    public int getEffectiveLight(int x, int y, int z) {
+        if (!inBounds(x,y,z)) return 0;
+        byte packed = lightPacked[idx(x,y,z)];
+        return Math.max((packed >> 4) & 0xF, packed & 0xF);
+    }
+
+    public void setSkyLight(int x, int y, int z, int v) {
+        if (!inBounds(x,y,z)) return;
+        int i = idx(x,y,z);
+        lightPacked[i] = (byte)((lightPacked[i] & 0x0F) | (clamp15(v) << 4));
+    }
+
+    public void setBlockLight(int x, int y, int z, int v) {
+        if (!inBounds(x,y,z)) return;
+        int i = idx(x,y,z);
+        lightPacked[i] = (byte)((lightPacked[i] & 0xF0) | clamp15(v));
+    }
+
+    public void clearLight() {
+        java.util.Arrays.fill(lightPacked, (byte)0);
+    }
+
+
     public void markDirty() { dirty = true; }
     public int  getChunkX() { return chunkX; }
     public int  getChunkZ() { return chunkZ; }
     public byte[] getRawBlocks() { return blocks; }
+    public boolean isLightDirty()      { return lightDirty; }
+    public void setLightDirty(boolean d) { lightDirty = d; }
+
+    private static int clamp15(int v) { return Math.max(0, Math.min(15, v)); }
+    private boolean inBounds(int x, int y, int z) {
+        return x>=0 && x<SIZE && y>=0 && y<HEIGHT && z>=0 && z<SIZE;
+    }
 
 }
