@@ -448,7 +448,7 @@ public class GameLoop {
             player.tickRegen(TICK_STEP);
         }
 
-        mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight.isNight());
+        mobs.update(dt, world, player.getX(), player.getY(), player.getZ(), dayNight);
         applyMobDamage(dt);
         
         currentBiome = world.getWorldGen().getBiome(player.getX(), player.getZ());
