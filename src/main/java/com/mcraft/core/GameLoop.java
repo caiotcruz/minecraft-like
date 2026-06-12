@@ -34,6 +34,8 @@ import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 
+import java.util.List;
+
 import com.mcraft.audio.SoundEvent;
 import com.mcraft.audio.SoundManager;
 import com.mcraft.entity.Mob;
@@ -464,11 +466,31 @@ public class GameLoop {
 
         world.integrateReady();
 
-        for (Chunk chunk : world.getLoadedChunksList()) {
-            if (chunk.isLightDirty() && !chunk.isLightPending()) {
-                chunk.setLightDirty(false);
-                lightScheduler.submit(chunk);
-            }
+        float playerCX = player.getX() / Chunk.SIZE;
+        float playerCZ = player.getZ() / Chunk.SIZE;
+
+        int budget = 4;
+        int maxDistance = World.RENDER_DISTANCE + 2;
+        float maxDistanceSq = maxDistance * maxDistance;
+
+        List<Chunk> activeChunks = world.getLoadedChunksList();
+
+        for (int i = 0; i < activeChunks.size(); i++) {
+            if (budget <= 0) break;
+
+            Chunk chunk = activeChunks.get(i);
+            
+            if (!chunk.isLightDirty() || chunk.isLightPending()) continue;
+
+            float dx = chunk.getChunkX() - playerCX;
+            float dz = chunk.getChunkZ() - playerCZ;
+            float distSq = dx * dx + dz * dz;
+
+            if (distSq > maxDistanceSq) continue;
+
+            chunk.setLightDirty(false);
+            lightScheduler.submit(chunk);
+            budget--;
         }
 
         unloadTimer += dt;
