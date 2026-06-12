@@ -3,7 +3,6 @@ package com.mcraft.render;
 import com.mcraft.world.Block;
 import com.mcraft.world.Chunk;
 import com.mcraft.world.World;
-import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -27,11 +26,6 @@ public class ChunkRenderer {
     private int     framesSinceModify   = 0;
     private static final int STABLE_AFTER_FRAMES = 60;
 
-    private static int MAX_QUADS = Chunk.SIZE * Chunk.HEIGHT * Chunk.SIZE * 6;
-    private static final FloatBuffer OPAQUE_V_BUF = BufferUtils.createFloatBuffer(MAX_QUADS * 4 * 8);
-    private static final IntBuffer   OPAQUE_I_BUF = BufferUtils.createIntBuffer(MAX_QUADS * 6);
-    private static final FloatBuffer WATER_V_BUF = BufferUtils.createFloatBuffer(MAX_QUADS * 4 * VERT_FLOATS);
-    private static final IntBuffer   WATER_I_BUF = BufferUtils.createIntBuffer(MAX_QUADS * 6);
     private static final float[] LIGHT_CACHE = new float[16];
     static {
         for(int i=0; i<16; i++) LIGHT_CACHE[i] = i / 15.0f;
@@ -68,15 +62,15 @@ public class ChunkRenderer {
         int cs = Chunk.SIZE, ch = Chunk.HEIGHT;
         int cx = chunk.getChunkX(), cz = chunk.getChunkZ();
 
-        Chunk nN = world.getChunkIfLoaded(cx,   cz-1);
-        Chunk nS = world.getChunkIfLoaded(cx,   cz+1);
-        Chunk nW = world.getChunkIfLoaded(cx-1, cz  );
-        Chunk nE = world.getChunkIfLoaded(cx+1, cz  );
+        Chunk nN = world.getChunkIfLoaded(cx,   cz - 1);
+        Chunk nS = world.getChunkIfLoaded(cx,   cz + 1);
+        Chunk nW = world.getChunkIfLoaded(cx - 1, cz);
+        Chunk nE = world.getChunkIfLoaded(cx + 1, cz);
 
-        FloatBuffer vBuf = OPAQUE_V_BUF; vBuf.clear();
-        IntBuffer   iBuf = OPAQUE_I_BUF; iBuf.clear();
-        FloatBuffer wBuf = WATER_V_BUF; wBuf.clear();
-        IntBuffer   wIdx = WATER_I_BUF; wIdx.clear();
+        FloatBuffer vBuf = ChunkMeshBufferPool.OPAQUE_V_BUF.get(); vBuf.clear();
+        IntBuffer   iBuf = ChunkMeshBufferPool.OPAQUE_I_BUF.get(); iBuf.clear();
+        FloatBuffer wBuf = ChunkMeshBufferPool.WATER_V_BUF.get();  wBuf.clear();
+        IntBuffer   wIdx = ChunkMeshBufferPool.WATER_I_BUF.get();  wIdx.clear();
 
         int quadCount  = 0;
         int wQuadCount = 0;
@@ -109,6 +103,11 @@ public class ChunkRenderer {
                             if (!neighborLoaded) continue;
                         }
 
+                        if (vBuf.position() + 32 >= vBuf.capacity() || wBuf.position() + 32 >= wBuf.capacity()) {
+                            System.err.println("[Mesh] Overflow de segurança atingido na Thread Pool para o chunk: " + cx + ", " + cz);
+                            break;
+                        }
+
                         float[] uvs   = block.getUVs(face);
                         float[][] vv  = (block == Block.BED) ? BED_VERTS[face] : FACE_VERTS[face];
 
@@ -121,13 +120,13 @@ public class ChunkRenderer {
                             blockLight = chunk.getBlockLight(lx, ny, lz);
                         } else {
                             int wx = (cx << 4) + nx;
-                            int wz = cz * cs + nz;
+                            int wz = (cz << 4) + nz;
                             skyLight   = world.getSkyLightAt(wx, ny, wz);
                             blockLight = world.getBlockLightAt(wx, ny, wz);
                         }
 
-                        float skyNorm = LIGHT_CACHE[skyLight];
-                        float blockNorm = blockLight / 15.0f;
+                        float skyNorm   = LIGHT_CACHE[skyLight];
+                        float blockNorm = LIGHT_CACHE[blockLight];
                         
                         float lightDir  = FACE_LIGHT[face];
                         if (isWater && face == 0) {
@@ -164,8 +163,12 @@ public class ChunkRenderer {
         indexCount  = quadCount  * 6;
         wIndexCount = wQuadCount * 6;
 
-        upload(vBuf, iBuf, false);  
-        upload(wBuf, wIdx, true); 
+        if (vBuf.hasRemaining()) {
+            upload(vBuf, iBuf, false);  
+        }
+        if (wBuf.hasRemaining()) {
+            upload(wBuf, wIdx, true); 
+        }
     }
 
     public void render() {
