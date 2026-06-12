@@ -20,7 +20,7 @@ public final class LightEngine {
         for (int x = 0; x < Chunk.SIZE; x++) {
             for (int z = 0; z < Chunk.SIZE; z++) {
                 for (int y = Chunk.HEIGHT - 1; y >= 0; y--) {
-                    Block b = chunk.getBlock(x, y, z);
+                    Block b = chunk.getBlockUnsafe(x, y, z);
 
                     if (b == Block.WATER) {
                         int above = (y + 1 < Chunk.HEIGHT)
@@ -44,7 +44,7 @@ public final class LightEngine {
         for (int y = 0; y < Chunk.HEIGHT; y++) {
             for (int z = 0; z < Chunk.SIZE; z++) {
                 for (int x = 0; x < Chunk.SIZE; x++) {
-                    Block b = chunk.getBlock(x, y, z);
+                    Block b = chunk.getBlockUnsafe(x, y, z);
                     if (b.lightEmission > 0) {
                         chunk.setBlockLight(x, y, z, b.lightEmission);
                         queue.add(pack(cx+x, y, cz+z, b.lightEmission, false));
@@ -131,7 +131,7 @@ public final class LightEngine {
         for (int x = 0; x < Chunk.SIZE; x++) {
             for (int z = 0; z < Chunk.SIZE; z++) {
                 for (int y = Chunk.HEIGHT - 1; y >= 0; y--) {
-                    Block b = chunk.getBlock(x, y, z);
+                    Block b = chunk.getBlockUnsafe(x, y, z);
                     if (b == Block.WATER) {
                         int above = (y+1 < Chunk.HEIGHT) ? getSkyFromStaging(staging, x, y+1, z) : 15;
                         int wl    = Math.max(0, above - 1);
@@ -148,7 +148,7 @@ public final class LightEngine {
         for (int y=0; y<Chunk.HEIGHT; y++)
             for (int z=0; z<Chunk.SIZE; z++)
                 for (int x=0; x<Chunk.SIZE; x++) {
-                    Block b = chunk.getBlock(x, y, z);
+                    Block b = chunk.getBlockUnsafe(x, y, z);
                     if (b.lightEmission > 0) {
                         setBlockStaging(staging, x, y, z, b.lightEmission);
                         queue.add(pack(cx+x, y, cz+z, b.lightEmission, false));

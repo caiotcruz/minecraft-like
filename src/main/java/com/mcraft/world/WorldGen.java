@@ -156,8 +156,7 @@ public class WorldGen {
         return total / maxVal;
     }
 
-    public byte[] generateChunk(int chunkX, int chunkZ,
-                                  int size, int height) {
+    public byte[] generateChunk(int chunkX, int chunkZ, int size, int height) {
         byte[] blocks = new byte[size * height * size];
 
         for (int x = 0; x < size; x++) {
@@ -173,6 +172,7 @@ public class WorldGen {
                     int idx = y * size * size + z * size + x;
                     if (y == 0) {
                         blocks[idx] = (byte) Block.BEDROCK.id;
+                        continue;
                     } else if (y < surfaceY - 4) {
                         blocks[idx] = (byte) Block.STONE.id;
                     } else if (y < surfaceY) {
@@ -201,43 +201,30 @@ public class WorldGen {
                     } else if (y > surfaceY && y <= biome.seaLevel) {
                         if (biome == Biome.TUNDRA && y == biome.seaLevel) {
                             long iceHash = (long)((int)(wx * 7.3 + wz * 3.7 + y * 11.1)) * 2654435761L;
-                            blocks[idx] = ((iceHash >> 16) & 0xF) < 6
-                                ? (byte) Block.ICE.id
-                                : (byte) Block.WATER.id;
+                            blocks[idx] = ((iceHash >> 16) & 0xF) < 6 ? (byte) Block.ICE.id : (byte) Block.WATER.id;
                         } else {
                             blocks[idx] = (byte) Block.WATER.id;
                         }
                     } else {
                         if (biome == Biome.FOREST){
-                            blocks[idx] = (y <= biome.seaLevel + 1)
-                            ? (byte) Block.WATER.id
-                            : (byte) Block.AIR.id;
-                        }else{
-                            blocks[idx] = (y <= biome.seaLevel)
-                            ? (byte) Block.WATER.id
-                            : (byte) Block.AIR.id;
+                            blocks[idx] = (y <= biome.seaLevel + 1) ? (byte) Block.WATER.id : (byte) Block.AIR.id;
+                        } else {
+                            blocks[idx] = (y <= biome.seaLevel) ? (byte) Block.WATER.id : (byte) Block.AIR.id;
+                        }
+                    }
+                    if (y > 0 && y < surfaceY) {
+                        byte current = blocks[idx];
+                        if ((current == (byte) Block.STONE.id || current == (byte) Block.DIRT.id) && shouldCarve(wx, y, wz, surfaceY)) {
+                            blocks[idx] = (byte) Block.AIR.id;
                         }
                     }
                 }
-
-                for (int y = 1; y < surfaceY; y++) {
-                    int idx = y * size * size + z * size + x;
-                    byte current = blocks[idx];
-
-                    if (current != (byte) Block.STONE.id
-                    && current != (byte) Block.DIRT.id) continue;
-
-                    if (shouldCarve(wx, y, wz, surfaceY)) {
-                        blocks[idx] = (byte) Block.AIR.id;
-                    }
-                }
-
-                generateWaterPockets(blocks, chunkX, chunkZ, size, height);
-                placeOreVeins(blocks, chunkX, chunkZ, size, height);
             }
         }
 
-       generateTreesForBiome(blocks, chunkX, chunkZ, size, height);
+        generateWaterPockets(blocks, chunkX, chunkZ, size, height);
+        placeOreVeins(blocks, chunkX, chunkZ, size, height);
+        generateTreesForBiome(blocks, chunkX, chunkZ, size, height);
 
         return blocks;
     }

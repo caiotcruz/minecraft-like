@@ -38,6 +38,10 @@ public class Chunk {
         return Block.fromId(blocks[idx(x, y, z)] & 0xFF);
     }
 
+    public Block getBlockUnsafe(int x, int y, int z) {
+        return Block.fromId(blocks[y*SIZE*SIZE + z*SIZE + x] & 0xFF);
+    }
+
     public void setBlock(int x, int y, int z, int blockId) {
         if (x < 0 || x >= SIZE || y < 0 || y >= HEIGHT || z < 0 || z >= SIZE) return;
         blocks[idx(x, y, z)] = (byte) blockId;

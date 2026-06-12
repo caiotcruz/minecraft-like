@@ -146,6 +146,11 @@ public class GameLoop {
 
     private LightScheduler lightScheduler;
 
+    private long lastProfile = 0;
+    private long lightTime = 0;
+    private long renderTime = 0;
+    private int  profileFrames = 0;
+
     public GameLoop( Window window, WorldIO worldIO, long seed, float spawnX, float spawnY, float spawnZ) {
         this.window = window;
         ortho2D = Camera.ortho(window.getWidth(), window.getHeight());
@@ -533,25 +538,15 @@ public class GameLoop {
         float grayBlend = rainIntensity * 0.68f;
         float grayLevel = 0.38f;
 
-        float finalSkyR =
-            sky[0] * (1f - grayBlend) + grayLevel * grayBlend;
-
-        float finalSkyG =
-            sky[1] * (1f - grayBlend) + grayLevel * grayBlend;
-
-        float finalSkyB =
-            sky[2] * (1f - grayBlend) + (grayLevel + 0.04f) * grayBlend;
+        float finalSkyR = sky[0] * (1f - grayBlend) + grayLevel * grayBlend;
+        float finalSkyG = sky[1] * (1f - grayBlend) + grayLevel * grayBlend;
+        float finalSkyB = sky[2] * (1f - grayBlend) + (grayLevel + 0.04f) * grayBlend;
 
         glClearColor(finalSkyR, finalSkyG, finalSkyB, 1f);
 
-        float finalFogR =
-        fog[0] * (1f - grayBlend) + grayLevel * grayBlend;
-
-        float finalFogG =
-            fog[1] * (1f - grayBlend) + grayLevel * grayBlend;
-
-        float finalFogB =
-            fog[2] * (1f - grayBlend) + (grayLevel + 0.05f) * grayBlend;
+        float finalFogR = fog[0] * (1f - grayBlend) + grayLevel * grayBlend;
+        float finalFogG = fog[1] * (1f - grayBlend) + grayLevel * grayBlend;
+        float finalFogB = fog[2] * (1f - grayBlend) + (grayLevel + 0.05f) * grayBlend;
 
         float[] proj = Camera.perspective(70f,
             (float)window.getWidth() / window.getHeight(), 0.05f, 900f);
@@ -560,6 +555,12 @@ public class GameLoop {
         skyRenderer.render(camera, dayNight, skyShader, proj, view);
         weather.render(camera, skyShader, proj, view);
 
+        long t0 = System.nanoTime();
+        if (lightScheduler != null) {
+            lightScheduler.flushResults(4);
+        }
+        lightTime += System.nanoTime() - t0;
+
         blockShader.use();
         blockShader.setMatrix4("uProjection", proj);
         blockShader.setMatrix4("uView",       view);
@@ -567,12 +568,33 @@ public class GameLoop {
         blockShader.setVec3   ("uFogColor", finalFogR, finalFogG, finalFogB);
         atlas.bind(0);
         blockShader.setInt("uTexture", 0);
+
+        long t1 = System.nanoTime();
         world.render(blockShader, camera, proj, view);
         if (breakX != -1 && hud.getBreakProgress() > 0.01f) {
             breakOverlay.render(breakX, breakY, breakZ, hud.getBreakProgress(), proj, view);
         }
+        renderTime += System.nanoTime() - t1;
 
         mobs.render( mobShader, proj, view, dayNight.getAmbientLight(), fog);
+
+        profileFrames++;
+        long now = System.currentTimeMillis();
+        
+        if (now - lastProfile > 5000) {
+            if (profileFrames > 0) {
+                double avgLightMs  = (lightTime  / 1e6) / profileFrames;
+                double avgRenderMs = (renderTime / 1e6) / profileFrames;
+                
+                System.out.printf("[Perf] Frames: %d | Light Flush: %.3fms | World Render: %.3fms%n",
+                    profileFrames, avgLightMs, avgRenderMs);
+            }
+            
+            lightTime = 0;
+            renderTime = 0;
+            profileFrames = 0;
+            lastProfile = now;
+        }
     }
 
     private void updatePhysics(float dt) {

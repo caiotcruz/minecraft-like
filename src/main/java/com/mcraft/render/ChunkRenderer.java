@@ -78,7 +78,7 @@ public class ChunkRenderer {
         for (int y = 0; y < ch; y++) {
             for (int z = 0; z < cs; z++) {
                 for (int x = 0; x < cs; x++) {
-                    Block block = chunk.getBlock(x, y, z);
+                    Block block = chunk.getBlockUnsafe(x, y, z);
                     boolean isWater = (block == Block.WATER);
 
                     if (block == Block.AIR) continue;
@@ -188,59 +188,84 @@ public class ChunkRenderer {
 
     private void upload(FloatBuffer vb, IntBuffer ib, boolean water) {
         int myVao, myVbo, myEbo;
+        boolean isNewAllocation = false;
 
         if (water) {
-            if (wVao != 0) { glDeleteVertexArrays(wVao); glDeleteBuffers(wVbo); glDeleteBuffers(wEbo); }
-            wVao = myVao = glGenVertexArrays();
-            wVbo = myVbo = glGenBuffers();
-            wEbo = myEbo = glGenBuffers();
+            if (wVao != 0) {
+                myVao = wVao; myVbo = wVbo; myEbo = wEbo;
+            } else {
+                wVao = myVao = glGenVertexArrays();
+                wVbo = myVbo = glGenBuffers();
+                wEbo = myEbo = glGenBuffers();
+                isNewAllocation = true;
+            }
         } else {
-            if (vao != 0) { glDeleteVertexArrays(vao); glDeleteBuffers(vbo); glDeleteBuffers(ebo); }
-            vao = myVao = glGenVertexArrays();
-            vbo = myVbo = glGenBuffers();
-            ebo = myEbo = glGenBuffers();
+            if (vao != 0) {
+                myVao = vao; myVbo = vbo; myEbo = ebo;
+            } else {
+                vao = myVao = glGenVertexArrays();
+                vbo = myVbo = glGenBuffers();
+                ebo = myEbo = glGenBuffers();
+                isNewAllocation = true;
+            }
         }
 
         framesSinceModify++;
         if (framesSinceModify > STABLE_AFTER_FRAMES) {
             wasRecentlyModified = false;
         }
-        
         int hint = wasRecentlyModified ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 
-        glBindVertexArray(myVao);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, myVbo);
-        glBufferData(GL_ARRAY_BUFFER, vb, hint);
-        
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, myEbo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, hint);
-
-        int stride = VERT_FLOATS * Float.BYTES;
-        
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);
-        glEnableVertexAttribArray(0);
-        
-        glVertexAttribPointer(1, 2, GL_FLOAT, false, stride, 12L);
-        glEnableVertexAttribArray(1);
-        
-        glVertexAttribPointer(2, 1, GL_FLOAT, false, stride, 20L);
-        glEnableVertexAttribArray(2);
-        
-        glVertexAttribPointer(3, 1, GL_FLOAT, false, stride, 24L);
-        glEnableVertexAttribArray(3);
-        
-        glVertexAttribPointer(4, 1, GL_FLOAT, false, stride, 28L);
-        glEnableVertexAttribArray(4);
-        
-        glBindVertexArray(0);
+        if (isNewAllocation) {
+            setupAttributes(myVao, myVbo, myEbo, vb, ib, hint);
+        } else {
+            glBindBuffer(GL_ARRAY_BUFFER, myVbo);
+            glBufferData(GL_ARRAY_BUFFER, vb, hint);
+            
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, myEbo);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, hint);
+        }
     }
 
-        public void delete() {
+    public void delete() {
         if (vao  != 0) { glDeleteVertexArrays(vao);  glDeleteBuffers(vbo);  glDeleteBuffers(ebo);  }
         if (wVao != 0) { glDeleteVertexArrays(wVao); glDeleteBuffers(wVbo); glDeleteBuffers(wEbo); }
         vao = vbo = ebo = wVao = wVbo = wEbo = 0;
         indexCount = wIndexCount = 0;
+    }
+
+    private void setupAttributes(int vaoId, int vboId, int eboId, FloatBuffer vb, IntBuffer ib, int hint) {
+        glBindVertexArray(vaoId);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vboId);
+        glBufferData(GL_ARRAY_BUFFER, vb, hint);
+        
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboId);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, hint);
+
+        int stride = VERT_FLOATS * Float.BYTES;
+        
+        // aPos
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);
+        glEnableVertexAttribArray(0);
+        
+        // aUV
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, stride, 12L);
+        glEnableVertexAttribArray(1);
+        
+        // aLightDir
+        glVertexAttribPointer(2, 1, GL_FLOAT, false, stride, 20L);
+        glEnableVertexAttribArray(2);
+        
+        // aSkyLight
+        glVertexAttribPointer(3, 1, GL_FLOAT, false, stride, 24L);
+        glEnableVertexAttribArray(3);
+        
+        // aBlockLight
+        glVertexAttribPointer(4, 1, GL_FLOAT, false, stride, 28L);
+        glEnableVertexAttribArray(4);
+        
+        glBindVertexArray(0);
     }
 
     private Block getNeighborFast(Chunk self, Chunk nN, Chunk nS, Chunk nW, Chunk nE, int lx, int ly, int lz) {
