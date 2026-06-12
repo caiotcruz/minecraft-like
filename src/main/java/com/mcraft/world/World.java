@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.mcraft.render.Camera;
 import com.mcraft.render.Frustum;
+import com.mcraft.render.Frustum2D;
 import com.mcraft.render.Shader;
 import com.mcraft.ui.Inventory;
 
@@ -33,6 +34,7 @@ public class World {
     private static final int UNLOAD_DISTANCE = RENDER_DISTANCE + 3;
 
     private final Frustum frustum = new Frustum();
+    private final Frustum2D frustum2D = new Frustum2D();
 
     private final Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
     private final WorldGen gen;
@@ -241,10 +243,17 @@ public class World {
 
         int cx = Math.floorDiv((int) camera.getX(), Chunk.SIZE);
         int cz = Math.floorDiv((int) camera.getZ(), Chunk.SIZE);
+        float camX   = camera.getX();
+        float camZ   = camera.getZ();
+        float yaw    = camera.getYaw();
+        frustum2D.update(camX, camZ, yaw, 70f);
 
         for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
             for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
-
+                
+                int tcx = cx+dx; 
+                int tcz = cz+dz;
+                if (!frustum2D.isChunkVisible(tcx, tcz)) continue;
                 Chunk chunk = chunks.get(key(cx + dx, cz + dz));
                 if (chunk == null) continue;
 
@@ -272,6 +281,9 @@ public class World {
         for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
             for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
 
+                int tcx = cx+dx;
+                int tcz = cz+dz;
+                if (!frustum2D.isChunkVisible(tcx, tcz)) continue;
                 Chunk chunk = chunks.get(key(cx + dx, cz + dz));
                 if (chunk == null) continue;
 
