@@ -48,6 +48,10 @@ public class World {
 
     private final Map<Long, FurnaceState> furnaceStates = new HashMap<>();
 
+    private transient Chunk cachedChunk = null;
+    private transient int   cachedCX    = Integer.MIN_VALUE;
+    private transient int   cachedCZ    = Integer.MIN_VALUE;
+
     private final ExecutorService chunkGenPool = Executors.newFixedThreadPool(
         Math.max(1, Runtime.getRuntime().availableProcessors() - 1)
     );
@@ -90,15 +94,39 @@ public class World {
     }
 
     public Block getBlock(int x, int y, int z) {
-        if (y < 0 || y >= Chunk.HEIGHT) return Block.AIR;
+        if (y < 0 || y >= Chunk.HEIGHT) {
+            return Block.AIR;
+        }
 
-        int cx = Math.floorDiv(x, Chunk.SIZE);
-        int cz = Math.floorDiv(z, Chunk.SIZE);
+        int cx = x >> 4;
+        int cz = z >> 4;
+
+        Chunk chunk;
+
+        if (cx == cachedCX && cz == cachedCZ) {
+            chunk = cachedChunk;
+        } else {
+            chunk = chunks.get(key(cx, cz));
+
+            cachedCX = cx;
+            cachedCZ = cz;
+            cachedChunk = chunk;
+        }
+
+        if (chunk == null) {
+            return Block.AIR;
+        }
+
         int lx = Math.floorMod(x, Chunk.SIZE);
         int lz = Math.floorMod(z, Chunk.SIZE);
 
-        Chunk chunk = chunks.get(key(cx, cz));
-        return (chunk != null) ? chunk.getBlock(lx, y, lz) : Block.AIR;
+        return chunk.getBlock(lx, y, lz);
+    }
+
+    public void invalidateBlockCache() {
+        cachedChunk = null;
+        cachedCX = Integer.MIN_VALUE;
+        cachedCZ = Integer.MIN_VALUE;
     }
 
     public void setBlock(int x, int y, int z, int blockId) {
@@ -250,7 +278,7 @@ public class World {
         float camX   = camera.getX();
         float camZ   = camera.getZ();
         float yaw    = camera.getYaw();
-        frustum2D.update(camX, camZ, yaw, 70f);
+        frustum2D.update(camX, camZ, yaw, 115f);
 
         for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
             for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
