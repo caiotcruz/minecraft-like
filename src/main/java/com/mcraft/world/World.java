@@ -110,7 +110,11 @@ public class World {
         int lz = Math.floorMod(z, Chunk.SIZE);
 
         Chunk chunk = getOrCreate(cx, cz);
-        
+
+        if (chunk != null) {
+            chunk.getChunkRenderer().notifyModified();
+        }
+                
         Block oldBlock = chunk.getBlock(lx, y, lz);
 
         chunk.setBlock(lx, y, lz, blockId);

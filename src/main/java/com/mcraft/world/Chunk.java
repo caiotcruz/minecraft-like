@@ -138,6 +138,7 @@ public class Chunk {
     public byte[] getLightStagingBuffer() { return lightStaging; }
     public boolean isLightPending()      { return lightPending; }
     public boolean isLightStagingReady() { return lightStagingReady; }
+    public ChunkRenderer getChunkRenderer() {return renderer;}
 
     private static int clamp15(int v) { return Math.max(0, Math.min(15, v)); }
     private boolean inBounds(int x, int y, int z) {

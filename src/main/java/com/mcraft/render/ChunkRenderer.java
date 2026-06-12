@@ -23,6 +23,10 @@ public class ChunkRenderer {
     private int wVao, wVbo, wEbo;
     private int wIndexCount;
 
+    private boolean wasRecentlyModified = false;
+    private int     framesSinceModify   = 0;
+    private static final int STABLE_AFTER_FRAMES = 60;
+
     private static int MAX_QUADS = Chunk.SIZE * Chunk.HEIGHT * Chunk.SIZE * 6;
     private static final FloatBuffer OPAQUE_V_BUF = BufferUtils.createFloatBuffer(MAX_QUADS * 4 * 8);
     private static final IntBuffer   OPAQUE_I_BUF = BufferUtils.createIntBuffer(MAX_QUADS * 6);
@@ -194,36 +198,49 @@ public class ChunkRenderer {
             ebo = myEbo = glGenBuffers();
         }
 
+        framesSinceModify++;
+        if (framesSinceModify > STABLE_AFTER_FRAMES) {
+            wasRecentlyModified = false;
+        }
+        
+        int hint = wasRecentlyModified ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+
         glBindVertexArray(myVao);
+        
         glBindBuffer(GL_ARRAY_BUFFER, myVbo);
-        glBufferData(GL_ARRAY_BUFFER, vb, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, vb, hint);
+        
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, myEbo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib, hint);
 
         int stride = VERT_FLOATS * Float.BYTES;
+        
         glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);
         glEnableVertexAttribArray(0);
+        
         glVertexAttribPointer(1, 2, GL_FLOAT, false, stride, 12L);
         glEnableVertexAttribArray(1);
+        
         glVertexAttribPointer(2, 1, GL_FLOAT, false, stride, 20L);
         glEnableVertexAttribArray(2);
+        
         glVertexAttribPointer(3, 1, GL_FLOAT, false, stride, 24L);
         glEnableVertexAttribArray(3);
+        
         glVertexAttribPointer(4, 1, GL_FLOAT, false, stride, 28L);
         glEnableVertexAttribArray(4);
+        
         glBindVertexArray(0);
     }
 
-    public void delete() {
+        public void delete() {
         if (vao  != 0) { glDeleteVertexArrays(vao);  glDeleteBuffers(vbo);  glDeleteBuffers(ebo);  }
         if (wVao != 0) { glDeleteVertexArrays(wVao); glDeleteBuffers(wVbo); glDeleteBuffers(wEbo); }
         vao = vbo = ebo = wVao = wVbo = wEbo = 0;
         indexCount = wIndexCount = 0;
     }
 
-    private Block getNeighborFast(Chunk self,
-                                   Chunk nN, Chunk nS, Chunk nW, Chunk nE,
-                                   int lx, int ly, int lz) {
+    private Block getNeighborFast(Chunk self, Chunk nN, Chunk nS, Chunk nW, Chunk nE, int lx, int ly, int lz) {
         if (ly < 0 || ly >= Chunk.HEIGHT) return Block.AIR;
         if (lx >= 0 && lx < Chunk.SIZE && lz >= 0 && lz < Chunk.SIZE)
             return self.getBlock(lx, ly, lz);
@@ -232,4 +249,10 @@ public class ChunkRenderer {
         if (lx < 0)            return (nW != null) ? nW.getBlock(Chunk.SIZE-1, ly, lz) : Block.AIR;
         return                         (nE != null) ? nE.getBlock(0, ly, lz)            : Block.AIR;
     }
+
+    public void notifyModified() {
+        wasRecentlyModified = true;
+        framesSinceModify   = 0;
+    }
+
 }

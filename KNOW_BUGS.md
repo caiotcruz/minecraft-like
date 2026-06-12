@@ -19,10 +19,6 @@
 
 - Parte de tras da cama está invisivel se junto a um bloco.
 
-## Crafting
-
-- Items se perdem ao serem stackados diretamente da crafting table.
-
 ## ILUMINAÇÃO
 
 - Iluminação não atravessa Chunks.
