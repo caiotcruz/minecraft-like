@@ -34,8 +34,6 @@ import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 
-import java.util.List;
-
 import com.mcraft.audio.SoundEvent;
 import com.mcraft.audio.SoundManager;
 import com.mcraft.entity.Mob;
@@ -44,6 +42,7 @@ import com.mcraft.player.Player;
 import com.mcraft.player.Raycast;
 import com.mcraft.render.BreakOverlay;
 import com.mcraft.render.Camera;
+import com.mcraft.render.LightScheduler;
 import com.mcraft.render.Shader;
 import com.mcraft.render.SkyRenderer;
 import com.mcraft.render.TextureAtlas;
@@ -57,7 +56,6 @@ import com.mcraft.world.Block;
 import com.mcraft.world.Chunk;
 import com.mcraft.world.DayNightCycle;
 import com.mcraft.world.FurnaceState;
-import com.mcraft.world.LightEngine;
 import com.mcraft.world.WeatherSystem;
 import com.mcraft.world.WeatherType;
 import com.mcraft.world.World;
@@ -144,6 +142,7 @@ public class GameLoop {
 
     private final MobManager mobs;
 
+    private LightScheduler lightScheduler;
 
     public GameLoop( Window window, WorldIO worldIO, long seed, float spawnX, float spawnY, float spawnZ) {
         this.window = window;
@@ -157,6 +156,8 @@ public class GameLoop {
         if (spawnY == 90){
             spawnY = world.getSurfaceY(spawnX, spawnZ);
         }
+
+        lightScheduler = new LightScheduler(world);
 
         player = new Player(
             spawnX,
@@ -429,6 +430,8 @@ public class GameLoop {
             return; 
         }
 
+        lightScheduler.flushResults(4);
+
         hud.setDeathAlpha(Math.max(0f, hud.getDeathAlpha() - dt * 2f));
 
         dayNight.update(dt);
@@ -461,14 +464,10 @@ public class GameLoop {
 
         world.integrateReady();
 
-        int budget = 2;
-        List<Chunk> activeChunks = world.getLoadedChunksList(); 
-        for (int i = 0; i < activeChunks.size(); i++) {
-            if (budget <= 0) break;
-            Chunk chunk = activeChunks.get(i);
-            if (chunk.isLightDirty()) {
-                LightEngine.calculateChunkLight(chunk, world);
-                budget--;
+        for (Chunk chunk : world.getLoadedChunksList()) {
+            if (chunk.isLightDirty() && !chunk.isLightPending()) {
+                chunk.setLightDirty(false);
+                lightScheduler.submit(chunk);
             }
         }
 
@@ -1178,6 +1177,7 @@ public class GameLoop {
         breakOverlay.delete();
         atlas.delete();
         sound.cleanup();
+        lightScheduler.delete();
     }
 
     public World getWorld() {

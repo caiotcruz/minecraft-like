@@ -14,6 +14,9 @@ public class Chunk {
     private boolean dirty = true;       
 
     private final byte[] lightPacked = new byte[SIZE * HEIGHT * SIZE];
+    private final byte[] lightStaging = new byte[SIZE * HEIGHT * SIZE];
+    private volatile boolean lightPending      = false;
+    private volatile boolean lightStagingReady = false;
     private boolean lightDirty = true;
 
     private final ChunkRenderer renderer = new ChunkRenderer();
@@ -111,6 +114,20 @@ public class Chunk {
         java.util.Arrays.fill(lightPacked, (byte)0);
     }
 
+    public void markStagingReady() {
+        lightStagingReady = true;
+        lightPending      = false;
+    }
+
+    public void commitLightStaging() {
+        System.arraycopy(lightStaging, 0, lightPacked, 0, lightPacked.length);
+        lightStagingReady = false;
+        dirty             = true;
+    }
+
+    public void setLightPending(boolean v) { 
+        lightPending = v; 
+    }
 
     public void markDirty() { dirty = true; }
     public int  getChunkX() { return chunkX; }
@@ -118,6 +135,9 @@ public class Chunk {
     public byte[] getRawBlocks() { return blocks; }
     public boolean isLightDirty()      { return lightDirty; }
     public void setLightDirty(boolean d) { lightDirty = d; }
+    public byte[] getLightStagingBuffer() { return lightStaging; }
+    public boolean isLightPending()      { return lightPending; }
+    public boolean isLightStagingReady() { return lightStagingReady; }
 
     private static int clamp15(int v) { return Math.max(0, Math.min(15, v)); }
     private boolean inBounds(int x, int y, int z) {

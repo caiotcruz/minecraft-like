@@ -34,7 +34,7 @@ public class World {
 
     private final Frustum frustum = new Frustum();
 
-    private final Map<Long, Chunk> chunks = new HashMap<>();
+    private final Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
     private final WorldGen gen;
     private WorldIO worldIO; 
     private long seed;
@@ -121,7 +121,7 @@ public class World {
         
         Block newBlock = Block.fromId(blockId);
         if (newBlock.lightEmission > 0) {
-            LightEngine.propagateBlockLightFrom(this, x, y, z, newBlock.lightEmission);
+            LightEngine.onBlockChanged(this, x, y, z);
         }
 
         markDirty(cx, cz); 
@@ -470,6 +470,16 @@ public class World {
     public void setBlockLightAt(int x, int y, int z, int v) {
         Chunk c = getChunkFor(x, z);
         if (c != null) c.setBlockLight(localX(x), y, localZ(z), v);
+    }
+
+    public Block getBlockSafe(int x, int y, int z) {
+        if (y < 0 || y >= Chunk.HEIGHT) return Block.AIR;
+        int cx = Math.floorDiv(x, Chunk.SIZE);
+        int cz = Math.floorDiv(z, Chunk.SIZE);
+        Chunk c = chunks.get(key(cx, cz));
+        if (c == null) return Block.AIR;
+        int lx = x - cx*Chunk.SIZE, lz = z - cz*Chunk.SIZE;
+        return c.getBlock(lx, y, lz);
     }
 
     public long getSeed() { return seed; }
