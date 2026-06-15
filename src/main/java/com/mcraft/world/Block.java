@@ -36,6 +36,7 @@ public enum Block {
     WOODEN_AXE     (27, "wooden_axe",       2,  4, false, 0f, 0),
     WOODEN_SHOVEL  (28, "wooden_shovel",    3,  4, false, 0f, 0),
     WOODEN_SWORD   (29, "wooden_sword",     4,  4, false, 0f, 0),
+    STONE_PICKAXE  (40, "stone_pickaxe",    5,  4, false, 0f, 0),
 
     // ROW 5 — DROPS E RECURSOS
     FEATHER        (15, "feather",          0,  5, false, 0f, 0),

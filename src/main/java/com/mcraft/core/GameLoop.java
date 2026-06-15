@@ -909,6 +909,7 @@ public class GameLoop {
                         case WOODEN_PICKAXE: damage += 1; break;
                         case WOODEN_AXE: damage += 3; break; 
                         case WOODEN_SHOVEL: damage -= 1; break;
+                        case STONE_PICKAXE: damage += 5; break;
                         default: break;
                     }
                 }
@@ -1141,14 +1142,17 @@ public class GameLoop {
                 case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 2.5f;
                 default -> 1.0f;
             };
-        }
-        if (toolId == Block.WOODEN_AXE.id) {
+        }else if (toolId == Block.STONE_PICKAXE.id){
+             return switch (target) {
+                case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 3.5f;
+                default -> 1.0f;
+            };
+        }else if (toolId == Block.WOODEN_AXE.id) {
             return switch (target) {
                 case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> 2.5f;
                 default -> 1.0f;
             };
-        }
-        if (toolId == Block.WOODEN_SHOVEL.id) {
+        }else if (toolId == Block.WOODEN_SHOVEL.id) {
             return switch (target) {
                 case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> 2.5f;
                 default -> 1.0f;

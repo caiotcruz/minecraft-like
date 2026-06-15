@@ -473,7 +473,7 @@ public class TextureAtlas {
 
         //  ROW 4 — FERRAMENTAS E ARMAS
 
-        // WOODEN_PICKAXE
+        // WOODEN_PICKAXE (Refatorada)
         if (col == 1 && row == 4) {
             boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 11);
             
@@ -481,8 +481,9 @@ public class TextureAtlas {
             if ((px == 14 && py == 8) || (px == 7 && py == 1)) head = true;
             
             boolean outline = (px + py == 20 || px + py == 24 || (px == 6 && py == 1) || (px == 14 && py == 9));
+            boolean shaftOutline = (px == (14 - py)) || (px == (16 - py));
 
-            if (outline && (head || shaft || (px == (15 - py) - 1) || (px == (15 - py) + 1))) {
+            if ((outline && head) || (shaftOutline && px >= 1 && px <= 12)) {
                 if (!shaft && !head) return new int[]{ 45, 25, 10, 255 };
             }
 
@@ -572,6 +573,33 @@ public class TextureAtlas {
             return new int[]{ 0, 0, 0, 0 };
         }
 
+        // STONE_PICKAXE
+        if (col == 5 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 11);
+            
+            boolean head = (px + py >= 21 && px + py <= 23) && (px >= 8 && py <= 7);
+            if ((px == 14 && py == 8) || (px == 7 && py == 1)) head = true;
+            
+            boolean outline = (px + py == 20 || px + py == 24 || (px == 6 && py == 1) || (px == 14 && py == 9));
+            boolean shaftOutline = (px == (14 - py)) || (px == (16 - py));
+
+            if (outline && head) {
+                return new int[]{ 40, 40, 40, 255 }; 
+            }
+            if (shaftOutline && px >= 1 && px <= 12) {
+                if (!shaft && !head) return new int[]{ 45, 25, 10, 255 }; 
+            }
+
+            if (head) {
+                boolean edgeLight = (px + py == 21);
+                int gray = edgeLight ? 160 + (n & 3) * 8 : 100 + (n & 3) * 6;
+                return new int[]{ gray, gray, gray, 255 }; 
+            }
+
+            if (shaft) return new int[]{ 110, 70, 30, 255 };
+
+            return new int[]{ 0, 0, 0, 0 };
+        }
 
         // ROW 5 — DROPS E RECURSOS 
         

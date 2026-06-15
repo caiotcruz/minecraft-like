@@ -74,6 +74,13 @@ public class CraftingGrid {
             {0, Block.STICK.id,  0} 
         }, Block.WOODEN_SWORD.id, 1);
 
+        // Picareta de Pedra
+        reg3(new int[][]{
+            {Block.STONE.id, Block.STONE.id, Block.STONE.id},
+            {     0,          Block.STICK.id,      0          },
+            {     0,          Block.STICK.id,      0          }
+        }, Block.STONE_PICKAXE.id, 1);
+
         // Baú
         reg3(new int[][]{
             {Block.PLANKS.id, Block.PLANKS.id, Block.PLANKS.id},

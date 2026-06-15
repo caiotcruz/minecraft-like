@@ -17,7 +17,8 @@ public class Inventory {
             Block.WOODEN_PICKAXE.id, 60,
             Block.WOODEN_AXE.id,     10,
             Block.WOODEN_SHOVEL.id,  60,
-            Block.WOODEN_SWORD.id,   60
+            Block.WOODEN_SWORD.id,   60,
+            Block.STONE_PICKAXE.id,  90
         );
 
     public void clearSlot(int index) {
