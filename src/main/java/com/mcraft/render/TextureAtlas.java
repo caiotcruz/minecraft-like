@@ -471,12 +471,11 @@ public class TextureAtlas {
             return new int[]{ stoneV, stoneV, stoneV + (n & 1) * 2, 255 };
         }
 
-        //  ROW 4 — FERRAMENTAS E ARMAS
+        // ROW 4 — FERRAMENTAS E ARMAS
 
-        // WOODEN_PICKAXE (Refatorada)
-        if (col == 1 && row == 4) {
+        // WOODEN_PICKAXE
+        if (col == 0 && row == 4) {
             boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 11);
-            
             boolean head = (px + py >= 21 && px + py <= 23) && (px >= 8 && py <= 7);
             if ((px == 14 && py == 8) || (px == 7 && py == 1)) head = true;
             
@@ -486,22 +485,18 @@ public class TextureAtlas {
             if ((outline && head) || (shaftOutline && px >= 1 && px <= 12)) {
                 if (!shaft && !head) return new int[]{ 45, 25, 10, 255 };
             }
-
             if (head) {
                 boolean edgeLight = (px + py == 21); 
                 int r = edgeLight ? 195 + (n & 3) * 5 : 150 + (n & 3) * 4;
                 return new int[]{ r, clamp(r - 50), clamp(r - 95), 255 };
             }
-
             if (shaft) return new int[]{ 110, 70, 30, 255 };
-
             return new int[]{ 0, 0, 0, 0 };
         }
 
         // WOODEN_AXE
-       if (col == 2 && row == 4) {
+        if (col == 1 && row == 4) {
             boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 12);
-            
             boolean blade = (px >= 9 && px <= 14 && py >= 1 && py <= 6) && (px >= (15 - py));
             if (py == 1 && px == 9) blade = false;
             if (px == 14 && py == 6) blade = false;
@@ -511,23 +506,17 @@ public class TextureAtlas {
                 int r = cuttingEdge ? 195 + (n & 3) * 5 : 145 + (n & 3) * 4;
                 return new int[]{ r, clamp(r - 45), clamp(r - 90), 255 };
             }
-
-            if (shaft) {
-                return new int[]{ 100, 62, 25, 255 };
-            }
-
+            if (shaft) return new int[]{ 100, 62, 25, 255 };
+            
             boolean outline = (px == 8 && py >= 2 && py <= 5) || (py == 7 && px >= 10 && px <= 13);
             if (outline) return new int[]{ 50, 30, 10, 255 };
-
             return new int[]{ 0, 0, 0, 0 };
         }
 
         // WOODEN_SHOVEL
-        if (col == 3 && row == 4) {
+        if (col == 2 && row == 4) {
             boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 10);
-            
             boolean head = (px >= 10 && px <= 15 && py >= 0 && py <= 5) && (px + py >= 13);
-            
             if (py == 0 && px < 13) head = false;
             if (px == 15 && py > 2) head = false;
             if (py == 5 || px == 10) head = false;
@@ -537,22 +526,18 @@ public class TextureAtlas {
                 int r = centerLine ? 190 + (n & 3) * 5 : 140 + (n & 3) * 4;
                 return new int[]{ r, clamp(r - 45), clamp(r - 90), 255 };
             }
-
             if (shaft) return new int[]{ 110, 70, 30, 255 };
-
             if ((px == 9 && py == 5) || (px == 10 && py == 6)) return new int[]{ 45, 25, 10, 255 };
-
             return new int[]{ 0, 0, 0, 0 };
         }
-        
-        // WOODEN_SWORD 
-        if (col == 4 && row == 4) {
+
+        // WOODEN_SWORD
+        if (col == 3 && row == 4) {
             boolean blade = (px == py || px == py + 1 || px == py - 1) && (px >= 5 && px <= 14 && py >= 5 && py <= 14);
             if (px == 14 && py == 14) blade = true;
             if ((px == 5 && py == 5) || (px == 14 && py == 13) || (px == 13 && py == 14)) blade = true;
 
             boolean guard = (px + py == 9 || px + py == 10) && (px >= 2 && px <= 7 && py >= 2 && py <= 7) && !blade;
-
             boolean hilt = (px == py) && (px >= 1 && px <= 3);
 
             if (blade) {
@@ -560,44 +545,251 @@ public class TextureAtlas {
                 int r = edge ? 190 + (n & 3) * 5 : 145 + (n & 3) * 4;
                 return new int[]{ r, clamp(r - 45), clamp(r - 90), 255 };
             }
-
             if (guard) {
                 int r = 100 + (n & 3) * 3;
                 return new int[]{ r, clamp(r - 55), clamp(r - 80), 255 };
             }
-
-            if (hilt) {
-                return new int[]{ 70, 42, 15, 255 }; 
-            }
-
+            if (hilt) return new int[]{ 70, 42, 15, 255 };
             return new int[]{ 0, 0, 0, 0 };
         }
 
         // STONE_PICKAXE
-        if (col == 5 && row == 4) {
+        if (col == 4 && row == 4) {
             boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 11);
-            
             boolean head = (px + py >= 21 && px + py <= 23) && (px >= 8 && py <= 7);
             if ((px == 14 && py == 8) || (px == 7 && py == 1)) head = true;
             
             boolean outline = (px + py == 20 || px + py == 24 || (px == 6 && py == 1) || (px == 14 && py == 9));
             boolean shaftOutline = (px == (14 - py)) || (px == (16 - py));
 
-            if (outline && head) {
-                return new int[]{ 40, 40, 40, 255 }; 
-            }
-            if (shaftOutline && px >= 1 && px <= 12) {
-                if (!shaft && !head) return new int[]{ 45, 25, 10, 255 }; 
-            }
+            if (outline && head) return new int[]{ 40, 40, 40, 255 };
+            if (shaftOutline && px >= 1 && px <= 12 && !shaft && !head) return new int[]{ 45, 25, 10, 255 };
 
             if (head) {
                 boolean edgeLight = (px + py == 21);
-                int gray = edgeLight ? 160 + (n & 3) * 8 : 100 + (n & 3) * 6;
-                return new int[]{ gray, gray, gray, 255 }; 
+                int gray = edgeLight ? 160 + (n & 3) * 6 : 100 + (n & 3) * 5;
+                return new int[]{ gray, gray, gray, 255 };
             }
-
             if (shaft) return new int[]{ 110, 70, 30, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
 
+        // STONE_AXE
+        if (col == 5 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 12);
+            boolean blade = (px >= 9 && px <= 14 && py >= 1 && py <= 6) && (px >= (15 - py));
+            if (py == 1 && px == 9) blade = false;
+            if (px == 14 && py == 6) blade = false;
+
+            if (blade) {
+                boolean cuttingEdge = (px == 14 || py == 1);
+                int gray = cuttingEdge ? 160 + (n & 3) * 6 : 100 + (n & 3) * 5;
+                return new int[]{ gray, gray, gray, 255 };
+            }
+            if (shaft) return new int[]{ 100, 62, 25, 255 };
+            
+            boolean outline = (px == 8 && py >= 2 && py <= 5) || (py == 7 && px >= 10 && px <= 13);
+            if (outline) return new int[]{ 40, 40, 40, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // STONE_SHOVEL
+        if (col == 6 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 10);
+            boolean head = (px >= 10 && px <= 15 && py >= 0 && py <= 5) && (px + py >= 13);
+            if (py == 0 && px < 13) head = false;
+            if (px == 15 && py > 2) head = false;
+            if (py == 5 || px == 10) head = false;
+
+            if (head) {
+                boolean centerLine = (px == (15 - py)) || (px == (16 - py));
+                int gray = centerLine ? 155 + (n & 3) * 6 : 100 + (n & 3) * 5;
+                return new int[]{ gray, gray, gray, 255 };
+            }
+            if (shaft) return new int[]{ 110, 70, 30, 255 };
+            if ((px == 9 && py == 5) || (px == 10 && py == 6)) return new int[]{ 40, 40, 40, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // STONE_SWORD
+        if (col == 7 && row == 4) {
+            boolean blade = (px == py || px == py + 1 || px == py - 1) && (px >= 5 && px <= 14 && py >= 5 && py <= 14);
+            if (px == 14 && py == 14) blade = true;
+            if ((px == 5 && py == 5) || (px == 14 && py == 13) || (px == 13 && py == 14)) blade = true;
+
+            boolean guard = (px + py == 9 || px + py == 10) && (px >= 2 && px <= 7 && py >= 2 && py <= 7) && !blade;
+            boolean hilt = (px == py) && (px >= 1 && px <= 3);
+
+            if (blade) {
+                boolean edge = (px == py);
+                int gray = edge ? 160 + (n & 3) * 6 : 100 + (n & 3) * 5;
+                return new int[]{ gray, gray, gray, 255 };
+            }
+            if (guard) {
+                int gray = 75 + (n & 3) * 3;
+                return new int[]{ gray, gray, gray, 255 };
+            }
+            if (hilt) return new int[]{ 70, 42, 15, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // IRON_PICKAXE
+        if (col == 8 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 11);
+            boolean head = (px + py >= 21 && px + py <= 23) && (px >= 8 && py <= 7);
+            if ((px == 14 && py == 8) || (px == 7 && py == 1)) head = true;
+            
+            boolean outline = (px + py == 20 || px + py == 24 || (px == 6 && py == 1) || (px == 14 && py == 9));
+            boolean shaftOutline = (px == (14 - py)) || (px == (16 - py));
+
+            if (outline && head) return new int[]{ 70, 70, 75, 255 }; 
+            if (shaftOutline && px >= 1 && px <= 12 && !shaft && !head) return new int[]{ 45, 25, 10, 255 };
+
+            if (head) {
+                boolean edgeLight = (px + py == 21);
+                int iron = edgeLight ? 240 + (n & 1) * 15 : 195 + (n & 3) * 8;
+                return new int[]{ iron, iron, clamp(iron + 10), 255 };
+            }
+            if (shaft) return new int[]{ 110, 70, 30, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // IRON_AXE
+        if (col == 9 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 12);
+            boolean blade = (px >= 9 && px <= 14 && py >= 1 && py <= 6) && (px >= (15 - py));
+            if (py == 1 && px == 9) blade = false;
+            if (px == 14 && py == 6) blade = false;
+
+            if (blade) {
+                boolean cuttingEdge = (px == 14 || py == 1);
+                int iron = cuttingEdge ? 240 + (n & 1) * 15 : 195 + (n & 3) * 8;
+                return new int[]{ iron, iron, clamp(iron + 10), 255 };
+            }
+            if (shaft) return new int[]{ 100, 62, 25, 255 };
+            
+            boolean outline = (px == 8 && py >= 2 && py <= 5) || (py == 7 && px >= 10 && px <= 13);
+            if (outline) return new int[]{ 70, 70, 75, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // IRON_SHOVEL
+        if (col == 10 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 10);
+            boolean head = (px >= 10 && px <= 15 && py >= 0 && py <= 5) && (px + py >= 13);
+            if (py == 0 && px < 13) head = false;
+            if (px == 15 && py > 2) head = false;
+            if (py == 5 || px == 10) head = false;
+
+            if (head) {
+                boolean centerLine = (px == (15 - py)) || (px == (16 - py));
+                int iron = centerLine ? 235 + (n & 1) * 15 : 190 + (n & 3) * 8;
+                return new int[]{ iron, iron, clamp(iron + 10), 255 };
+            }
+            if (shaft) return new int[]{ 110, 70, 30, 255 };
+            if ((px == 9 && py == 5) || (px == 10 && py == 6)) return new int[]{ 70, 70, 75, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // IRON_SWORD
+        if (col == 11 && row == 4) {
+            boolean blade = (px == py || px == py + 1 || px == py - 1) && (px >= 5 && px <= 14 && py >= 5 && py <= 14);
+            if (px == 14 && py == 14) blade = true;
+            if ((px == 5 && py == 5) || (px == 14 && py == 13) || (px == 13 && py == 14)) blade = true;
+
+            boolean guard = (px + py == 9 || px + py == 10) && (px >= 2 && px <= 7 && py >= 2 && py <= 7) && !blade;
+            boolean hilt = (px == py) && (px >= 1 && px <= 3);
+
+            if (blade) {
+                boolean edge = (px == py);
+                int iron = edge ? 240 + (n & 1) * 15 : 195 + (n & 3) * 8;
+                return new int[]{ iron, iron, clamp(iron + 10), 255 };
+            }
+            if (guard) {
+                int ironGuard = 140 + (n & 3) * 6;
+                return new int[]{ ironGuard, ironGuard, ironGuard + 5, 255 };
+            }
+            if (hilt) return new int[]{ 70, 42, 15, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // DIAMOND_PICKAXE
+        if (col == 12 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 11);
+            boolean head = (px + py >= 21 && px + py <= 23) && (px >= 8 && py <= 7);
+            if ((px == 14 && py == 8) || (px == 7 && py == 1)) head = true;
+            
+            boolean outline = (px + py == 20 || px + py == 24 || (px == 6 && py == 1) || (px == 14 && py == 9));
+            boolean shaftOutline = (px == (14 - py)) || (px == (16 - py));
+
+            if (outline && head) return new int[]{ 10, 75, 85, 255 };
+            if (shaftOutline && px >= 1 && px <= 12 && !shaft && !head) return new int[]{ 45, 25, 10, 255 };
+
+            if (head) {
+                boolean edgeLight = (px + py == 21);
+                int cyan = edgeLight ? 180 + (n & 3) * 10 : 100 + (n & 3) * 12;
+                return new int[]{ clamp(cyan - 40), cyan, clamp(cyan + 45), 255 };
+            }
+            if (shaft) return new int[]{ 110, 70, 30, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // DIAMOND_AXE
+        if (col == 13 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 12);
+            boolean blade = (px >= 9 && px <= 14 && py >= 1 && py <= 6) && (px >= (15 - py));
+            if (py == 1 && px == 9) blade = false;
+            if (px == 14 && py == 6) blade = false;
+
+            if (blade) {
+                boolean cuttingEdge = (px == 14 || py == 1);
+                int cyan = cuttingEdge ? 180 + (n & 3) * 10 : 100 + (n & 3) * 12;
+                return new int[]{ clamp(cyan - 40), cyan, clamp(cyan + 45), 255 };
+            }
+            if (shaft) return new int[]{ 100, 62, 25, 255 };
+            
+            boolean outline = (px == 8 && py >= 2 && py <= 5) || (py == 7 && px >= 10 && px <= 13);
+            if (outline) return new int[]{ 10, 75, 85, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // DIAMOND_SHOVEL
+        if (col == 14 && row == 4) {
+            boolean shaft = (px == (15 - py)) && (px >= 2 && px <= 10);
+            boolean head = (px >= 10 && px <= 15 && py >= 0 && py <= 5) && (px + py >= 13);
+            if (py == 0 && px < 13) head = false;
+            if (px == 15 && py > 2) head = false;
+            if (py == 5 || px == 10) head = false;
+
+            if (head) {
+                boolean centerLine = (px == (15 - py)) || (px == (16 - py));
+                int cyan = centerLine ? 175 + (n & 3) * 10 : 95 + (n & 3) * 12;
+                return new int[]{ clamp(cyan - 40), cyan, clamp(cyan + 45), 255 };
+            }
+            if (shaft) return new int[]{ 110, 70, 30, 255 };
+            if ((px == 9 && py == 5) || (px == 10 && py == 6)) return new int[]{ 10, 75, 85, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // DIAMOND_SWORD
+        if (col == 15 && row == 4) {
+            boolean blade = (px == py || px == py + 1 || px == py - 1) && (px >= 5 && px <= 14 && py >= 5 && py <= 14);
+            if (px == 14 && py == 14) blade = true;
+            if ((px == 5 && py == 5) || (px == 14 && py == 13) || (px == 13 && py == 14)) blade = true;
+
+            boolean guard = (px + py == 9 || px + py == 10) && (px >= 2 && px <= 7 && py >= 2 && py <= 7) && !blade;
+            boolean hilt = (px == py) && (px >= 1 && px <= 3);
+
+            if (blade) {
+                boolean edge = (px == py);
+                int cyan = edge ? 180 + (n & 3) * 10 : 100 + (n & 3) * 12;
+                return new int[]{ clamp(cyan - 40), cyan, clamp(cyan + 45), 255 };
+            }
+            if (guard) {
+                int gCyan = 80 + (n & 3) * 8;
+                return new int[]{ clamp(gCyan - 30), gCyan, clamp(gCyan + 30), 255 };
+            }
+            if (hilt) return new int[]{ 70, 42, 15, 255 };
             return new int[]{ 0, 0, 0, 0 };
         }
 

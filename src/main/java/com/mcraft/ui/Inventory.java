@@ -1,5 +1,7 @@
 package com.mcraft.ui;
 
+import java.util.Map;
+
 import com.mcraft.world.Block;
 
 public class Inventory {
@@ -12,14 +14,27 @@ public class Inventory {
     private final int[] itemDurability = new int[TOTAL_SLOTS];
     private int selectedSlot = 0;
 
-    private static final java.util.Map<Integer, Integer> MAX_DUR =
-        java.util.Map.of(
-            Block.WOODEN_PICKAXE.id, 60,
-            Block.WOODEN_AXE.id,     10,
-            Block.WOODEN_SHOVEL.id,  60,
-            Block.WOODEN_SWORD.id,   60,
-            Block.STONE_PICKAXE.id,  90
-        );
+    private static final Map<Integer, Integer> MAX_DUR = Map.ofEntries(
+        Map.entry(Block.WOODEN_PICKAXE.id, 60),
+        Map.entry(Block.WOODEN_AXE.id, 60),
+        Map.entry(Block.WOODEN_SHOVEL.id, 60),
+        Map.entry(Block.WOODEN_SWORD.id, 60),
+
+        Map.entry(Block.STONE_PICKAXE.id, 90),
+        Map.entry(Block.STONE_AXE.id, 90),
+        Map.entry(Block.STONE_SHOVEL.id, 90),
+        Map.entry(Block.STONE_SWORD.id, 90),
+
+        Map.entry(Block.IRON_PICKAXE.id, 120),
+        Map.entry(Block.IRON_AXE.id, 120),
+        Map.entry(Block.IRON_SHOVEL.id, 120),
+        Map.entry(Block.IRON_SWORD.id, 120),
+
+        Map.entry(Block.DIAMOND_PICKAXE.id, 180),
+        Map.entry(Block.DIAMOND_AXE.id, 180),
+        Map.entry(Block.DIAMOND_SHOVEL.id, 180),
+        Map.entry(Block.DIAMOND_SWORD.id, 180)
+    );
 
     public void clearSlot(int index) {
         if (index < 0 || index >= TOTAL_SLOTS) return;

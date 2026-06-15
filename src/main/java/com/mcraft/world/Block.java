@@ -32,11 +32,22 @@ public enum Block {
     FURNACE        (33, "furnace",          3,  3, true,  1.50f, 0),
 
     // ROW 4 — FERRAMENTAS E ARMAS
-    WOODEN_PICKAXE (26, "wooden_pickaxe",   1,  4, false, 0f, 0),
-    WOODEN_AXE     (27, "wooden_axe",       2,  4, false, 0f, 0),
-    WOODEN_SHOVEL  (28, "wooden_shovel",    3,  4, false, 0f, 0),
-    WOODEN_SWORD   (29, "wooden_sword",     4,  4, false, 0f, 0),
-    STONE_PICKAXE  (40, "stone_pickaxe",    5,  4, false, 0f, 0),
+    WOODEN_PICKAXE (26, "wooden_pickaxe",   0,  4, false, 0f, 0),
+    WOODEN_AXE     (27, "wooden_axe",       1,  4, false, 0f, 0),
+    WOODEN_SHOVEL  (28, "wooden_shovel",    2,  4, false, 0f, 0),
+    WOODEN_SWORD   (29, "wooden_sword",     3,  4, false, 0f, 0),
+    STONE_PICKAXE  (40, "stone_pickaxe",    4,  4, false, 0f, 0),
+    STONE_AXE      (41, "stone_axe",        5,  4, false, 0f, 0),
+    STONE_SHOVEL   (42, "stone_shovel",     6,  4, false, 0f, 0),
+    STONE_SWORD    (43, "stone_swrod",      7,  4, false, 0f, 0),
+    IRON_PICKAXE   (44, "iron_pickaxe",     8,  4, false, 0f, 0),
+    IRON_AXE       (45, "iron_axe",         9,  4, false, 0f, 0),
+    IRON_SHOVEL    (46, "iron_shovel",      10, 4, false, 0f, 0),
+    IRON_SWORD     (47, "iron_sword",       11, 4, false, 0f, 0),
+    DIAMOND_PICKAXE(48, "diamond_pickaxe",  12, 4, false, 0f, 0),
+    DIAMOND_AXE    (49, "diamond_axe",      13, 4, false, 0f, 0),
+    DIAMOND_SHOVEL (50, "diamond_shovel",   14, 4, false, 0f, 0),
+    DIAMOND_SWORD  (51, "diamond_sword",    15, 4, false, 0f, 0),
 
     // ROW 5 — DROPS E RECURSOS
     FEATHER        (15, "feather",          0,  5, false, 0f, 0),

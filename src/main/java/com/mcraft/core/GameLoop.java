@@ -908,8 +908,23 @@ public class GameLoop {
                         case WOODEN_SWORD: damage += 5; break;
                         case WOODEN_PICKAXE: damage += 1; break;
                         case WOODEN_AXE: damage += 3; break; 
-                        case WOODEN_SHOVEL: damage -= 1; break;
-                        case STONE_PICKAXE: damage += 5; break;
+                        case WOODEN_SHOVEL: damage -= 1.9f; break;
+                        
+                        case STONE_SWORD: damage += 7; break;
+                        case STONE_PICKAXE: damage += 1; break;
+                        case STONE_AXE: damage += 4; break; 
+                        case STONE_SHOVEL: damage -= 1.5f; break;
+
+                        case IRON_SWORD: damage += 10; break;
+                        case IRON_PICKAXE: damage += 2; break;
+                        case IRON_AXE: damage += 6; break; 
+                        case IRON_SHOVEL: damage -= 1.3f; break;
+
+                        case DIAMOND_SWORD: damage += 15; break;
+                        case DIAMOND_PICKAXE: damage += 2; break;
+                        case DIAMOND_AXE: damage += 7; break; 
+                        case DIAMOND_SHOVEL: damage -= 1; break;
+
                         default: break;
                     }
                 }
@@ -1137,27 +1152,91 @@ public class GameLoop {
     }
 
     private float getToolMultiplier(int toolId, Block target) {
+
         if (toolId == Block.WOODEN_PICKAXE.id) {
             return switch (target) {
                 case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 2.5f;
                 default -> 1.0f;
             };
-        }else if (toolId == Block.STONE_PICKAXE.id){
-             return switch (target) {
-                case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 3.5f;
-                default -> 1.0f;
-            };
-        }else if (toolId == Block.WOODEN_AXE.id) {
+        } else if (toolId == Block.WOODEN_AXE.id) {
             return switch (target) {
                 case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> 2.5f;
                 default -> 1.0f;
             };
-        }else if (toolId == Block.WOODEN_SHOVEL.id) {
+        } else if (toolId == Block.WOODEN_SHOVEL.id) {
             return switch (target) {
                 case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> 2.5f;
                 default -> 1.0f;
             };
+        } else if (toolId == Block.WOODEN_SWORD.id) {
+            return switch (target) {
+                default -> 1.0f;
+            };
         }
+
+        else if (toolId == Block.STONE_PICKAXE.id) {
+            return switch (target) {
+                case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 3.0f;
+                default -> 1.0f;
+            };
+        } else if (toolId == Block.STONE_AXE.id) {
+            return switch (target) {
+                case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> 3.0f;
+                default -> 1.0f;
+            };
+        } else if (toolId == Block.STONE_SHOVEL.id) {
+            return switch (target) {
+                case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> 3.0f;
+                default -> 1.0f;
+            };
+        } else if (toolId == Block.STONE_SWORD.id) {
+            return switch (target) {
+                default -> 1.0f;
+            };
+        }
+
+        else if (toolId == Block.IRON_PICKAXE.id) {
+            return switch (target) {
+                case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 3.5f;
+                default -> 1.0f;
+            };
+        } else if (toolId == Block.IRON_AXE.id) {
+            return switch (target) {
+                case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> 3.5f;
+                default -> 1.0f;
+            };
+        } else if (toolId == Block.IRON_SHOVEL.id) {
+            return switch (target) {
+                case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> 3.5f;
+                default -> 1.0f;
+            };
+        } else if (toolId == Block.IRON_SWORD.id) {
+            return switch (target) {
+                default -> 1.0f;
+            };
+        }
+
+        else if (toolId == Block.DIAMOND_PICKAXE.id) {
+            return switch (target) {
+                case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 5.0f;
+                default -> 1.0f;
+            };
+        } else if (toolId == Block.DIAMOND_AXE.id) {
+            return switch (target) {
+                case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> 5.0f;
+                default -> 1.0f;
+            };
+        } else if (toolId == Block.DIAMOND_SHOVEL.id) {
+            return switch (target) {
+                case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> 5.0f;
+                default -> 1.0f;
+            };
+        } else if (toolId == Block.DIAMOND_SWORD.id) {
+            return switch (target) {
+                default -> 1.0f;
+            };
+        }
+
         return 1.0f;
     }
 

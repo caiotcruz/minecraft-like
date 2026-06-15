@@ -17,3 +17,7 @@
 ## ILUMINAÇÃO
 
 - Iluminação não atravessa Chunks.
+
+## ARMAZENAMENTO
+
+- Inventário do baú está sendo guardado por coordenadas. Devolver itens ao quebrar o baú é fix suficiente.

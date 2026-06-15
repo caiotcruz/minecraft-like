@@ -81,6 +81,98 @@ public class CraftingGrid {
             {     0,          Block.STICK.id,      0          }
         }, Block.STONE_PICKAXE.id, 1);
 
+        // Machado de Pedra
+        reg3(new int[][]{
+            {Block.STONE.id, Block.STONE.id, 0},
+            {Block.STONE.id, Block.STICK.id,  0},
+            {0,               Block.STICK.id,  0}
+        }, Block.STONE_AXE.id, 1);
+        reg3(new int[][]{
+            {0, Block.STONE.id, Block.STONE.id},
+            {0, Block.STICK.id,  Block.STONE.id},
+            {0, Block.STICK.id,        0        }
+        }, Block.STONE_AXE.id, 1);
+
+        // Pá de Pedra
+        reg3(new int[][]{
+            {0, Block.STONE.id, 0},
+            {0, Block.STICK.id, 0},
+            {0, Block.STICK.id, 0}
+        }, Block.STONE_SHOVEL.id, 1);
+
+        // Espada de Pedra
+        reg3(new int[][]{
+            {0, Block.STONE.id, 0},
+            {0, Block.STONE.id, 0},
+            {0, Block.STICK.id,  0} 
+        }, Block.STONE_SWORD.id, 1);
+
+        // Picareta de Ferro
+        reg3(new int[][]{
+            {Block.IRON_INGOT.id, Block.IRON_INGOT.id, Block.IRON_INGOT.id},
+            {     0,          Block.STICK.id,      0          },
+            {     0,          Block.STICK.id,      0          }
+        }, Block.IRON_PICKAXE.id, 1);
+
+        // Machado de Ferro
+        reg3(new int[][]{
+            {Block.IRON_INGOT.id, Block.IRON_INGOT.id, 0},
+            {Block.IRON_INGOT.id, Block.STICK.id,  0},
+            {0,               Block.STICK.id,  0}
+        }, Block.IRON_AXE.id, 1);
+        reg3(new int[][]{
+            {0, Block.IRON_INGOT.id, Block.IRON_INGOT.id},
+            {0, Block.STICK.id,  Block.IRON_INGOT.id},
+            {0, Block.STICK.id,        0        }
+        }, Block.IRON_AXE.id, 1);
+
+        // Pá de Ferro
+        reg3(new int[][]{
+            {0, Block.IRON_INGOT.id, 0},
+            {0, Block.STICK.id, 0},
+            {0, Block.STICK.id, 0}
+        }, Block.IRON_SHOVEL.id, 1);
+
+        // Espada de Ferro
+        reg3(new int[][]{
+            {0, Block.IRON_INGOT.id, 0},
+            {0, Block.IRON_INGOT.id, 0},
+            {0, Block.STICK.id,  0} 
+        }, Block.IRON_SWORD.id, 1);
+
+        // Picareta de Diamante
+        reg3(new int[][]{
+            {Block.DIAMOND.id, Block.DIAMOND.id, Block.DIAMOND.id},
+            {     0,          Block.STICK.id,      0          },
+            {     0,          Block.STICK.id,      0          }
+        }, Block.DIAMOND_PICKAXE.id, 1);
+
+        // Machado de Diamante
+        reg3(new int[][]{
+            {Block.DIAMOND.id, Block.DIAMOND.id, 0},
+            {Block.DIAMOND.id, Block.STICK.id,  0},
+            {0,               Block.STICK.id,  0}
+        }, Block.DIAMOND_AXE.id, 1);
+        reg3(new int[][]{
+            {0, Block.DIAMOND.id, Block.DIAMOND.id},
+            {0, Block.STICK.id,  Block.DIAMOND.id},
+            {0, Block.STICK.id,        0        }
+        }, Block.DIAMOND_AXE.id, 1);
+
+        // Pá de Diamante
+        reg3(new int[][]{
+            {0, Block.DIAMOND.id, 0},
+            {0, Block.STICK.id, 0},
+            {0, Block.STICK.id, 0}
+        }, Block.DIAMOND_SHOVEL.id, 1);
+
+        // Espada de Diamante
+        reg3(new int[][]{
+            {0, Block.DIAMOND.id, 0},
+            {0, Block.DIAMOND.id, 0},
+            {0, Block.STICK.id,  0} 
+        }, Block.DIAMOND_SWORD.id, 1);
+
         // Baú
         reg3(new int[][]{
             {Block.PLANKS.id, Block.PLANKS.id, Block.PLANKS.id},
