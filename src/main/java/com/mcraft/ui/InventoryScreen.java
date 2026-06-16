@@ -17,11 +17,13 @@ public class InventoryScreen extends Screen2D {
     }
 
     protected int panelW() {
-        return BORDER * 2 + 9 * S - PAD;
+        return BORDER * 2 + 9 * S - PAD + S;
     }
 
     protected int panelH() {
-        return BORDER * 2 + getTopRows() * S + 8 + 3 * S + PAD + SLOT_PX;
+        int craftSectionH = getTopRows() * S + 8;
+        int invSectionH = 3 * S + PAD + SLOT_PX;
+        return BORDER * 2 + craftSectionH + invSectionH;
     }
 
     protected int panelX() { return (sw - panelW()) / 2; }
@@ -58,7 +60,14 @@ public class InventoryScreen extends Screen2D {
         }
     }
 
-    @Override
+    private int armorSlotX() { 
+        return panelX() + BORDER + 9 * S; 
+    }
+
+    private int armorSlotY(int slot) {
+        return invAreaY() + slot * (SLOT_PX + PAD);
+    }
+
     public void render() {
         beginRender();
 
@@ -66,6 +75,9 @@ public class InventoryScreen extends Screen2D {
 
         drawPanel(); 
         drawInventorySlots();
+    
+        drawArmorSlots(); 
+
         if (heldId != 0) {
             addRect(mouseX - SLOT_PX / 2, mouseY - SLOT_PX / 2,
                     SLOT_PX, SLOT_PX, 0.5f, 0.5f, 0.5f, 0.75f);
@@ -77,6 +89,9 @@ public class InventoryScreen extends Screen2D {
         atlas.bind(0);
         beginBatch();
         drawInventoryIcons();
+        
+        drawArmorIcons(); 
+
         drawTopSectionIcons();
         drawHeldItemIcon();
         drawSlotCounts();
@@ -120,8 +135,28 @@ public class InventoryScreen extends Screen2D {
     private void drawInventorySlots() {
         for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
             boolean isSelected = (i < Inventory.HOTBAR_SIZE)
-                                 && (i == inventory.getSelectedSlot());
-            drawSlotBg(slotX(i), slotY(i), isSelected);
+                                && (i == inventory.getSelectedSlot());
+            
+            int ax = slotX(i);
+            int ay = slotY(i);
+            
+            drawSlotBg(ax, ay, isSelected);
+
+            int id = inventory.getItemId(i);
+            if (id != 0) {
+                int durVal = inventory.getItemDurability(i);
+                int maxDur = Inventory.getMaxDurability(id);
+
+                if (maxDur > 0 && durVal < maxDur) {
+                    float pct  = (float) durVal / maxDur;
+                    
+                    float r    = pct < 0.5f ? 1f : 1f - (pct - 0.5f) * 2;
+                    float g    = pct > 0.5f ? 1f : pct * 2;
+                    
+                    addRect(ax + 2, ay + SLOT_PX - 4, SLOT_PX - 4, 2, 0f, 0f, 0f, 0.8f);
+                    addRect(ax + 2, ay + SLOT_PX - 4, (int)((SLOT_PX - 4) * pct), 2, r, g, 0f, 1f);
+                }
+            }
         }
     }
 
@@ -186,6 +221,70 @@ public class InventoryScreen extends Screen2D {
         }
     }
 
+    private void drawArmorSlots() {
+        for (int i = 0; i < 4; i++) {
+            int ax = armorSlotX(), ay = armorSlotY(i);
+            
+            drawSlotBg(ax, ay, false);
+            
+            if (inventory.getArmorId(i) == 0) {
+                float alpha = 0.25f;
+                float c = 0.55f;
+                
+                switch (i) {
+                    case 0 -> {
+                        addRect(ax + 13, ay + 11, 10, 8,  c, c, c, alpha);
+                        addRect(ax + 11, ay + 14, 2,  8,  c, c, c, alpha);
+                        addRect(ax + 23, ay + 14, 2,  8,  c, c, c, alpha);
+                        addRect(ax + 15, ay + 19, 6,  3,  c, c, c, alpha);
+                    }
+                    case 1 -> {
+                        addRect(ax + 11, ay + 10, 4,  4,  c, c, c, alpha);
+                        addRect(ax + 21, ay + 10, 4,  4,  c, c, c, alpha);
+                        addRect(ax + 11, ay + 14, 14, 10, c, c, c, alpha);
+                        addRect(ax + 9,  ay + 14, 2,  6,  c, c, c, alpha);
+                        addRect(ax + 25, ay + 14, 2,  6,  c, c, c, alpha);
+                    }
+                    case 2 -> {
+                        addRect(ax + 11, ay + 10, 14, 4,  c, c, c, alpha);
+                        addRect(ax + 11, ay + 14, 5,  12, c, c, c, alpha);
+                        addRect(ax + 20, ay + 14, 5,  12, c, c, c, alpha); 
+                    }
+                    case 3 -> {
+                        addRect(ax + 10, ay + 13, 5,  7,  c, c, c, alpha);
+                        addRect(ax + 21, ay + 13, 5,  7,  c, c, c, alpha);
+                        addRect(ax + 8,  ay + 18, 7,  4,  c, c, c, alpha);
+                        addRect(ax + 21, ay + 18, 7,  4,  c, c, c, alpha);
+                    }
+                }
+            }
+            
+            int durVal = inventory.getArmorDur(i);
+            int arId   = inventory.getArmorId(i);
+            if (arId != 0) {
+                int maxDur = Block.fromId(arId).getArmorMaxDurability();
+                if (durVal < maxDur) {
+                    float pct  = (float)durVal / maxDur;
+                    float r    = pct < 0.5f ? 1f : 1f - (pct-0.5f)*2;
+                    float g    = pct > 0.5f ? 1f : pct*2;
+                    
+                    addRect(ax + 2, ay + SLOT_PX - 4, SLOT_PX - 4, 2, 0f, 0f, 0f, 0.8f);
+                    addRect(ax + 2, ay + SLOT_PX - 4, (int)((SLOT_PX - 4) * pct), 2, r, g, 0f, 1f);
+                }
+            }
+        }
+    }
+
+    private void drawArmorIcons() {
+        for (int i = 0; i < 4; i++) {
+            int id = inventory.getArmorId(i);
+            if (id != 0) {
+                drawBlockIcon(Block.fromId(id),
+                    armorSlotX()+2, armorSlotY(i)+2, SLOT_PX-4);
+            }
+        }
+    }
+
     protected boolean isDefaultCraftActive() {
         return true; 
     }
@@ -218,6 +317,13 @@ public class InventoryScreen extends Screen2D {
             }
         }
 
+        for (int i = 0; i < 4; i++) {
+            if (hit(mx, my, armorSlotX(), armorSlotY(i), SLOT_PX, SLOT_PX)) {
+                handleArmorSlotClick(i);
+                return true;
+            }
+        }
+
         if (isDefaultCraftActive()) {
             for (int i = 0; i < craft.size * craft.size; i++) {
                 int row = i / craft.size;
@@ -241,6 +347,42 @@ public class InventoryScreen extends Screen2D {
         }
 
         return false;
+    }
+
+    private void handleArmorSlotClick(int slotIdx) {
+        int equippedId  = inventory.getArmorId(slotIdx);
+        int equippedDur = inventory.getArmorDur(slotIdx);
+
+        if (heldId == 0) {
+            if (equippedId != 0) {
+                heldId  = equippedId;
+                heldQty = 1;
+                heldDur = equippedDur;
+                inventory.unequipArmor(slotIdx);
+            }
+        } else {
+            Block heldBlock = Block.fromId(heldId);
+            if (heldBlock.getArmorSlot() == slotIdx) {
+                if (equippedId != 0) {
+                    if (heldQty == 1) {
+                        int tempId  = equippedId;
+                        int tempDur = equippedDur;
+                        inventory.equipArmor(heldId, heldDur);
+                        heldId  = tempId;
+                        heldQty = 1;
+                        heldDur = tempDur;
+                    }
+                } else {
+                    inventory.equipArmor(heldId, heldDur);
+                    
+                    if (heldQty > 1) {
+                        heldQty--;
+                    } else {
+                        heldId = 0; heldQty = 0; heldDur = -1;
+                    }
+                }
+            }
+        }
     }
 
     @Override

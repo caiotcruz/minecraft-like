@@ -3,7 +3,7 @@ package com.mcraft.world;
 public enum Block {
 
     AIR            ( 0, "air",              0,  0, false, 0f, 0),
-    WATER          ( 7, "water",           13, 12, false, 0f, 0),
+    WATER          ( 7, "water",            13, 12, false, 0f, 0),
     
     // ROW 0 — BLOCOS BÁSICOS
     GRASS          ( 1, "grass",            0,  0, true,  0.90f, 0),
@@ -71,7 +71,26 @@ public enum Block {
     DIAMOND        (37, "diamond",          4,  7, false, 0f, 0),
 
     // ROW 8 - ILUMINAÇÃO
-    TORCH          (39, "torch",            0,  8, true, 0.05f, 14);
+    TORCH          (39, "torch",            0,  8, true, 0.05f, 14),
+
+    // ROW 9 - ARMADURAS
+
+    LEATHER_HELMET    (52, "leather_helmet",    0, 9, false, 0f, 0),
+    LEATHER_CHESTPLATE(53, "leather_chestplate",1, 9, false, 0f, 0),
+    LEATHER_LEGGINGS  (54, "leather_leggings",  2, 9, false, 0f,0 ),
+    LEATHER_BOOTS     (55, "leather_boots",     3, 9, false, 0f, 0),
+    IRON_HELMET       (56, "iron_helmet",       4, 9, false, 0f, 0),
+    IRON_CHESTPLATE   (57, "iron_chestplate",   5, 9, false, 0f, 0),
+    IRON_LEGGINGS     (58, "iron_leggings",     6, 9, false, 0f, 0),
+    IRON_BOOTS        (59, "iron_boots",        7, 9, false, 0f, 0),
+    GOLD_HELMET       (60, "gold_helmet",       8, 9, false, 0f, 0),
+    GOLD_CHESTPLATE   (61, "gold_chestplate",   9, 9, false, 0f, 0),
+    GOLD_LEGGINGS     (62, "gold_leggings",     10, 9, false, 0f, 0),
+    GOLD_BOOTS        (63, "gold_boots",        11, 9, false, 0f, 0),
+    DIAMOND_HELMET    (64, "diamond_helmet",    12, 9, false, 0f, 0),
+    DIAMOND_CHESTPLATE(65, "diamond_chestplate",13, 9, false, 0f, 0),
+    DIAMOND_LEGGINGS  (66, "diamond_leggings",  14, 9, false, 0f, 0),
+    DIAMOND_BOOTS     (67, "diamond_boots",     15, 9, false, 0f, 0);
 
     /**
     * ROW 15 - Faces Auxiliaras
@@ -123,6 +142,99 @@ public enum Block {
             default       -> this.id;
         };
     }
+
+    public int getToolMaxDurability() {
+        String n = this.name();
+        
+        if (n.contains("_PICKAXE") || n.contains("_AXE") || n.contains("_SHOVEL") || n.contains("_SWORD")) {
+            if (n.startsWith("WOODEN"))  return 60;
+            if (n.startsWith("STONE"))   return 90;
+            if (n.startsWith("IRON"))    return 120;
+            if (n.startsWith("DIAMOND")) return 180;
+        }
+        return -1;
+    }
+
+    public float getToolMaterialMultiplier() {
+        String n = this.name();
+        if (n.startsWith("WOODEN"))  return 2.5f;
+        if (n.startsWith("STONE"))   return 3.0f;
+        if (n.startsWith("IRON"))    return 3.5f;
+        if (n.startsWith("DIAMOND")) return 5.0f;
+        return 1.0f;
+    }
+
+    public boolean isStoneType() {
+        return switch (this) {
+            case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> true;
+            default -> false;
+        };
+    }
+
+    public boolean isWoodType() {
+        return switch (this) {
+            case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> true;
+            default -> false;
+        };
+    }
+
+    public boolean isEarthType() {
+        return switch (this) {
+            case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> true;
+            default -> false;
+        };
+    }
+
+    public int getArmorSlot() {
+        return switch (this) {
+            case LEATHER_HELMET, IRON_HELMET, GOLD_HELMET, DIAMOND_HELMET         -> 0;
+            case LEATHER_CHESTPLATE, IRON_CHESTPLATE, GOLD_CHESTPLATE, DIAMOND_CHESTPLATE -> 1;
+            case LEATHER_LEGGINGS, IRON_LEGGINGS, GOLD_LEGGINGS, DIAMOND_LEGGINGS -> 2;
+            case LEATHER_BOOTS, IRON_BOOTS, GOLD_BOOTS, DIAMOND_BOOTS             -> 3;
+            default -> -1;
+        };
+    }
+
+    public float getArmorProtection() {
+        return switch (this) {
+
+            case LEATHER_HELMET, LEATHER_BOOTS              -> 0.04f;
+            case LEATHER_CHESTPLATE                          -> 0.10f;
+            case LEATHER_LEGGINGS                            -> 0.06f;
+
+            case IRON_HELMET, IRON_BOOTS                    -> 0.08f;
+            case IRON_CHESTPLATE                             -> 0.20f;
+            case IRON_LEGGINGS                               -> 0.12f;
+
+            case GOLD_HELMET, GOLD_BOOTS                    -> 0.15f;
+            case GOLD_CHESTPLATE                             -> 0.40f;
+            case GOLD_LEGGINGS                               -> 0.20f;
+
+            case DIAMOND_HELMET, DIAMOND_BOOTS              -> 0.12f;
+            case DIAMOND_CHESTPLATE                          -> 0.30f;
+            case DIAMOND_LEGGINGS                            -> 0.18f;
+            default -> 0f;
+        };
+    }
+
+    public int getArmorMaxDurability() {
+        if (getArmorSlot() < 0) return -1;
+        String n = name();
+        if (n.startsWith("LEATHER"))  return 60;
+        if (n.startsWith("IRON"))     return 140;
+        if (n.startsWith("GOLD"))     return 40;
+        if (n.startsWith("DIAMOND"))  return 200;
+        return -1;
+    }
+
+    public boolean isArmor() {
+        return getArmorSlot() != -1;
+    }
+
+    public boolean isTool() {
+        return getToolMaxDurability() != -1;
+    }
+
 
     public float[] getUVs(int face) {
         int col = texCol;

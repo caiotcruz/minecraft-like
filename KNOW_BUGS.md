@@ -21,3 +21,4 @@
 ## ARMAZENAMENTO
 
 - Inventário do baú está sendo guardado por coordenadas. Devolver itens ao quebrar o baú é fix suficiente.
+- Durabilidade do item dentro do baú não é salva ao fechar o jogo.

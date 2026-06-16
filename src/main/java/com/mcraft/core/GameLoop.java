@@ -1152,89 +1152,21 @@ public class GameLoop {
     }
 
     private float getToolMultiplier(int toolId, Block target) {
+        Block tool = Block.fromId(toolId);
+        if (tool == null || target == null) return 1.0f;
 
-        if (toolId == Block.WOODEN_PICKAXE.id) {
-            return switch (target) {
-                case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 2.5f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.WOODEN_AXE.id) {
-            return switch (target) {
-                case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> 2.5f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.WOODEN_SHOVEL.id) {
-            return switch (target) {
-                case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> 2.5f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.WOODEN_SWORD.id) {
-            return switch (target) {
-                default -> 1.0f;
-            };
+        String toolName = tool.name();
+
+        if (toolName.contains("_PICKAXE") && target.isStoneType()) {
+            return tool.getToolMaterialMultiplier();
         }
-
-        else if (toolId == Block.STONE_PICKAXE.id) {
-            return switch (target) {
-                case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 3.0f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.STONE_AXE.id) {
-            return switch (target) {
-                case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> 3.0f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.STONE_SHOVEL.id) {
-            return switch (target) {
-                case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> 3.0f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.STONE_SWORD.id) {
-            return switch (target) {
-                default -> 1.0f;
-            };
+        
+        if (toolName.contains("_AXE") && target.isWoodType()) {
+            return tool.getToolMaterialMultiplier();
         }
-
-        else if (toolId == Block.IRON_PICKAXE.id) {
-            return switch (target) {
-                case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 3.5f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.IRON_AXE.id) {
-            return switch (target) {
-                case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> 3.5f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.IRON_SHOVEL.id) {
-            return switch (target) {
-                case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> 3.5f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.IRON_SWORD.id) {
-            return switch (target) {
-                default -> 1.0f;
-            };
-        }
-
-        else if (toolId == Block.DIAMOND_PICKAXE.id) {
-            return switch (target) {
-                case STONE, COAL_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE -> 5.0f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.DIAMOND_AXE.id) {
-            return switch (target) {
-                case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> 5.0f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.DIAMOND_SHOVEL.id) {
-            return switch (target) {
-                case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> 5.0f;
-                default -> 1.0f;
-            };
-        } else if (toolId == Block.DIAMOND_SWORD.id) {
-            return switch (target) {
-                default -> 1.0f;
-            };
+        
+        if (toolName.contains("_SHOVEL") && target.isEarthType()) {
+            return tool.getToolMaterialMultiplier();
         }
 
         return 1.0f;
@@ -1267,7 +1199,7 @@ public class GameLoop {
             boolean yOverlap = (mobTop > playerBottom - 0.3f) && (mobBottom < playerTop + 0.3f);
 
             if (dist < 1.2f && yOverlap) {
-                hit = player.takeDamage(2);
+                hit = player.takeDamageWithArmour(2);
                 float kx = player.getX() - mob.getX();
                 float kz = player.getZ() - mob.getZ();
                 float klen = (float) Math.sqrt(kx*kx + kz*kz);

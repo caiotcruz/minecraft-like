@@ -1173,6 +1173,246 @@ public class TextureAtlas {
             return new int[]{ clamp(r), clamp(g), clamp(b), 255 };
         }
 
+        // ARMADURAS
+
+        // ROW 9 — ARMADURAS
+
+        // LEATHER_HELMET
+        if (col == 0 && row == 9) {
+            boolean main = (px >= 4 && px <= 11 && py >= 2 && py <= 7);
+            if (py == 7 && (px == 7 || px == 8)) main = false;
+            boolean outline = (px == 3 || px == 12) && (py >= 2 && py <= 7) || (py == 1 && px >= 4 && px <= 11) || (py == 7 && (px == 4 || px == 11 || px == 6 || px == 9));
+
+            if (outline && !main) return new int[]{ 55, 30, 15, 255 };
+            if (main) {
+                int r = 135 + (n & 3) * 6;
+                return new int[]{ r, clamp(r - 55), clamp(r - 90), 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // LEATHER_CHESTPLATE
+        if (col == 1 && row == 9) {
+            boolean chest = (px >= 4 && px <= 11 && py >= 5 && py <= 8) || (px >= 3 && px <= 5 && py >= 2 && py <= 4) || (px >= 10 && px <= 12 && py >= 2 && py <= 4);
+            
+            if (chest) {
+                boolean strap = (py == 5); 
+                int r = strap ? 90 : 135 + (n & 3) * 6;
+                int g = strap ? 50 : clamp(r - 55);
+                int b = strap ? 25 : clamp(r - 90);
+                return new int[]{ r, g, b, 255 };
+            }
+            if ((px == 2 || px == 13 || py == 1 || py == 9) && (px >= 2 && px <= 13)) {
+                return new int[]{ 55, 30, 15, 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // LEATHER_LEGGINGS
+        if (col == 2 && row == 9) {
+            boolean legs = (px >= 3 && px <= 12 && py >= 2 && py <= 8);
+            if (py >= 4 && py <= 8 && px >= 7 && px <= 8) legs = false;
+
+            if (legs) {
+                int r = 130 + (n & 3) * 6;
+                return new int[]{ r, clamp(r - 55), clamp(r - 90), 255 };
+            }
+            boolean outline = (px == 2 || px == 13 || py == 1 || py == 9 || (px >= 6 && px <= 9 && py == 3));
+            if (outline && (px >= 2 && px <= 13 && py >= 1 && py <= 9)) {
+                return new int[]{ 55, 30, 15, 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // LEATHER_BOOTS
+        if (col == 3 && row == 9) {
+            boolean boots = (px >= 3 && px <= 5 && py >= 4 && py <= 8) || (px >= 10 && px <= 12 && py >= 4 && py <= 8);
+            if (py == 8) { if (px == 2 || px == 13 || px == 6 || px == 9) boots = true; }
+
+            if (boots) {
+                int r = 120 + (n & 3) * 6;
+                return new int[]{ r, clamp(r - 50), clamp(r - 85), 255 };
+            }
+            if ((px == 2 || px == 6 || px == 9 || px == 13 || py == 3 || py == 9) && (px >= 2 && px <= 13 && py >= 3 && py <= 9)) {
+                if (!(px >= 7 && px <= 8 && py >= 3 && py <= 7)) return new int[]{ 55, 30, 15, 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // IRON_HELMET
+        if (col == 4 && row == 9) {
+            boolean main = (px >= 4 && px <= 11 && py >= 2 && py <= 7);
+            if (py == 7 && (px == 7 || px == 8)) main = false;
+            if (main) {
+                boolean light = (py == 2 || px == 4);
+                int iron = light ? 235 + (n & 1) * 15 : 190 + (n & 3) * 8;
+                return new int[]{ iron, iron, clamp(iron + 10), 255 };
+            }
+            boolean outline = (px == 3 || px == 12) && (py >= 2 && py <= 7) || (py == 1 && px >= 4 && px <= 11) || (py == 7 && (px == 4 || px == 11 || px == 6 || px == 9));
+            if (outline) return new int[]{ 80, 80, 85, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // IRON_CHESTPLATE
+        if (col == 5 && row == 9) {
+            boolean chest = (px >= 4 && px <= 11 && py >= 5 && py <= 8) || (px >= 3 && px <= 5 && py >= 2 && py <= 4) || (px >= 10 && px <= 12 && py >= 2 && py <= 4);
+            if (chest) {
+                boolean light = (px == 3 || px == 10 || py == 2);
+                int iron = light ? 240 + (n & 1) * 10 : 195 + (n & 3) * 8;
+                return new int[]{ iron, iron, clamp(iron + 10), 255 };
+            }
+            if ((px == 2 || px == 13 || py == 1 || py == 9) && (px >= 2 && px <= 13 && py >= 1 && py <= 9)) {
+                if (!(px >= 6 && px <= 9 && py == 1)) return new int[]{ 80, 80, 85, 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // IRON_LEGGINGS
+        if (col == 6 && row == 9) {
+            boolean legs = (px >= 3 && px <= 12 && py >= 2 && py <= 8);
+            if (py >= 4 && py <= 8 && px >= 7 && px <= 8) legs = false;
+            if (legs) {
+                boolean light = (py == 2 || px == 3 || px == 9);
+                int iron = light ? 235 + (n & 1) * 15 : 190 + (n & 3) * 8;
+                return new int[]{ iron, iron, clamp(iron + 10), 255 };
+            }
+            boolean outline = (px == 2 || px == 13 || py == 1 || py == 9 || (px >= 6 && px <= 9 && py == 3));
+            if (outline && (px >= 2 && px <= 13 && py >= 1 && py <= 9)) return new int[]{ 80, 80, 85, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // IRON_BOOTS
+        if (col == 7 && row == 9) {
+            boolean boots = (px >= 3 && px <= 5 && py >= 4 && py <= 8) || (px >= 10 && px <= 12 && py >= 4 && py <= 8);
+            if (py == 8 && (px == 2 || px == 13 || px == 6 || px == 9)) boots = true;
+            if (boots) {
+                boolean light = (py == 4 || px == 3 || px == 10);
+                int iron = light ? 235 + (n & 1) * 15 : 185 + (n & 3) * 8;
+                return new int[]{ iron, iron, clamp(iron + 10), 255 };
+            }
+            if ((px == 2 || px == 6 || px == 9 || px == 13 || py == 3 || py == 9) && (px >= 2 && px <= 13 && py >= 3 && py <= 9)) {
+                if (!(px >= 7 && px <= 8 && py >= 3 && py <= 7)) return new int[]{ 80, 80, 85, 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // GOLD_HELMET
+        if (col == 8 && row == 9) {
+            boolean main = (px >= 4 && px <= 11 && py >= 2 && py <= 7);
+            if (py == 7 && (px == 7 || px == 8)) main = false;
+            if (main) {
+                boolean light = (py == 2 || px == 4);
+                int gR = light ? 255 : 220 + (n & 3) * 6;
+                int gG = light ? 230 + (n & 1) * 15 : 170 + (n & 3) * 6;
+                return new int[]{ gR, gG, clamp(gG - 110), 255 };
+            }
+            boolean outline = (px == 3 || px == 12) && (py >= 2 && py <= 7) || (py == 1 && px >= 4 && px <= 11) || (py == 7 && (px == 4 || px == 11 || px == 6 || px == 9));
+            if (outline) return new int[]{ 140, 90, 15, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // GOLD_CHESTPLATE
+        if (col == 9 && row == 9) {
+            boolean chest = (px >= 4 && px <= 11 && py >= 5 && py <= 8) || (px >= 3 && px <= 5 && py >= 2 && py <= 4) || (px >= 10 && px <= 12 && py >= 2 && py <= 4);
+            if (chest) {
+                boolean light = (px == 3 || px == 10 || py == 2);
+                int gR = light ? 255 : 225 + (n & 3) * 5;
+                int gG = light ? 230 + (n & 1) * 10 : 175 + (n & 3) * 6;
+                return new int[]{ gR, gG, clamp(gG - 110), 255 };
+            }
+            if ((px == 2 || px == 13 || py == 1 || py == 9) && (px >= 2 && px <= 13 && py >= 1 && py <= 9)) {
+                if (!(px >= 6 && px <= 9 && py == 1)) return new int[]{ 140, 90, 15, 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // GOLD_LEGGINGS
+        if (col == 10 && row == 9) {
+            boolean legs = (px >= 3 && px <= 12 && py >= 2 && py <= 8);
+            if (py >= 4 && py <= 8 && px >= 7 && px <= 8) legs = false;
+            if (legs) {
+                boolean light = (py == 2 || px == 3 || px == 9);
+                int gR = light ? 255 : 220 + (n & 3) * 6;
+                int gG = light ? 225 + (n & 1) * 12 : 170 + (n & 3) * 6;
+                return new int[]{ gR, gG, clamp(gG - 110), 255 };
+            }
+            boolean outline = (px == 2 || px == 13 || py == 1 || py == 9 || (px >= 6 && px <= 9 && py == 3));
+            if (outline && (px >= 2 && px <= 13 && py >= 1 && py <= 9)) return new int[]{ 140, 90, 15, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // GOLD_BOOTS
+        if (col == 11 && row == 9) {
+            boolean boots = (px >= 3 && px <= 5 && py >= 4 && py <= 8) || (px >= 10 && px <= 12 && py >= 4 && py <= 8);
+            if (py == 8 && (px == 2 || px == 13 || px == 6 || px == 9)) boots = true;
+            if (boots) {
+                boolean light = (py == 4 || px == 3 || px == 10);
+                int gR = light ? 255 : 215 + (n & 3) * 6;
+                int gG = light ? 225 + (n & 1) * 10 : 165 + (n & 3) * 6;
+                return new int[]{ gR, gG, clamp(gG - 110), 255 };
+            }
+            if ((px == 2 || px == 6 || px == 9 || px == 13 || py == 3 || py == 9) && (px >= 2 && px <= 13 && py >= 3 && py <= 9)) {
+                if (!(px >= 7 && px <= 8 && py >= 3 && py <= 7)) return new int[]{ 140, 90, 15, 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // DIAMOND_HELMET
+        if (col == 12 && row == 9) {
+            boolean main = (px >= 4 && px <= 11 && py >= 2 && py <= 7);
+            if (py == 7 && (px == 7 || px == 8)) main = false;
+            if (main) {
+                boolean light = (py == 2 || px == 4);
+                int cyan = light ? 190 + (n & 3) * 8 : 120 + (n & 3) * 10;
+                return new int[]{ clamp(cyan - 50), cyan, clamp(cyan + 45), 255 };
+            }
+            boolean outline = (px == 3 || px == 12) && (py >= 2 && py <= 7) || (py == 1 && px >= 4 && px <= 11) || (py == 7 && (px == 4 || px == 11 || px == 6 || px == 9));
+            if (outline) return new int[]{ 15, 80, 95, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // DIAMOND_CHESTPLATE
+        if (col == 13 && row == 9) {
+            boolean chest = (px >= 4 && px <= 11 && py >= 5 && py <= 8) || (px >= 3 && px <= 5 && py >= 2 && py <= 4) || (px >= 10 && px <= 12 && py >= 2 && py <= 4);
+            if (chest) {
+                boolean light = (px == 3 || px == 10 || py == 2);
+                int cyan = light ? 195 + (n & 3) * 8 : 125 + (n & 3) * 10;
+                return new int[]{ clamp(cyan - 50), cyan, clamp(cyan + 45), 255 };
+            }
+            if ((px == 2 || px == 13 || py == 1 || py == 9) && (px >= 2 && px <= 13 && py >= 1 && py <= 9)) {
+                if (!(px >= 6 && px <= 9 && py == 1)) return new int[]{ 15, 80, 95, 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // DIAMOND_LEGGINGS
+        if (col == 14 && row == 9) {
+            boolean legs = (px >= 3 && px <= 12 && py >= 2 && py <= 8);
+            if (py >= 4 && py <= 8 && px >= 7 && px <= 8) legs = false;
+            if (legs) {
+                boolean light = (py == 2 || px == 3 || px == 9);
+                int cyan = light ? 190 + (n & 3) * 8 : 120 + (n & 3) * 10;
+                return new int[]{ clamp(cyan - 50), cyan, clamp(cyan + 45), 255 };
+            }
+            boolean outline = (px == 2 || px == 13 || py == 1 || py == 9 || (px >= 6 && px <= 9 && py == 3));
+            if (outline && (px >= 2 && px <= 13 && py >= 1 && py <= 9)) return new int[]{ 15, 80, 95, 255 };
+            return new int[]{ 0, 0, 0, 0 };
+        }
+
+        // DIAMOND_BOOTS
+        if (col == 15 && row == 9) {
+            boolean boots = (px >= 3 && px <= 5 && py >= 4 && py <= 8) || (px >= 10 && px <= 12 && py >= 4 && py <= 8);
+            if (py == 8 && (px == 2 || px == 13 || px == 6 || px == 9)) boots = true;
+            if (boots) {
+                boolean light = (py == 4 || px == 3 || px == 10);
+                int cyan = light ? 190 + (n & 3) * 8 : 115 + (n & 3) * 10;
+                return new int[]{ clamp(cyan - 50), cyan, clamp(cyan + 45), 255 };
+            }
+            if ((px == 2 || px == 6 || px == 9 || px == 13 || py == 3 || py == 9) && (px >= 2 && px <= 13 && py >= 3 && py <= 9)) {
+                if (!(px >= 7 && px <= 8 && py >= 3 && py <= 7)) return new int[]{ 15, 80, 95, 255 };
+            }
+            return new int[]{ 0, 0, 0, 0 };
+        }
 
         // FALLBACK
         float hue = (col * 16 + row) / 256.0f;

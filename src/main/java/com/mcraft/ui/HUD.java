@@ -227,9 +227,12 @@ public class HUD {
 
     private void drawHotbarIcons() {
         int total  = Inventory.HOTBAR_SIZE * (SLOT_SIZE + PADDING) - PADDING;
-        int startX = (screenW - total) / 2;
+        int startX = (int) Math.round((screenW - total) / 2.0); 
         int startY = screenH - SLOT_SIZE - 10;
-        int pad    = 6;
+
+        int sz = 32; 
+        
+        int pad = (SLOT_SIZE - sz) / 2; 
 
         atlas.bind(0);
 
@@ -243,9 +246,8 @@ public class HUD {
 
             int sx = slotX + pad;
             int sy = startY + pad;
-            int sz = SLOT_SIZE - pad * 2;
 
-            drawBlockIcon( block, sx, sy, sz);
+            drawBlockIcon(block, sx, sy, sz);
 
             int durVal = inventory.getItemDurability(i);
             int maxDur = Inventory.getMaxDurability(blockId);
@@ -255,32 +257,20 @@ public class HUD {
 
                 int barW = sz; 
                 int barH = 2;
-                
                 int barX = sx; 
-                int barY = startY + SLOT_SIZE - 7; 
+                int barY = startY + SLOT_SIZE - 6;
+                
+                addRect(barX, barY, barW, barH, 0f, 0f, 0f, 0.8f);
 
-                addRect(barX - 1, barY - 1, barW + 2, barH + 2, 0f, 0f, 0f, 1f); 
-                addRect(barX, barY, barW, barH, 0.15f, 0.15f, 0.15f, 1f);
+                float r = pct < 0.5f ? 1f : 1f - (pct - 0.5f) * 2;
+                float g = pct > 0.5f ? 1f : pct * 2;
+                float b = 0f;
 
-                float r = 0f, g = 0f, b = 0f;
+                int fillW = (int) (barW * pct);
 
-                if (pct > 0.5f) {
-                    r = 0.0f;
-                    g = 1.0f;
-                    b = 0.0f;
-                } else if (pct > 0.2f) {
-                    r = 1.0f;
-                    g = 0.9f;
-                    b = 0.0f;
-                } else {
-                    r = 1.0f;
-                    g = 0.0f; 
-                    b = 0.0f;
+                if (fillW > 0) {
+                    addRect(barX, barY, fillW, barH, r, g, b, 1f);
                 }
-
-                int fillW = Math.max(1, (int)(barW * pct));
-
-                addRect(barX, barY, fillW, barH, r, g, b, 1f);
             }
         }
     }
@@ -627,7 +617,7 @@ public class HUD {
     }
 
     private void addRect(int x, int y, int w, int h, float r, float g, float b, float a) {
-        addQuad(x, y, x + w, y + h, 0, 0, 1, 1, r, g, b, a);
+        addQuad(x, y, x + w, y + h, 0f, 0f, 0f, 0f, r, g, b, a);
     }
 
     public void showNotification(String msg, float duration) {

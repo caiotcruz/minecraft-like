@@ -291,6 +291,23 @@ public class Player {
         return true;
     }
 
+    public boolean takeDamageWithArmour (int amount) {
+        if (dead || invincibleTimer > 0) return false;
+
+        float reduction = inventory.getTotalArmorReduction();
+        int reducedDamage = Math.max(1, (int)(amount * (1.0f - reduction)));
+
+        health -= reducedDamage;
+        invincibleTimer = INVINCIBLE_TIME;
+
+        if (reduction > 0) {
+            inventory.damageArmor(1);
+        }
+
+        if (health <= 0) { health = 0; dead = true; }
+        return true;
+    }
+
     public void applyKnockback(float dirX, float dirZ, float force) {
         velX += dirX * force;
         velZ += dirZ * force;

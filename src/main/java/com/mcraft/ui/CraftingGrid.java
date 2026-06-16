@@ -193,6 +193,118 @@ public class CraftingGrid {
             {Block.STONE.id,       0,        Block.STONE.id},
             {Block.STONE.id, Block.STONE.id, Block.STONE.id}
         }, Block.FURNACE.id, 1);
+
+        reg3(new int[][]{
+            {Block.LEATHER.id, Block.LEATHER.id, Block.LEATHER.id},
+            {Block.LEATHER.id,        0,         Block.LEATHER.id},
+            {       0,                0,                0       }
+        }, Block.LEATHER_HELMET.id, 1);
+
+        // Peitoral de Couro
+        reg3(new int[][]{
+            {Block.LEATHER.id,        0,         Block.LEATHER.id},
+            {Block.LEATHER.id, Block.LEATHER.id, Block.LEATHER.id},
+            {Block.LEATHER.id, Block.LEATHER.id, Block.LEATHER.id}
+        }, Block.LEATHER_CHESTPLATE.id, 1);
+
+        // Calça de Couro
+        reg3(new int[][]{
+            {Block.LEATHER.id, Block.LEATHER.id, Block.LEATHER.id},
+            {Block.LEATHER.id,        0,         Block.LEATHER.id},
+            {Block.LEATHER.id,        0,         Block.LEATHER.id}
+        }, Block.LEATHER_LEGGINGS.id, 1);
+
+        // Botas de Couro
+        reg3(new int[][]{
+            {Block.LEATHER.id,        0,         Block.LEATHER.id},
+            {Block.LEATHER.id,        0,         Block.LEATHER.id},
+            {       0,                0,                0       }
+        }, Block.LEATHER_BOOTS.id, 1);
+
+        // Elmo de Ferro
+        reg3(new int[][]{
+            {Block.IRON_INGOT.id, Block.IRON_INGOT.id, Block.IRON_INGOT.id},
+            {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id},
+            {          0,                  0,                   0         }
+        }, Block.IRON_HELMET.id, 1);
+
+        // Peitoral de Ferro
+        reg3(new int[][]{
+            {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id},
+            {Block.IRON_INGOT.id, Block.IRON_INGOT.id, Block.IRON_INGOT.id},
+            {Block.IRON_INGOT.id, Block.IRON_INGOT.id, Block.IRON_INGOT.id}
+        }, Block.IRON_CHESTPLATE.id, 1);
+
+        // Calça de Ferro
+        reg3(new int[][]{
+            {Block.IRON_INGOT.id, Block.IRON_INGOT.id, Block.IRON_INGOT.id},
+            {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id},
+            {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id}
+        }, Block.IRON_LEGGINGS.id, 1);
+
+        // Botas de Ferro
+        reg3(new int[][]{
+            {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id},
+            {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id},
+            {          0,                  0,                   0         }
+        }, Block.IRON_BOOTS.id, 1);
+
+        // Elmo de Ouro
+        reg3(new int[][]{
+            {Block.GOLD_INGOT.id, Block.GOLD_INGOT.id, Block.GOLD_INGOT.id},
+            {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id},
+            {          0,                  0,                   0         }
+        }, Block.GOLD_HELMET.id, 1);
+
+        // Peitoral de Ouro
+        reg3(new int[][]{
+            {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id},
+            {Block.GOLD_INGOT.id, Block.GOLD_INGOT.id, Block.GOLD_INGOT.id},
+            {Block.GOLD_INGOT.id, Block.GOLD_INGOT.id, Block.GOLD_INGOT.id}
+        }, Block.GOLD_CHESTPLATE.id, 1);
+
+        // Calça de Ouro
+        reg3(new int[][]{
+            {Block.GOLD_INGOT.id, Block.GOLD_INGOT.id, Block.GOLD_INGOT.id},
+            {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id},
+            {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id}
+        }, Block.GOLD_LEGGINGS.id, 1);
+
+        // Botas de Ouro
+        reg3(new int[][]{
+            {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id},
+            {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id},
+            {          0,                  0,                   0         }
+        }, Block.GOLD_BOOTS.id, 1);
+
+        // Elmo de Diamante
+        reg3(new int[][]{
+            {Block.DIAMOND.id, Block.DIAMOND.id, Block.DIAMOND.id},
+            {Block.DIAMOND.id,        0,         Block.DIAMOND.id},
+            {       0,                0,                0       }
+        }, Block.DIAMOND_HELMET.id, 1);
+
+        // Peitoral de Diamante
+        reg3(new int[][]{
+            {Block.DIAMOND.id,        0,         Block.DIAMOND.id},
+            {Block.DIAMOND.id, Block.DIAMOND.id, Block.DIAMOND.id},
+            {Block.DIAMOND.id, Block.DIAMOND.id, Block.DIAMOND.id}
+        }, Block.DIAMOND_CHESTPLATE.id, 1);
+
+        // Calça de Diamante
+        reg3(new int[][]{
+            {Block.DIAMOND.id, Block.DIAMOND.id, Block.DIAMOND.id},
+            {Block.DIAMOND.id,        0,         Block.DIAMOND.id},
+            {Block.DIAMOND.id,        0,         Block.DIAMOND.id}
+        }, Block.DIAMOND_LEGGINGS.id, 1);
+
+        // Botas de Diamante
+        reg3(new int[][]{
+            {Block.DIAMOND.id,        0,         Block.DIAMOND.id},
+            {Block.DIAMOND.id,        0,         Block.DIAMOND.id},
+            {       0,                0,                0       }
+        }, Block.DIAMOND_BOOTS.id, 1);
+
     }
 
     public CraftingGrid(int size) {

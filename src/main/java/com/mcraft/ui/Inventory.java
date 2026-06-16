@@ -1,7 +1,5 @@
 package com.mcraft.ui;
 
-import java.util.Map;
-
 import com.mcraft.world.Block;
 
 public class Inventory {
@@ -12,29 +10,9 @@ public class Inventory {
     private final int[] itemId  = new int[TOTAL_SLOTS];
     private final int[] itemQty = new int[TOTAL_SLOTS];
     private final int[] itemDurability = new int[TOTAL_SLOTS];
+    private final int[] armorId  = new int[4];
+    private final int[] armorDur = new int[4];
     private int selectedSlot = 0;
-
-    private static final Map<Integer, Integer> MAX_DUR = Map.ofEntries(
-        Map.entry(Block.WOODEN_PICKAXE.id, 60),
-        Map.entry(Block.WOODEN_AXE.id, 60),
-        Map.entry(Block.WOODEN_SHOVEL.id, 60),
-        Map.entry(Block.WOODEN_SWORD.id, 60),
-
-        Map.entry(Block.STONE_PICKAXE.id, 90),
-        Map.entry(Block.STONE_AXE.id, 90),
-        Map.entry(Block.STONE_SHOVEL.id, 90),
-        Map.entry(Block.STONE_SWORD.id, 90),
-
-        Map.entry(Block.IRON_PICKAXE.id, 120),
-        Map.entry(Block.IRON_AXE.id, 120),
-        Map.entry(Block.IRON_SHOVEL.id, 120),
-        Map.entry(Block.IRON_SWORD.id, 120),
-
-        Map.entry(Block.DIAMOND_PICKAXE.id, 180),
-        Map.entry(Block.DIAMOND_AXE.id, 180),
-        Map.entry(Block.DIAMOND_SHOVEL.id, 180),
-        Map.entry(Block.DIAMOND_SWORD.id, 180)
-    );
 
     public void clearSlot(int index) {
         if (index < 0 || index >= TOTAL_SLOTS) return;
@@ -46,20 +24,20 @@ public class Inventory {
         if (index < 0 || index >= TOTAL_SLOTS) return;
         itemId [index] = id;
         itemQty[index] = qty;
-        itemDurability[index] = MAX_DUR.getOrDefault(id, -1);
+        itemDurability[index] = getMaxDurability(id);
     }
 
     public void setSlotFull(int index, int id, int qty, int durability) {
         if (index < 0 || index >= TOTAL_SLOTS) return;
         itemId  [index] = id;
         itemQty [index] = qty;
+        
         if (durability < 0 && isTool(id)) {
-            itemDurability[index] = MAX_DUR.getOrDefault(id, -1);
+            itemDurability[index] = getMaxDurability(id);
         } else {
             itemDurability[index] = durability;
         }
     }
-
 
     public void swapSlots(int a, int b) {
         int tmpId  = itemId [a]; int tmpQty = itemQty[a];
@@ -83,7 +61,7 @@ public class Inventory {
     }
 
     public void addItem(int blockId, int qty) {
-        int maxDur = MAX_DUR.getOrDefault(blockId, -1);
+        int maxDur = getMaxDurability(blockId);
 
         if (maxDur >= 0) {
             for (int i = 0; i < TOTAL_SLOTS; i++) {
@@ -121,7 +99,7 @@ public class Inventory {
         }
     }
 
-        public void removeItem(int blockId, int qty) {
+    public void removeItem(int blockId, int qty) {
         for (int i = 0; i < TOTAL_SLOTS && qty > 0; i++) {
             if (itemId[i] == blockId) {
                 int remove = Math.min(qty, itemQty[i]);
@@ -160,10 +138,20 @@ public class Inventory {
         return itemDurability;
     }
 
+    public int  getArmorId (int slot) { return armorId [slot]; }
+    public int  getArmorDur(int slot) { return armorDur[slot]; }
+
     public static int getMaxDurability(int blockId) {
-        return MAX_DUR.getOrDefault(blockId, -1);
+        Block b = Block.fromId(blockId);
+        if (b == null) return -1;
+        
+        if (b.isTool()) return b.getToolMaxDurability();
+        
+        if (b.isArmor()) return b.getArmorMaxDurability();
+        
+        return -1;
     }
-    
+        
     public int getItemDurability(int slot) {
         if (slot < 0 || slot >= TOTAL_SLOTS) return -1;
         return itemDurability[slot];
@@ -182,6 +170,54 @@ public class Inventory {
     }
 
     public static boolean isTool(int blockId) {
-        return MAX_DUR.containsKey(blockId);
+        Block b = Block.fromId(blockId);
+        if (b == null) return false;
+        
+        return b.isTool() || b.isArmor();
     }
+
+    public int equipArmor(int armorBlockId, int durability) {
+        Block armor = Block.fromId(armorBlockId);
+        int slot = armor.getArmorSlot();
+        if (slot < 0) return armorBlockId;
+        
+        int oldArmorId = armorId[slot];
+
+        armorId [slot] = armorBlockId;
+        armorDur[slot] = (durability < 0) ? armor.getArmorMaxDurability() : durability;
+        
+        return oldArmorId;
+    }
+
+    public int unequipArmor(int slot) {
+        int id = armorId[slot];
+        armorId[slot] = 0; armorDur[slot] = 0;
+        return id;
+    }
+
+
+    public float getTotalArmorReduction() {
+        float total = 0f;
+        for (int i = 0; i < 4; i++) {
+            if (armorId[i] != 0) {
+                total += Block.fromId(armorId[i]).getArmorProtection();
+            }
+        }
+        return Math.min(0.85f, total);
+    }
+
+    public boolean damageArmor(int amount) {
+        boolean brokeAny = false;
+        for (int i = 0; i < 4; i++) {
+            if (armorId[i] == 0) continue;
+            armorDur[i] -= amount;
+            if (armorDur[i] <= 0) {
+                armorId[i] = 0;
+                armorDur[i] = 0;
+                brokeAny = true;
+            }
+        }
+        return brokeAny;
+    }
+        
 }
