@@ -130,6 +130,16 @@ public class WorldIO {
 
                 out.writeInt(player.getInventory().getSelectedSlot());
 
+                int[] armors = player.getInventory().getArmors();
+                int[] armorsDur = player.geInventory().getArmorDurabilities();
+
+                out.writeInt(armors.length);
+
+                for (int i = 0; i < armors.length; i++){
+                    out.writeInt(armors[i]);
+                    out.writeInt(armorsDur[i]);
+                }
+
                 out.writeInt(weatherSystem.getCurrentOrdinal());
                 out.writeFloat(weatherSystem.getIntensity());
                 out.writeFloat(weatherSystem.getChangeTimer());
@@ -338,6 +348,16 @@ public class WorldIO {
                 }
 
                 data.selectedSlot = in.readInt();
+
+                int armorSize = in.readInt();
+
+                data.armorItems = new int[armorSize];
+                data.armorDurabilities = new int[armorSize];
+
+                for (int i = 0; i < armorSize; i++) {
+                    data.armorItems[i] = in.readInt();
+                    data.armorDurabilities[i] = in.readInt();
+                }
 
                 data.weatherType = in.readInt();
                 data.weatherIntensity = in.readFloat();

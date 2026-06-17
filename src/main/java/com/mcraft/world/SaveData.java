@@ -24,6 +24,9 @@ public class SaveData {
 
     public int selectedSlot;
 
+    public int[] armorItems;
+    public int[] armorDurabilities;
+
     public int weatherType;
     public float weatherIntensity;
     public float weatherChangeTimer;

@@ -95,7 +95,9 @@ public class Main {
                 saveData.inventoryItems,
                 saveData.inventoryCounts,
                 saveData.inventoryDurabilities,
-                saveData.selectedSlot
+                saveData.selectedSlot,
+                saveData.armorItems,
+                saveData.armorDurabilities
             );
 
             loop.getPlayer().setHealth(saveData.playerHealth);

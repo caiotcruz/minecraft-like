@@ -109,11 +109,13 @@ public class Inventory {
         }
     }
 
-    public void load(int[] items, int[] counts, int[] durability, int selectedSlot) {
+    public void load(int[] items, int[] counts, int[] durability, int selectedSlot, int[] armors, int[] armorsDur) {
 
         System.arraycopy(items, 0, this.getItems(), 0, items.length);
         System.arraycopy(counts, 0, this.getCounts(), 0, counts.length);
         System.arraycopy(durability, 0, this.getDurabilities(), 0, durability.length);
+        System.arraycopy(armors, 0, this.getArmors(), 0, armors.length);
+        System.arraycopy(armorsDur, 0, this.getArmorDurabilities(), 0, armorsDur.length);
 
         this.selectedSlot = selectedSlot;
     }
@@ -136,6 +138,14 @@ public class Inventory {
 
     public int[] getDurabilities(){
         return itemDurability;
+    }
+
+    public int[] getArmors(){
+        return armorId;
+    }
+
+    public int[] getArmorDurabilities(){
+        return armorDur;
     }
 
     public int  getArmorId (int slot) { return armorId [slot]; }
