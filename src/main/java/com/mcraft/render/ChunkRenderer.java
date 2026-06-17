@@ -92,8 +92,18 @@ public class ChunkRenderer {
 
                         Block neighbor = getNeighborFast(chunk, nN, nS, nW, nE, nx, ny, nz);
 
-                        if (block.solid && neighbor.solid) continue;
-                        if (isWater && (neighbor == Block.WATER || neighbor.solid)) continue;
+                        if (block.solid) {
+                            if (neighbor.solid) {
+                                if (block != Block.LEAVES && neighbor == Block.LEAVES) {
+                                } else {
+                                    continue; 
+                                }
+                            }
+                        }
+                        
+                        if (isWater && (neighbor == Block.WATER || neighbor.solid)) {
+                            continue;
+                        }
 
                         if (isWater && (nx < 0 || nx >= cs || nz < 0 || nz >= cs)) {
                             boolean neighborLoaded = (nx < 0  && nN != null) ||
