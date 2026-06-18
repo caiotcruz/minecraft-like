@@ -83,6 +83,11 @@ public class ChestScreen extends Screen2D {
         drawHeldItemIcon();
         flushBatch(true);
 
+        beginBatch();
+        drawChestCounts();
+        drawPlayerCounts();
+        flushBatch(false);
+
         endRender();
     }
 
@@ -108,7 +113,6 @@ public class ChestScreen extends Screen2D {
             int id = chestInv.getItemId(i);
             if (id == 0) continue;
             drawBlockIcon(Block.fromId(id), chestSlotX(i)+2, chestSlotY(i)+2, SLOT_PX-4);
-            drawSlotQty(chestInv, i, chestSlotX(i), chestSlotY(i));
         }
     }
 
@@ -120,12 +124,27 @@ public class ChestScreen extends Screen2D {
         }
     }
 
+    private void drawChestCounts() {
+        for (int i = 0; i < 27; i++) {
+            if (chestInv.getItemId(i) != 0) {
+                drawSlotQty(chestInv, i, chestSlotX(i), chestSlotY(i));
+            }
+        }
+    }
+
     private void drawPlayerIcons() {
         for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
             int id = playerInv.getItemId(i);
             if (id == 0) continue;
             drawBlockIcon(Block.fromId(id), playerSlotX(i)+2, playerSlotY(i)+2, SLOT_PX-4);
-            drawSlotQty(playerInv, i, playerSlotX(i), playerSlotY(i));
+        }
+    }
+
+    private void drawPlayerCounts() {
+        for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
+            if (playerInv.getItemId(i) != 0) {
+                drawSlotQty(playerInv, i, playerSlotX(i), playerSlotY(i));
+            }
         }
     }
 

@@ -68,34 +68,35 @@ public class InventoryScreen extends Screen2D {
         return invAreaY() + slot * (SLOT_PX + PAD);
     }
 
+    @Override
     public void render() {
         beginRender();
 
         beginBatch();
-
         drawPanel(); 
         drawInventorySlots();
-    
         drawArmorSlots(); 
 
         if (heldId != 0) {
-            addRect(mouseX - SLOT_PX / 2, mouseY - SLOT_PX / 2,
-                    SLOT_PX, SLOT_PX, 0.5f, 0.5f, 0.5f, 0.75f);
+            addRect(mouseX - SLOT_PX / 2, mouseY - SLOT_PX / 2, SLOT_PX, SLOT_PX, 0.5f, 0.5f, 0.5f, 0.75f);
         }
+
         drawTopSectionGeometry(); 
         drawHeldItem();
-        flushBatch(false);
+        flushBatch(false); 
 
         atlas.bind(0);
         beginBatch();
         drawInventoryIcons();
-        
         drawArmorIcons(); 
-
         drawTopSectionIcons();
         drawHeldItemIcon();
-        drawSlotCounts();
-        flushBatch(true);
+        flushBatch(true); 
+
+        beginBatch();
+        drawSlotCounts(); 
+        drawTopSectionCounts(); 
+        flushBatch(false); 
 
         endRender();
     }
@@ -191,6 +192,31 @@ public class InventoryScreen extends Screen2D {
         int[] result = craft.getResult();
         if (result != null && result[0] != 0) {
             drawBlockIcon(Block.fromId(result[0]), resultX() + 2, resultY() + 2, SLOT_PX - 4);
+            int resultQty = craft.getResultQty();
+            if (resultQty > 1) {
+                int nw = PixelFont.measureWidth(resultQty) * 2 + 2;
+                PixelFont.drawIntShadow(this::addRect, resultX() + SLOT_PX - nw - 2, resultY() + SLOT_PX - 12, 2, resultQty, 1f, 1f, 1f);
+            }
+        }
+    }
+
+    protected void drawTopSectionCounts() {
+        if (!isDefaultCraftActive()) return; 
+
+        for (int i = 0; i < craft.size * craft.size; i++) {
+            int qty = craft.getSlotQty(i);
+            if (qty > 1) {
+                int row = i / craft.size;
+                int col = i % craft.size;
+                int cx = craftX(col);
+                int cy = craftY(row);
+                int nw = PixelFont.measureWidth(qty) * 2 + 2;
+                PixelFont.drawIntShadow(this::addRect, cx + SLOT_PX - nw - 2, cy + SLOT_PX - 12, 2, qty, 1f, 1f, 1f);
+            }
+        }
+
+        int[] result = craft.getResult();
+        if (result != null && result[0] != 0) {
             int resultQty = craft.getResultQty();
             if (resultQty > 1) {
                 int nw = PixelFont.measureWidth(resultQty) * 2 + 2;
