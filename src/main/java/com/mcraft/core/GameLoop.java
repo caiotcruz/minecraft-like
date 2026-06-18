@@ -15,6 +15,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F4;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F5;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F6;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F7;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
@@ -655,9 +656,13 @@ public class GameLoop {
             jump = input.isKeyDown(GLFW_KEY_SPACE);
             dive = !inventoryOpen && input.isKeyDown(GLFW_KEY_LEFT_SHIFT) && player.isInWater();
 
-            //Coloar Noite
+            //Colocar Noite
             if (input.isKeyDown(GLFW_KEY_F2)) {
                 dayNight.setTime(0.8f);
+            }
+            //Colocar Dia
+            if (input.isKeyDown(GLFW_KEY_F7)) {
+                dayNight.setTime(0.4f);
             }
 
             //Spawnar Zumbi
