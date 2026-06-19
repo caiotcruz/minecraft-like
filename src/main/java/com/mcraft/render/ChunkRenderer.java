@@ -94,7 +94,7 @@ public class ChunkRenderer {
 
                         if (block.solid) {
                             if (neighbor.solid) {
-                                if (block != Block.LEAVES && neighbor == Block.LEAVES) {
+                                if (!block.isLeaves() && neighbor.isLeaves()) {
                                 } else {
                                     continue; 
                                 }

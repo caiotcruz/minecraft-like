@@ -17,26 +17,38 @@ public class CraftingGrid {
     static {
         // Receitas 2×2 (inventário)
 
-        //Planks
+        //Oak Planks
         reg2(new int[][]{
-            {5,0},
+            {Block.WOOD_LOG.id,0},
             {0,0}
         }, Block.PLANKS.id, 4);
-        
+
+        // Spruce Plank
+        reg2(new int[][]{
+            {Block.SPRUCE_LOG.id,0},
+            {0,0}
+        }, Block.SPRUCE_PLANKS.id, 4);
+
+        // Jungle Plank
+        reg2(new int[][]{
+            {Block.JUNGLE_LOG.id,0},
+            {0,0}
+        }, Block.JUNGLE_PLANKS.id, 4);
+
         //bancada
         reg2(new int[][]{
-            {9,9},
-            {9,9}
+            {Block.PLANKS.id, Block.PLANKS.id},
+            {Block.PLANKS.id, Block.PLANKS.id}
         }, Block.CRAFTING_TABLE.id, 1);
 
         //Stick
         reg2(new int[][]{
-            {9,0},
-            {9,0}
+            {Block.PLANKS.id,0},
+            {Block.PLANKS.id,0}
         }, Block.STICK.id , 4);
         reg2(new int[][]{
-            {0,9},
-            {0,9}
+            {0,Block.PLANKS.id},
+            {0,Block.PLANKS.id}
         }, Block.STICK.id , 4);
 
         // Receitas 3×3 (bancada)

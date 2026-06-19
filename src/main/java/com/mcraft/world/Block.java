@@ -11,6 +11,8 @@ public enum Block {
     DIRT           ( 2, "block/dirt",             2,  0, true,  0.75f, 0),
     PLANKS         ( 9, "block/planks",           3,  0, true,  1.50f, 0),
     BEDROCK        ( 8, "block/bedrock",          4,  0, true,  0f, 0),
+    SPRUCE_PLANKS  ( 72,"block/spruce_planks",    5,  0, true,  1.50f, 0),
+    JUNGLE_PLANKS  ( 73,"block/jungle_planks",    6,  0, true,  1.50f, 0),
 
     // ROW 1 — NATUREZA
     SAND           ( 4, "block/sand",             0,  1, true,  0.75f, 0),
@@ -18,6 +20,10 @@ public enum Block {
     LEAVES         ( 6, "block/leaves",           2,  1, true,  0.35f, 0),
     CACTUS         (21, "block/cactus",           3,  1, true,  0.50f, 0),
     DENSE_GRASS    (32, "block/dense_grass",      4,  1, true,  0.9f, 0),
+    SPRUCE_LOG     (68, "block/spruce_log",       5,  1, true,  2.0f, 0),
+    SPRUCE_LEAVES  (69, "block/spruce_leaves",    6,  1, true,  0.35f, 0),
+    JUNGLE_LOG     (70, "block/jungle_log",       7,  1, true,  2.0f, 0),
+    JUNGLE_LEAVES  (71, "block/jungle_leaves",    8,  1, true,  0.35f, 0),
 
     // ROW 2 — MINÉRIOS
     COAL_ORE       (11, "block/coal_ore",         0,  2, true,  3.0f, 0),
@@ -103,6 +109,8 @@ public enum Block {
     * SNOWY_GRASS_SIDE          6 15
     * WOOD_LOG_SIDE             7 15
     * CACTUS_SIDE               8 15
+    * SPRUCE_LOG_SIDE           9 15
+    * JUNGLE_LOG_SIDE           10 15
     */
 
     public final int     id;
@@ -175,7 +183,7 @@ public enum Block {
 
     public boolean isWoodType() {
         return switch (this) {
-            case WOOD_LOG, PLANKS, CRAFTING_TABLE, CHEST -> true;
+            case WOOD_LOG, SPRUCE_LOG, JUNGLE_LOG, PLANKS, CRAFTING_TABLE, CHEST -> true;
             default -> false;
         };
     }
@@ -183,6 +191,13 @@ public enum Block {
     public boolean isEarthType() {
         return switch (this) {
             case DIRT, GRASS, SAND, SNOW, SNOWY_GRASS, DENSE_GRASS -> true;
+            default -> false;
+        };
+    }
+
+    public boolean isLeaves() {
+        return switch (this) {
+            case LEAVES, SPRUCE_LEAVES, JUNGLE_LEAVES -> true;
             default -> false;
         };
     }
@@ -261,6 +276,18 @@ public enum Block {
                 switch (face) {
                     case 0, 1 -> { col = 1; row = 1; }
                     default -> { col = 7; row = 15; }
+                }
+            }
+            case SPRUCE_LOG -> {
+                switch (face){
+                    case 0, 1 -> { col = 5; row = 1; }
+                    default -> { col = 9; row = 15; }
+                }
+            }
+            case JUNGLE_LOG -> {
+                switch (face){
+                    case 0, 1 -> { col = 7; row = 1; }
+                    default -> { col = 10; row = 15; }
                 }
             }
             case CRAFTING_TABLE -> {

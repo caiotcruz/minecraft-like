@@ -342,24 +342,40 @@ public class WorldGen {
     }
 
     private void plantOakTree(byte[] blocks, int tx, int ty, int tz, int size, int height, int cx, int cz, int t) {
-        int trunkH = 4 + chunkRandInt(cx, cz, t*10+5, 2); 
+        int trunkH = 4 + chunkRandInt(cx, cz, t*10+5, 2);
 
-        for (int dy = 1; dy <= trunkH; dy++) setBlock(blocks, tx, ty+dy, tz, Block.WOOD_LOG, size, height);
+        for (int dy = 1; dy <= trunkH; dy++) {
+            setBlock(blocks, tx, ty+dy, tz, Block.WOOD_LOG, size, height);
+        }
 
-        int leafTop = ty + trunkH;
-        for (int dx = -2; dx <= 2; dx++)
-            for (int dz = -2; dz <= 2; dz++)
+        int leafTop      = ty + trunkH;
+        int coreRadius   = 1;
+        int outerRadius  = 2;
+
+        for (int dx = -outerRadius; dx <= outerRadius; dx++) {
+            for (int dz = -outerRadius; dz <= outerRadius; dz++) {
                 for (int dy = -1; dy <= 2; dy++) {
-                    if (Math.max(Math.abs(dx), Math.max(Math.abs(dz), Math.abs(dy))) > 2) continue;
-                    if (dx==0 && dz==0 && dy <= 0) continue; 
+                    int dist = Math.max(Math.abs(dx), Math.max(Math.abs(dz), Math.abs(dy)));
+                    if (dist > outerRadius) continue;
+                    if (dx == 0 && dz == 0 && dy <= 0) continue;
+
+                    if (dist > coreRadius) {
+                        int wx = cx*size + tx + dx, wy = leafTop + dy, wz = cz*size + tz + dz;
+                        if (!leafEdgeKeep(wx, wy, wz, 0.70f)) continue;
+                    }
+
                     setBlockIfAir(blocks, tx+dx, leafTop+dy, tz+dz, Block.LEAVES, size, height);
                 }
+            }
+        }
     }
 
     private void plantSpruceTree(byte[] blocks, int tx, int ty, int tz, int size, int height, int cx, int cz, int t) {
-        int trunkH = 6 + chunkRandInt(cx, cz, t*10+5, 3); 
+        int trunkH = 6 + chunkRandInt(cx, cz, t*10+5, 3);
 
-        for (int dy = 1; dy <= trunkH; dy++) setBlock(blocks, tx, ty+dy, tz, Block.WOOD_LOG, size, height);
+        for (int dy = 1; dy <= trunkH; dy++) {
+            setBlock(blocks, tx, ty+dy, tz, Block.SPRUCE_LOG, size, height);
+        }
 
         int[] layerRadius = {0, 1, 1, 2, 2, 2};
         int startLayer = ty + trunkH;
@@ -367,11 +383,26 @@ public class WorldGen {
         for (int layer = 0; layer < layerRadius.length; layer++) {
             int ly   = startLayer - layer;
             int lrad = layerRadius[layer];
-            for (int dx = -lrad; dx <= lrad; dx++)
+
+            for (int dx = -lrad; dx <= lrad; dx++) {
                 for (int dz = -lrad; dz <= lrad; dz++) {
-                    if (Math.abs(dx) == lrad && Math.abs(dz) == lrad) continue;
-                    setBlockIfAir(blocks, tx+dx, ly, tz+dz, Block.LEAVES, size, height);
+                    boolean isCorner = (Math.abs(dx) == lrad && Math.abs(dz) == lrad);
+
+                    if (isCorner) {
+                        continue;
+                    }
+
+                    boolean nearCorner = lrad >= 2
+                        && (Math.abs(dx) == lrad || Math.abs(dz) == lrad);
+
+                    if (nearCorner) {
+                        int wx = cx*size + tx + dx, wy = ly, wz = cz*size + tz + dz;
+                        if (!leafEdgeKeep(wx, wy, wz, 0.65f)) continue;
+                    }
+
+                    setBlockIfAir(blocks, tx+dx, ly, tz+dz, Block.SPRUCE_LEAVES, size, height);
                 }
+            }
         }
     }
 
@@ -394,35 +425,61 @@ public class WorldGen {
     }
 
     private void plantRainforestTree(byte[] blocks, int tx, int ty, int tz, int size, int height, int cx, int cz, int t) {
-        int trunkH = 9 + chunkRandInt(cx, cz, t*10+5, 5); 
+        int trunkH = 9 + chunkRandInt(cx, cz, t*10+5, 5);
 
         for (int dy = 1; dy <= trunkH; dy++) {
             for (int dtx = 0; dtx <= 1; dtx++) {
                 for (int dtz = 0; dtz <= 1; dtz++) {
-                    setBlock(blocks, tx+dtx, ty+dy, tz+dtz, Block.WOOD_LOG, size, height);
+                    setBlock(blocks, tx+dtx, ty+dy, tz+dtz, Block.JUNGLE_LOG, size, height);
                 }
             }
         }
 
         int[][] layers = {
-            {trunkH - 2, 4}, 
-            {trunkH,     3}, 
-            {trunkH + 2, 2}, 
+            { trunkH - 2, 4 },
+            { trunkH,     3 },
+            { trunkH + 2, 2 },
         };
 
         for (int[] layer : layers) {
             int lyOff = layer[0], rad = layer[1];
             int ly = ty + lyOff;
+            int coreRad = rad - 1;
+
             for (int dx = -rad; dx <= rad + 1; dx++) {
                 for (int dz = -rad; dz <= rad + 1; dz++) {
                     int dist2 = dx*dx + dz*dz;
                     if (dist2 > (rad+1)*(rad+1)) continue;
-                    setBlockIfAir(blocks, tx+dx, ly, tz+dz, Block.LEAVES, size, height);
-                    if (dist2 <= rad*rad)
-                        setBlockIfAir(blocks, tx+dx, ly-1, tz+dz, Block.LEAVES, size, height);
+
+                    boolean isOuterShell = dist2 > coreRad*coreRad;
+
+                    if (isOuterShell) {
+                        int wx = cx*size + tx + dx, wy = ly, wz = cz*size + tz + dz;
+                        if (!leafEdgeKeep(wx, wy, wz, 0.72f)) continue;
+                    }
+
+                    setBlockIfAir(blocks, tx+dx, ly, tz+dz, Block.JUNGLE_LEAVES, size, height);
+
+                    if (dist2 <= rad*rad) {
+                        boolean innerShell = dist2 > coreRad*coreRad;
+                        if (innerShell) {
+                            int wx2 = cx*size+tx+dx, wy2 = ly-1, wz2 = cz*size+tz+dz;
+                            if (!leafEdgeKeep(wx2, wy2, wz2, 0.72f)) continue;
+                        }
+                        setBlockIfAir(blocks, tx+dx, ly-1, tz+dz, Block.JUNGLE_LEAVES, size, height);
+                    }
                 }
             }
         }
+    }
+
+    private static boolean leafEdgeKeep(int wx, int wy, int wz, float keepChance) {
+        long h = (long) wx * 374761393L
+            ^ (long) wy * 668265263L
+            ^ (long) wz * 2147483647L;
+        h = (h ^ (h >>> 13)) * 1274126177L;
+        float r = ((h >>> 8) & 0xFFFFFF) / (float) 0xFFFFFF;
+        return r < keepChance;
     }
 
     private void setBlock(byte[] b, int x, int y, int z, Block type, int s, int h) {

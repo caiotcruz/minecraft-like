@@ -137,6 +137,8 @@ public class TextureAtlas {
             { "block/snowy_grass_side.png" , "6", "15" },
             { "block/wood_log_side.png"    , "7", "15" },
             { "block/cactus_side.png"      , "8", "15" },
+            { "block/spruce_log_side.png"    , "9", "15" },
+            { "block/jungle_log_side.png"    , "10", "15" }
         };
 
         for (String[] aux : texturasAuxiliares) {
@@ -171,6 +173,12 @@ public class TextureAtlas {
         }
         if (name.equals("leaves")) {
             return new float[]{ 0.48f, 0.74f, 0.29f };
+        }
+        if (name.equals("spruce_leaves")) {
+            return new float[]{ 0.38f, 0.60f, 0.38f };
+        }
+        if (name.equals("jungle_leaves")) {
+            return new float[]{ 0.30f, 0.75f, 0.24f };
         }
         if (name.equals("water")) {
             return new float[]{ 0.22f, 0.43f, 0.84f };
