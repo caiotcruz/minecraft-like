@@ -92,15 +92,21 @@ public class ChunkRenderer {
 
                         Block neighbor = getNeighborFast(chunk, nN, nS, nW, nE, nx, ny, nz);
 
+                        boolean isLeafFace = false;
+
                         if (block.solid) {
                             if (neighbor.solid) {
-                                if (!block.isLeaves() && neighbor.isLeaves()) {
-                                } else {
-                                    continue; 
+                                if (block.isLeaves() && neighbor.isLeaves()) {
+                                    isLeafFace = true;
+                                }
+                                else if (!block.isLeaves() && neighbor.isLeaves()) {
+                                }
+                                else {
+                                    continue;
                                 }
                             }
                         }
-                        
+                                                
                         if (isWater && (neighbor == Block.WATER || neighbor.solid)) {
                             continue;
                         }
@@ -143,7 +149,12 @@ public class ChunkRenderer {
                             lightDir *= 1.1f;
                         }
 
-                        FloatBuffer target = isWater ? wBuf : vBuf;
+                        boolean isTransparentPass = isWater || isLeafFace;
+                        FloatBuffer target = isTransparentPass ? wBuf : vBuf;
+
+                        if (isLeafFace) {
+                            lightDir = -lightDir; 
+                        }
 
                         for (int v = 0; v < 4; v++) {
                             target.put(x + vv[v][0]).put(y + vv[v][1]).put(z + vv[v][2]);
@@ -153,7 +164,7 @@ public class ChunkRenderer {
                             target.put(blockNorm);
                         }
 
-                        if (isWater) {
+                        if (isTransparentPass) {
                             int base = wQuadCount * 4;
                             wIdx.put(base).put(base + 1).put(base + 2)
                                 .put(base + 2).put(base + 3).put(base);
