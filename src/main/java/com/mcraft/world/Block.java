@@ -36,6 +36,8 @@ public enum Block {
     CHEST          (31, "block/chest",            1,  3, true,  1.50f, 0),
     BED            (24, "block/bed",              2,  3, true,  0.50f, 0),
     FURNACE        (33, "block/furnace",          3,  3, true,  1.50f, 0),
+    DOOR_CLOSED    (74, "block/door_closed", 12, 12, true, 1.5f, 0),
+    DOOR_OPEN      (75, "block/door_open",   12, 12, false, 1.5f, 0),
 
     // ROW 4 — FERRAMENTAS E ARMAS
     WOODEN_PICKAXE (26, "tools/wooden_pickaxe",   0,  4, false, 0f, 0),
@@ -149,8 +151,13 @@ public enum Block {
         return switch (this) {
             case COAL_ORE -> Block.COAL.id;
             case DIAMOND_ORE -> Block.DIAMOND.id;
+            case DOOR_OPEN -> Block.DOOR_CLOSED.id;
             default       -> this.id;
         };
+    }
+    public boolean isPlaceableItem() {
+        if (solid) return true;
+        return this == TORCH || this == BED || this == DOOR_CLOSED;
     }
 
     public int getToolMaxDurability() {

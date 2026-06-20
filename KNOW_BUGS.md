@@ -31,4 +31,3 @@
 ## TEXTURE
 
 - Textura do cacto menor que o bloco em sí
-- Folhas está visualmente desagradável

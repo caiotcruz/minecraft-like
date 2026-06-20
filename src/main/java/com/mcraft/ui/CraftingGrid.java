@@ -317,6 +317,12 @@ public class CraftingGrid {
             {       0,                0,                0       }
         }, Block.DIAMOND_BOOTS.id, 1);
 
+        //Porta
+        reg3(new int[][]{
+            {Block.PLANKS.id, Block.PLANKS.id, 0},
+            {Block.PLANKS.id, Block.PLANKS.id, 0},
+            {Block.PLANKS.id, Block.PLANKS.id, 0}
+        }, Block.DOOR_CLOSED.id, 2);
     }
 
     public CraftingGrid(int size) {
