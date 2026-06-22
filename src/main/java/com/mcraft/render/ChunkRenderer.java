@@ -31,6 +31,7 @@ public class ChunkRenderer {
         for(int i=0; i<16; i++) LIGHT_CACHE[i] = i / 15.0f;
     }
 
+    private static final float DOOR_THICK = 0.1875f;
     private static final float BED_TOP_Y = 0.5625f;
 
     private static final int[][] FACE_DIR = {
@@ -82,6 +83,15 @@ public class ChunkRenderer {
                     boolean isWater = (block == Block.WATER);
 
                     if (block == Block.AIR) continue;
+
+                    if (block == Block.DOOR_CLOSED || block == Block.DOOR_OPEN) {
+                        boolean open = (block == Block.DOOR_OPEN);
+
+                        quadCount += addDoorGeometry( x, y, z, open, chunk, nN, nS, nW, nE, vBuf, iBuf, quadCount, world, cx, cz);
+
+                        continue;
+                    }
+
                     if (!block.solid && !isWater) continue;
 
                     for (int face = 0; face < 6; face++) {
@@ -206,6 +216,57 @@ public class ChunkRenderer {
         glBindVertexArray(0);
     }
 
+    private int addDoorGeometry(int bx, int by, int bz, boolean open, Chunk chunk, Chunk nN, Chunk nS, Chunk nW, Chunk nE, FloatBuffer vBuf, IntBuffer iBuf, int baseQuad, World world, int cx0, int cz0) {
+        Block westN = getNeighborFast(chunk, nN, nS, nW, nE, bx-1, by, bz);
+        Block eastN = getNeighborFast(chunk, nN, nS, nW, nE, bx+1, by, bz);
+        boolean wallRunsAlongX = westN.solid || eastN.solid;
+
+        boolean spanX = open ? !wallRunsAlongX : wallRunsAlongX;
+
+        float x0, x1, z0, z1;
+        if (spanX) {
+            x0 = bx;      x1 = bx + 1f;
+            z0 = bz;      z1 = bz + DOOR_THICK;
+        } else {
+            x0 = bx;      x1 = bx + DOOR_THICK;
+            z0 = bz;      z1 = bz + 1f;
+        }
+        float y0 = by, y1 = by + 1f;
+
+        int lx = bx - cx0, lz = bz - cz0;
+        int skyL, blockL;
+        if (lx >= 0 && lx < Chunk.SIZE && lz >= 0 && lz < Chunk.SIZE) {
+            skyL   = chunk.getSkyLight  (lx, by, lz);
+            blockL = chunk.getBlockLight(lx, by, lz);
+        } else {
+            skyL   = world.getSkyLightAt  (bx, by, bz);
+            blockL = world.getBlockLightAt(bx, by, bz);
+        }
+        float sn = skyL / 15f, bn = blockL / 15f;
+
+        float ts = 1f/16f;
+        float u0 = 12*ts, u1 = 13*ts, v0 = 12*ts, v1 = 13*ts;
+
+        int q = baseQuad;
+        q = addBoxFace(vBuf, iBuf, q, x0,y1,z0, x0,y1,z1, x1,y1,z1, x1,y1,z0, u0,v0,u1,v1, 1.00f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x0,y0,z1, x0,y0,z0, x1,y0,z0, x1,y0,z1, u0,v0,u1,v1, 0.50f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x0,y0,z1, x1,y0,z1, x1,y1,z1, x0,y1,z1, u0,v0,u1,v1, 0.85f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x1,y0,z0, x0,y0,z0, x0,y1,z0, x1,y1,z0, u0,v0,u1,v1, 0.75f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x0,y0,z0, x0,y0,z1, x0,y1,z1, x0,y1,z0, u0,v0,u1,v1, 0.70f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x1,y0,z1, x1,y0,z0, x1,y1,z0, x1,y1,z1, u0,v0,u1,v1, 0.70f, sn, bn);
+
+        return q - baseQuad;
+    }
+
+    private int addBoxFace(FloatBuffer vBuf, IntBuffer iBuf, int quadIdx, float x0,float y0,float z0, float x1,float y1,float z1, float x2,float y2,float z2, float x3,float y3,float z3, float u0,float v0,float u1,float v1, float lightDir, float sky, float block) {
+        vBuf.put(x0).put(y0).put(z0).put(u0).put(v1).put(lightDir).put(sky).put(block);
+        vBuf.put(x1).put(y1).put(z1).put(u1).put(v1).put(lightDir).put(sky).put(block);
+        vBuf.put(x2).put(y2).put(z2).put(u1).put(v0).put(lightDir).put(sky).put(block);
+        vBuf.put(x3).put(y3).put(z3).put(u0).put(v0).put(lightDir).put(sky).put(block);
+        int base = quadIdx * 4;
+        iBuf.put(base).put(base+1).put(base+2).put(base+2).put(base+3).put(base);
+        return quadIdx + 1;
+    }
 
     private void upload(FloatBuffer vb, IntBuffer ib, boolean water) {
         int myVao, myVbo, myEbo;

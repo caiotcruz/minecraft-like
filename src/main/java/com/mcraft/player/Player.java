@@ -256,28 +256,54 @@ public class Player {
     private boolean checkCollision(World world) {
         float hw = WIDTH / 2f;
 
-        int minX = (int) Math.floor(x - hw),  maxX = (int) Math.floor(x + hw);
-        int minY = (int) Math.floor(y),        maxY = (int) Math.floor(y + HEIGHT);
-        int minZ = (int) Math.floor(z - hw),  maxZ = (int) Math.floor(z + hw);
+        int minX = (int) Math.floor(x - hw), maxX = (int) Math.floor(x + hw);
+        int minY = (int) Math.floor(y),      maxY = (int) Math.floor(y + HEIGHT);
+        int minZ = (int) Math.floor(z - hw), maxZ = (int) Math.floor(z + hw);
 
         if (minY >= Chunk.HEIGHT || maxY < 0) return false;
         minY = Math.max(0, minY);
         maxY = Math.min(Chunk.HEIGHT - 1, maxY);
 
-        if (minX == maxX && minY == maxY && minZ == maxZ) {
-            return world.getBlock(minX, minY, minZ).solid;
-        }
+        float pMinX = x - hw;
+        float pMaxX = x + hw;
+        float pMinY = y;
+        float pMaxY = y + HEIGHT;
+        float pMinZ = z - hw;
+        float pMaxZ = z + hw;
 
         for (int bx = minX; bx <= maxX; bx++) {
-            for (int bz = minZ; bz <= maxZ; bz++) {
-                if (world.getBlock(bx, minY, bz).solid) return true;
-            }
-        }
-
-        for (int bx = minX; bx <= maxX; bx++) {
-            for (int by = minY + 1; by <= maxY; by++) { 
+            for (int by = minY; by <= maxY; by++) {
                 for (int bz = minZ; bz <= maxZ; bz++) {
-                    if (world.getBlock(bx, by, bz).solid) return true;
+                    Block block = world.getBlock(bx, by, bz);
+
+                    if (block.solid) return true;
+
+                    if (block == Block.DOOR_CLOSED) {
+                        Block westN = world.getBlock(bx - 1, by, bz);
+                        Block eastN = world.getBlock(bx + 1, by, bz);
+                        boolean wallRunsAlongX = westN.solid || eastN.solid;
+
+                        float doorX0, doorX1, doorZ0, doorZ1;
+                        float doorY0 = by;
+                        float doorY1 = by + 1.0f;
+                        float doorThick = 0.1875f;
+
+                        if (wallRunsAlongX) {
+                            doorX0 = bx;        doorX1 = bx + 1.0f;
+                            doorZ0 = bz;        doorZ1 = bz + doorThick;
+                        } else {
+                            doorX0 = bx;        doorX1 = bx + doorThick;
+                            doorZ0 = bz;        doorZ1 = bz + 1.0f;
+                        }
+
+                        boolean intersectsX = (pMinX < doorX1 && pMaxX > doorX0);
+                        boolean intersectsY = (pMinY < doorY1 && pMaxY > doorY0);
+                        boolean intersectsZ = (pMinZ < doorZ1 && pMaxZ > doorZ0);
+
+                        if (intersectsX && intersectsY && intersectsZ) {
+                            return true;
+                        }
+                    }
                 }
             }
         }

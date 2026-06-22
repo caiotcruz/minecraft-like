@@ -1075,6 +1075,10 @@ public class GameLoop {
                         dayNight.skipToMorning();
                         hud.showNotification("Passando para a manhã...", 2.0f);
                     }
+                } else if (hitBlock == Block.DOOR_CLOSED) {
+                    world.setBlock(hit.blockX, hit.blockY, hit.blockZ, Block.DOOR_OPEN.id);
+                } else if (hitBlock == Block.DOOR_OPEN) {
+                    world.setBlock(hit.blockX, hit.blockY, hit.blockZ, Block.DOOR_CLOSED.id);
                 } else if (hitBlock == Block.CRAFTING_TABLE) {
                     openCrafting();
                     return; 
