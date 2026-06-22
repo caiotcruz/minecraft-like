@@ -304,6 +304,18 @@ public class Player {
                             return true;
                         }
                     }
+                    if (block == Block.BED) {
+                        float bedY0 = by;
+                        float bedY1 = by + 0.5625f;
+
+                        boolean intersectsX = (pMinX < (bx + 1.0f) && pMaxX > bx);
+                        boolean intersectsY = (pMinY < bedY1         && pMaxY > bedY0);
+                        boolean intersectsZ = (pMinZ < (bz + 1.0f) && pMaxZ > bz);
+
+                        if (intersectsX && intersectsY && intersectsZ) {
+                            return true;
+                        }
+                    }
                 }
             }
         }

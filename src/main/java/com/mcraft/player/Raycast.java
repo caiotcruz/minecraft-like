@@ -55,7 +55,7 @@ public class Raycast {
             }
 
             Block block = world.getBlock(bx, by, bz);
-            if (block.solid || block == Block.DOOR_CLOSED || block == Block.DOOR_OPEN) {
+            if (block.isPlaceableItem()) {
                 result.hit    = true;
                 result.blockX = bx; result.blockY = by; result.blockZ = bz;
                 result.prevX  = prevX; result.prevY = prevY; result.prevZ = prevZ;

@@ -26,13 +26,14 @@ public class ChunkRenderer {
     private int     framesSinceModify   = 0;
     private static final int STABLE_AFTER_FRAMES = 60;
 
+    private static final int MAX_CHUNK_QUADS = 65536;
+
     private static final float[] LIGHT_CACHE = new float[16];
     static {
         for(int i=0; i<16; i++) LIGHT_CACHE[i] = i / 15.0f;
     }
 
     private static final float DOOR_THICK = 0.1875f;
-    private static final float BED_TOP_Y = 0.5625f;
 
     private static final int[][] FACE_DIR = {
         { 0, 1, 0}, { 0,-1, 0}, { 0, 0, 1},
@@ -45,15 +46,6 @@ public class ChunkRenderer {
         {{1,0,0},{0,0,0},{0,1,0},{1,1,0}}, 
         {{0,0,0},{0,0,1},{0,1,1},{0,1,0}}, 
         {{1,0,1},{1,0,0},{1,1,0},{1,1,1}}  
-    };
-
-    private static final float[][][] BED_VERTS = {
-        {{0,BED_TOP_Y,0},{0,BED_TOP_Y,1},{1,BED_TOP_Y,1},{1,BED_TOP_Y,0}},
-        {{0,0,1},{0,0,0},{1,0,0},{1,0,1}},
-        {{0,0,1},{1,0,1},{1,BED_TOP_Y,1},{0,BED_TOP_Y,1}},
-        {{1,0,0},{0,0,0},{0,BED_TOP_Y,0},{1,BED_TOP_Y,0}},
-        {{0,0,0},{0,0,1},{0,BED_TOP_Y,1},{0,BED_TOP_Y,0}},
-        {{1,0,1},{1,0,0},{1,BED_TOP_Y,0},{1,BED_TOP_Y,1}}
     };
 
     private static final float[] FACE_LIGHT = {1.0f,0.5f,0.8f,0.7f,0.65f,0.65f};
@@ -86,9 +78,23 @@ public class ChunkRenderer {
 
                     if (block == Block.DOOR_CLOSED || block == Block.DOOR_OPEN) {
                         boolean open = (block == Block.DOOR_OPEN);
+                        if (quadCount + 6 < MAX_CHUNK_QUADS) {
+                            quadCount += addDoorGeometry( x, y, z, open, chunk, nN, nS, nW, nE, vBuf, iBuf, quadCount, world, cx, cz);
+                        }
+                        continue;
+                    }
 
-                        quadCount += addDoorGeometry( x, y, z, open, chunk, nN, nS, nW, nE, vBuf, iBuf, quadCount, world, cx, cz);
+                    if (block == Block.TORCH) {
+                        if (quadCount + 6 < MAX_CHUNK_QUADS) {
+                            quadCount += addTorchGeometry(x, y, z, chunk, vBuf, iBuf, quadCount, world, cx, cz);
+                        }
+                        continue;
+                    }
 
+                    if (block == Block.BED) {
+                        if (quadCount + 6 < MAX_CHUNK_QUADS) {
+                            quadCount += addBedGeometry(x, y, z, chunk, nN, nS, nW, nE, vBuf, iBuf, quadCount, world, cx, cz);
+                        }
                         continue;
                     }
 
@@ -135,7 +141,7 @@ public class ChunkRenderer {
                         }
 
                         float[] uvs   = block.getUVs(face);
-                        float[][] vv  = (block == Block.BED) ? BED_VERTS[face] : FACE_VERTS[face];
+                        float[][] vv  = FACE_VERTS[face];
 
                         int skyLight, blockLight;
                         int lx = nx;
@@ -258,6 +264,98 @@ public class ChunkRenderer {
         return q - baseQuad;
     }
 
+    private int addTorchGeometry(int bx, int by, int bz, Chunk chunk, FloatBuffer vBuf, IntBuffer iBuf, int baseQuad, World world, int cx0, int cz0) {
+        float x0 = bx + 0.4375f; float x1 = bx + 0.5625f;
+        float y0 = by;           float y1 = by + 0.625f;
+        float z0 = bz + 0.4375f; float z1 = bz + 0.5625f;
+
+        float sn = getSkyLightAt(chunk, world, bx, by, bz, cx0, cz0) / 15f;
+        float bn = 1.0f; 
+
+        float[] uvs = Block.TORCH.getUVs(0);
+        float uStart = uvs[0];
+        float uEnd   = uvs[2];
+        float vEnd   = uvs[1]; 
+        float vStart = uvs[5]; 
+
+        float texWidth = uEnd - uStart;
+        float u0 = uStart + texWidth * 0.4375f;
+        float u1 = uStart + texWidth * 0.5625f;
+        
+        float texHeight = vEnd - vStart;
+        float v0 = vEnd - texHeight * 0.625f; 
+        float v1 = vEnd;                       
+
+        float pad = 0.001f;
+        float ut0 = u0 + pad;
+        float ut1 = u1 - pad;
+        float vt0 = v0 + pad;
+
+        int q = baseQuad;
+        q = addBoxFace(vBuf, iBuf, q, x0,y1,z0, x0,y1,z1, x1,y1,z1, x1,y1,z0, ut0,vt0,ut1,vt0, 1.00f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x0,y0,z1, x0,y0,z0, x1,y0,z0, x1,y0,z1, u0,v1,u1,v1, 0.50f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x0,y0,z1, x1,y0,z1, x1,y1,z1, x0,y1,z1, u0,v0,u1,v1, 0.85f, sn, bn); 
+        q = addBoxFace(vBuf, iBuf, q, x1,y0,z0, x0,y0,z0, x0,y1,z0, x1,y1,z0, u0,v0,u1,v1, 0.75f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x0,y0,z0, x0,y0,z1, x0,y1,z1, x0,y1,z0, u0,v0,u1,v1, 0.70f, sn, bn); 
+        q = addBoxFace(vBuf, iBuf, q, x1,y0,z1, x1,y0,z0, x1,y1,z0, x1,y1,z1, u0,v0,u1,v1, 0.70f, sn, bn);
+
+        return q - baseQuad;
+    }
+
+    private int addBedGeometry(int bx, int by, int bz, Chunk chunk, Chunk nN, Chunk nS, Chunk nW, Chunk nE, FloatBuffer vBuf, IntBuffer iBuf, int baseQuad, World world, int cx0, int cz0) {
+        Block westN = getNeighborFast(chunk, nN, nS, nW, nE, bx-1, by, bz);
+        Block eastN = getNeighborFast(chunk, nN, nS, nW, nE, bx+1, by, bz);
+        boolean alignAlongX = westN.solid || eastN.solid;
+
+        float x0 = bx, x1 = bx + 1f;
+        float y0 = by, y1 = by + 0.5625f;
+        float z0 = bz, z1 = bz + 1f;
+
+        if (alignAlongX) {
+            z0 = bz + 0.0625f; z1 = bz + 0.9375f;
+        } else {
+            x0 = bx + 0.0625f; x1 = bx + 0.9375f;
+        }
+
+        int lx = bx - cx0, lz = bz - cz0;
+        int skyL, blockL;
+        
+        if (lx >= 0 && lx < Chunk.SIZE && lz >= 0 && lz < Chunk.SIZE) {
+            skyL   = chunk.getSkyLight  (lx, by, lz);
+            blockL = chunk.getBlockLight(lx, by, lz);
+        } else {
+            skyL   = world.getSkyLightAt  (bx, by, bz);
+            blockL = world.getBlockLightAt(bx, by, bz);
+        }
+
+        float sn = skyL / 15f;
+        float bn = blockL / 15f;
+
+        int q = baseQuad;
+        
+        float[] uv0 = Block.BED.getUVs(0);
+        float[] uv1 = Block.BED.getUVs(1);
+        float[] uv2 = Block.BED.getUVs(2);
+        float[] uv3 = Block.BED.getUVs(3);
+        float[] uv4 = Block.BED.getUVs(4);
+        float[] uv5 = Block.BED.getUVs(5);
+
+        q = addBoxFace(vBuf, iBuf, q, x0,y1,z0, x0,y1,z1, x1,y1,z1, x1,y1,z0, uv0[0],uv0[3],uv0[2],uv0[5], 1.00f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x0,y0,z1, x0,y0,z0, x1,y0,z0, x1,y0,z1, uv1[0],uv1[3],uv1[2],uv1[5], 0.50f, sn, bn);
+        
+        float vTop2 = uv2[5] + (uv2[3] - uv2[5]) * (1.0f - 0.5625f);
+        float vTop3 = uv3[5] + (uv3[3] - uv3[5]) * (1.0f - 0.5625f);
+        float vTop4 = uv4[5] + (uv4[3] - uv4[5]) * (1.0f - 0.5625f);
+        float vTop5 = uv5[5] + (uv5[3] - uv5[5]) * (1.0f - 0.5625f);
+
+        q = addBoxFace(vBuf, iBuf, q, x0,y0,z1, x1,y0,z1, x1,y1,z1, x0,y1,z1, uv2[0],vTop2,uv2[2],uv2[3], 0.85f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x1,y0,z0, x0,y0,z0, x0,y1,z0, x1,y1,z0, uv3[0],vTop3,uv3[2],uv3[3], 0.75f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x0,y0,z0, x0,y0,z1, x0,y1,z1, x0,y1,z0, uv4[0],vTop4,uv4[2],uv4[3], 0.70f, sn, bn);
+        q = addBoxFace(vBuf, iBuf, q, x1,y0,z1, x1,y0,z0, x1,y1,z0, x1,y1,z1, uv5[0],vTop5,uv5[2],uv5[3], 0.70f, sn, bn);
+
+        return q - baseQuad;
+    }
+
     private int addBoxFace(FloatBuffer vBuf, IntBuffer iBuf, int quadIdx, float x0,float y0,float z0, float x1,float y1,float z1, float x2,float y2,float z2, float x3,float y3,float z3, float u0,float v0,float u1,float v1, float lightDir, float sky, float block) {
         vBuf.put(x0).put(y0).put(z0).put(u0).put(v1).put(lightDir).put(sky).put(block);
         vBuf.put(x1).put(y1).put(z1).put(u1).put(v1).put(lightDir).put(sky).put(block);
@@ -266,6 +364,14 @@ public class ChunkRenderer {
         int base = quadIdx * 4;
         iBuf.put(base).put(base+1).put(base+2).put(base+2).put(base+3).put(base);
         return quadIdx + 1;
+    }
+
+    private int getSkyLightAt(Chunk chunk, World world, int bx, int by, int bz, int cx0, int cz0) {
+        int lx = bx - cx0, lz = bz - cz0;
+        if (lx >= 0 && lx < Chunk.SIZE && lz >= 0 && lz < Chunk.SIZE) {
+            return chunk.getSkyLight(lx, by, lz);
+        }
+        return world.getSkyLightAt(bx, by, bz);
     }
 
     private void upload(FloatBuffer vb, IntBuffer ib, boolean water) {

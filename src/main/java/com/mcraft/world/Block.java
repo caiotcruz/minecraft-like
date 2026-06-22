@@ -34,7 +34,7 @@ public enum Block {
     // ROW 3 — BLOCOS UTILITÁRIOS
     CRAFTING_TABLE (10, "block/crafting_table",   0,  3, true,  1.50f, 0),
     CHEST          (31, "block/chest",            1,  3, true,  1.50f, 0),
-    BED            (24, "block/bed",              2,  3, true,  0.50f, 0),
+    BED            (24, "block/bed",              2,  3, false,  0.50f, 0),
     FURNACE        (33, "block/furnace",          3,  3, true,  1.50f, 0),
     DOOR_CLOSED    (74, "block/door_closed",      12, 12, false, 1.5f, 0),
     DOOR_OPEN      (75, "block/door_open",        12, 12, false, 1.5f, 0),
@@ -79,7 +79,7 @@ public enum Block {
     DIAMOND        (37, "materiais/diamond",          4,  7, false, 0f, 0),
 
     // ROW 8 - ILUMINAÇÃO
-    TORCH          (39, "iluminacao/torch",            0,  8, true, 0.05f, 14),
+    TORCH          (39, "iluminacao/torch",            0,  8, false, 0.05f, 14),
 
     // ROW 9 - ARMADURAS
 
@@ -157,7 +157,7 @@ public enum Block {
     }
     public boolean isPlaceableItem() {
         if (solid) return true;
-        return this == TORCH || this == BED || this == DOOR_CLOSED;
+        return this == TORCH || this == BED || this == DOOR_CLOSED || this == DOOR_OPEN;
     }
 
     public int getToolMaxDurability() {
