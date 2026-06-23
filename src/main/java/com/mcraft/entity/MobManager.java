@@ -15,7 +15,7 @@ public class MobManager {
     private final MobRenderer renderer = new MobRenderer();
     private final Random rng = new Random();
 
-    private static final int MAX_MOBS = 64;
+    public static final int MAX_MOBS = 64;
     private static final float SPAWN_INTERVAL = 10f; 
     private float spawnTimer = 0;
 
@@ -112,4 +112,9 @@ public class MobManager {
     }
 
     public List<Mob> getMobs() { return mobs; }
+
+    public void setMobs(List<Mob> loaded) {
+        mobs.clear();
+        mobs.addAll(loaded);
+    }
 }

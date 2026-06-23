@@ -1,11 +1,13 @@
 package com.mcraft.world;
 
+import com.mcraft.entity.Mob;
 import com.mcraft.player.Player;
 import com.mcraft.ui.Inventory;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -229,6 +231,28 @@ public class WorldIO {
         }
     }
 
+    public void saveMobs(List<Mob> mobs) {
+
+        Path path = saveDir.resolve("mobs.dat");
+
+        try (DataOutputStream out = new DataOutputStream(
+                new BufferedOutputStream(Files.newOutputStream(path)))) {
+
+            out.writeInt(mobs.size());
+
+            for (Mob m : mobs) {
+                out.writeUTF(m.getType().name());
+                out.writeFloat(m.getX());
+                out.writeFloat(m.getY());
+                out.writeFloat(m.getZ());
+                out.writeInt(m.getHealth());
+            }
+
+        } catch (IOException e) {
+            System.err.println("[WorldIO] Erro ao salvar mobs: " + e.getMessage());
+        }
+    }
+
     public Map<Long, Inventory> loadChests() {
         Path path = saveDir.resolve("chests.dat");
         Map<Long, Inventory> map = new HashMap<>();
@@ -289,6 +313,38 @@ public class WorldIO {
             System.err.println("[WorldIO] Erro ao carregar fornalhas: " + e.getMessage());
         }
         return map;
+    }
+
+    public java.util.List<Mob> loadMobs(World world) {
+        java.util.List<Mob> result = new java.util.ArrayList<>();
+        Path path = saveDir.resolve("mobs.dat");
+        if (!Files.exists(path)) return result;
+
+        try (DataInputStream in = new DataInputStream(
+                new BufferedInputStream(Files.newInputStream(path)))) {
+
+            int count   = in.readInt();
+
+            for (int i = 0; i < count; i++) {
+                String typeName = in.readUTF();
+                float  x = in.readFloat(), y = in.readFloat(), z = in.readFloat();
+                int    health = in.readInt();
+
+                if (health <= 0) continue;
+
+                Mob.Type type;
+                try {
+                    type = Mob.Type.valueOf(typeName);
+                } catch (IllegalArgumentException ex) {
+                    continue;
+                }
+
+                result.add(new Mob(type, x, y, z, health));
+            }
+        } catch (IOException e) {
+            System.err.println("[WorldIO] Erro ao carregar mobs: " + e.getMessage());
+        }
+        return result;
     }
 
     public boolean hasSave() {

@@ -113,6 +113,9 @@ public class Main {
             
             loop.getWorld().setChestInventories(io.loadChests());
             loop.getWorld().setFurnaceStates(io.loadFurnaces());
+            loop.setMobs(
+                io.loadMobs(loop.getWorld())
+            );  
 
             loop.getWeatherSystem().restoreState(currentOrdinal, intensity, changeTimer);
         }

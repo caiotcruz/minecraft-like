@@ -1260,6 +1260,7 @@ public class GameLoop {
         }
         blockShader.delete();
         world.saveAll(world.getWorldIO());
+        world.getWorldIO().saveMobs(mobs.getMobs());
         world.deleteAllMeshes();
         hudShader.delete();
         skyRenderer.delete();
@@ -1285,5 +1286,9 @@ public class GameLoop {
 
     public WeatherSystem getWeatherSystem(){
         return this.weather;
+    }
+
+    public void setMobs(java.util.List<Mob> loadedMobs) {
+        mobs.setMobs(loadedMobs);
     }
 }

@@ -18,7 +18,8 @@ import static org.lwjgl.opengl.GL30.*;
 public class MobRenderer {
 
     private static final int VERT_FLOATS = 7; 
-    private static final int MAX_VERTS   = 8_000;
+    private static final int MAX_VERTS_PER_MOB = 300;
+    private static final int MAX_VERTS = MobManager.MAX_MOBS * MAX_VERTS_PER_MOB;
 
     private static final float L_TOP   = 1.00f;
     private static final float L_FRONT = 0.80f;
@@ -31,9 +32,12 @@ public class MobRenderer {
     private final IntBuffer   iBuf = BufferUtils.createIntBuffer(MAX_VERTS * 3 / 2);
     private int vCount, indexCount;
 
+    private boolean overflowWarned = false;
+
     public MobRenderer() { initGPU(); }
 
     public void renderAll(List<Mob> mobs, Shader shader, float[] proj, float[] view, float ambient, float[] fogColor) {
+        overflowWarned = false;
         if (mobs.isEmpty()) return;
 
         shader.use();
@@ -176,7 +180,15 @@ public class MobRenderer {
                       float x2, float y2, float z2,
                       float x3, float y3, float z3,
                       float r, float g, float b, float light) {
-        if (vCount + 4 > MAX_VERTS) return;
+        if (vCount + 4 > MAX_VERTS) {
+            if (!overflowWarned) {
+                System.err.println("[MobRenderer] Buffer de vertices excedido "
+                    + "(MAX_VERTS=" + MAX_VERTS + "). Alguns mobs ficarao invisiveis. "
+                    + "Aumente MAX_VERTS_PER_MOB ou reduza MobManager.MAX_MOBS.");
+                overflowWarned = true;
+            }
+            return;
+        }
         vBuf.put(x0); vBuf.put(y0); vBuf.put(z0); vBuf.put(light); vBuf.put(r); vBuf.put(g); vBuf.put(b);
         vBuf.put(x1); vBuf.put(y1); vBuf.put(z1); vBuf.put(light); vBuf.put(r); vBuf.put(g); vBuf.put(b);
         vBuf.put(x2); vBuf.put(y2); vBuf.put(z2); vBuf.put(light); vBuf.put(r); vBuf.put(g); vBuf.put(b);

@@ -57,6 +57,12 @@ public class Mob extends Entity {
         pickNewWanderDir();
     }
 
+    public Mob(Type type, float x, float y, float z, int initialHealth) {
+        this(type, x, y, z); 
+        this.health = Math.max(1, initialHealth);
+    }
+
+
 
     @Override
     public void update(float dt, World world, float playerX, float playerY, float playerZ) {
@@ -239,7 +245,6 @@ public class Mob extends Entity {
         }
     }
 
-
     private boolean isMoving() {
         return (float) Math.sqrt(velX*velX + velZ*velZ) > 0.4f;
     }
@@ -252,5 +257,9 @@ public class Mob extends Entity {
 
     public Type   getType()  { return type; }
     public AIState getState() { return state; }
+
+    public int getHealth(){
+        return this.health;
+    }
 
 }
