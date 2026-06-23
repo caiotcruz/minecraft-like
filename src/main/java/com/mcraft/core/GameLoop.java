@@ -1018,6 +1018,10 @@ public class GameLoop {
                         player.getInventory().addItem(dropId, 1);
                     }
 
+                    if (target == Block.CHEST) {
+                        dumpChestContents(breakX, breakY, breakZ);
+                    }
+
                     sound.playRandom(
                         sound.breakSound(target),
                         breakX + 0.5f,
@@ -1218,6 +1222,25 @@ public class GameLoop {
             }
 
             if (hit){}
+        }
+    }
+
+    private void dumpChestContents(int bx, int by, int bz) {
+        Inventory chestInv = world.removeChestInventory(bx, by, bz);
+        if (chestInv == null) return; 
+
+        for (int i = 0; i < Inventory.TOTAL_SLOTS; i++) {
+            int id  = chestInv.getItemId(i);
+            if (id == 0) continue;
+
+            int qty = chestInv.getItemQty(i);
+            int dur = chestInv.getItemDurability(i);
+
+            if (dur >= 0) {
+                player.getInventory().addToolWithDurability(id, dur);
+            } else {
+                player.getInventory().addItem(id, qty);
+            }
         }
     }
 

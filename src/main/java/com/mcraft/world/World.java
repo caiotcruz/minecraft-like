@@ -169,6 +169,10 @@ public class World {
         return chestInventories.computeIfAbsent(blockKey(x, y, z), k -> new Inventory());
     }
 
+    public Inventory removeChestInventory(int x, int y, int z) {
+        return chestInventories.remove(blockKey(x, y, z));
+    }
+
     private void markDirty(int cx, int cz) {
         Chunk c = chunks.get(key(cx, cz));
         if (c != null) c.markDirty();
