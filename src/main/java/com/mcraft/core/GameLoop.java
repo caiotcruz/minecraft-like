@@ -1097,27 +1097,7 @@ public class GameLoop {
                     openFurnace();
                     return;
                 }  else{
-                    int blockId = player.getInventory().getSelectedBlockId();
-
-                    if (blockId != 0) {
-
-                        world.setBlock(
-                            hit.prevX,
-                            hit.prevY,
-                            hit.prevZ,
-                            blockId
-                        );
-
-                        player.getInventory().consumeSelected(1);
-
-                        sound.playRandom(
-                            sound.placeSound(target),
-                            hit.prevX + 0.5f,
-                            hit.prevY + 0.5f,
-                            hit.prevZ + 0.5f,
-                            0.6f
-                        );
-                    }
+                    tryPlaceSelectedBlock(hit);
                 }
             }
 
@@ -1183,6 +1163,22 @@ public class GameLoop {
         }
 
         return 1.0f;
+    }
+
+    private void tryPlaceSelectedBlock(Raycast.HitResult hit) {
+        int blockId = player.getInventory().getSelectedBlockId();
+        if (blockId == 0) return;
+
+        if (Inventory.isTool(blockId)) return;
+
+        Block toPlace = Block.fromId(blockId);
+        if (!toPlace.isPlaceableItem()) return;
+
+        Block prevBlock = world.getBlock(hit.prevX, hit.prevY, hit.prevZ);
+        if (prevBlock.solid) return;
+
+        world.setBlock(hit.prevX, hit.prevY, hit.prevZ, blockId);
+        player.getInventory().consumeSelected(1);
     }
 
     private void doRespawn() {
