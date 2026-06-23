@@ -98,8 +98,6 @@ public class WorldIO {
         try (DataOutputStream out = new DataOutputStream(
                 new BufferedOutputStream(Files.newOutputStream(metaPath)))) {
 
-                out.writeInt(2);
-
                 out.writeLong(seed);
 
                 out.writeFloat(player.getX());
@@ -178,34 +176,30 @@ public class WorldIO {
     }
 
     public void saveChests(Map<Long, Inventory> chestInventories) throws IOException {
-
-        Files.createDirectories(saveDir);
+        if (chestInventories.isEmpty()) return;
 
         Path path = saveDir.resolve("chests.dat");
-
         try (DataOutputStream out = new DataOutputStream(
-                new BufferedOutputStream(
-                    Files.newOutputStream(
-                        path,
-                        StandardOpenOption.CREATE,
-                        StandardOpenOption.TRUNCATE_EXISTING,
-                        StandardOpenOption.WRITE
-                    )
-                ))) {
+                new BufferedOutputStream(Files.newOutputStream(path)))) {
 
             out.writeInt(chestInventories.size());
 
             for (Map.Entry<Long, Inventory> entry : chestInventories.entrySet()) {
+                long key = entry.getKey();
+                int  wx  = (int)( key         & 0x3FFFFFF);
+                int  wy  = (int)((key >> 26)  & 0x1FF);
+                int  wz  = (int)((key >> 35)  & 0x3FFFFFF);
 
-                out.writeLong(entry.getKey());
+                out.writeInt(wx);
+                out.writeInt(wy);
+                out.writeInt(wz);
 
                 Inventory inv = entry.getValue();
-
                 out.writeInt(Inventory.TOTAL_SLOTS);
-
                 for (int s = 0; s < Inventory.TOTAL_SLOTS; s++) {
-                    out.writeInt(inv.getItemId(s));
-                    out.writeInt(inv.getItemQty(s));
+                    out.writeInt(inv.getItemId         (s));
+                    out.writeInt(inv.getItemQty        (s));
+                    out.writeInt(inv.getItemDurability (s));
                 }
             }
         }
@@ -238,44 +232,39 @@ public class WorldIO {
     public Map<Long, Inventory> loadChests() {
         Path path = saveDir.resolve("chests.dat");
         Map<Long, Inventory> map = new HashMap<>();
-
         if (!Files.exists(path)) return map;
 
         try (DataInputStream in = new DataInputStream(
                 new BufferedInputStream(Files.newInputStream(path)))) {
 
+
             int numChests = in.readInt();
-
             for (int c = 0; c < numChests; c++) {
-
-                long key = in.readLong();
+                int wx = in.readInt(), wy = in.readInt(), wz = in.readInt();
+                long key = World.blockKey(wx, wy, wz);
 
                 int numSlots = in.readInt();
-
-                if (numSlots < 0 || numSlots > Inventory.TOTAL_SLOTS) {
-                    throw new IOException(
-                        "Quantidade de slots inválida: " + numSlots
-                    );
-                }
-
                 Inventory inv = new Inventory();
 
                 for (int s = 0; s < numSlots && s < Inventory.TOTAL_SLOTS; s++) {
                     int id  = in.readInt();
                     int qty = in.readInt();
 
-                    if (id != 0) {
-                        inv.setSlot(s, id, qty);
-                    }
-                }
+                    int dur = in.readInt();
 
+
+                    if (id == 0) continue;
+
+                    if (Inventory.isTool(id) && dur == 0) continue;
+                    if (Inventory.isTool(id) && dur < 0) dur = Inventory.getMaxDurability(id);
+
+                    inv.setSlotFull(s, id, qty, dur);
+                }
                 map.put(key, inv);
             }
-
         } catch (IOException e) {
-            System.err.println("[WorldIO] Erro ao carregar baús: " + e.getMessage());
+            System.err.println("[WorldIO] Erro ao carregar baus: " + e.getMessage());
         }
-
         return map;
     }
 
@@ -315,8 +304,6 @@ public class WorldIO {
 
             SaveData data = new SaveData();
 
-            int version = in.readInt();
-
             data.seed = in.readLong();
 
             data.playerX = in.readFloat();
@@ -330,39 +317,37 @@ public class WorldIO {
             data.yaw   = in.readFloat();
             data.pitch = in.readFloat();
 
-            if (version >= 2) {
+            data.timeOfDay = in.readFloat();
+            data.day = in.readInt();
 
-                data.timeOfDay = in.readFloat();
-                data.day = in.readInt();
+            int size = in.readInt();
 
-                int size = in.readInt();
+            data.inventoryItems  = new int[size];
+            data.inventoryCounts = new int[size];
+            data.inventoryDurabilities = new int[size];
 
-                data.inventoryItems  = new int[size];
-                data.inventoryCounts = new int[size];
-                data.inventoryDurabilities = new int[size];
-
-                for (int i = 0; i < size; i++) {
-                    data.inventoryItems[i]  = in.readInt();
-                    data.inventoryCounts[i] = in.readInt();
-                    data.inventoryDurabilities[i] = in.readInt();
-                }
-
-                data.selectedSlot = in.readInt();
-
-                int armorSize = in.readInt();
-
-                data.armorItems = new int[armorSize];
-                data.armorDurabilities = new int[armorSize];
-
-                for (int i = 0; i < armorSize; i++) {
-                    data.armorItems[i] = in.readInt();
-                    data.armorDurabilities[i] = in.readInt();
-                }
-
-                data.weatherType = in.readInt();
-                data.weatherIntensity = in.readFloat();
-                data.weatherChangeTimer = in.readFloat();
+            for (int i = 0; i < size; i++) {
+                data.inventoryItems[i]  = in.readInt();
+                data.inventoryCounts[i] = in.readInt();
+                data.inventoryDurabilities[i] = in.readInt();
             }
+
+            data.selectedSlot = in.readInt();
+
+            int armorSize = in.readInt();
+
+            data.armorItems = new int[armorSize];
+            data.armorDurabilities = new int[armorSize];
+
+            for (int i = 0; i < armorSize; i++) {
+                data.armorItems[i] = in.readInt();
+                data.armorDurabilities[i] = in.readInt();
+            }
+
+            data.weatherType = in.readInt();
+            data.weatherIntensity = in.readFloat();
+            data.weatherChangeTimer = in.readFloat();
+        
             return data;
         }
     }
