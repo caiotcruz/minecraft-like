@@ -125,7 +125,7 @@ public class WorldGen {
         double n2 = noise3D(wx / 16.0 + 400.0, y / 11.0 + 400.0,  wz / 16.0 + 400.0);
         double caveVal = n1 * n1 + n2 * n2;
 
-        double threshold = 0.018;
+        double threshold = 0.023;
 
         double chamberN = Math.abs(noise3D(wx / 40.0 + 800.0, y / 32.0 + 800.0, wz / 40.0 + 800.0));
         if (chamberN < 0.07) {
@@ -493,8 +493,7 @@ public class WorldGen {
             b[y*s*s + z*s + x] = (byte) type.id;
     }
 
-    private void placeOreVeins(byte[] blocks, int chunkX, int chunkZ,
-                                int size, int height) {
+    private void placeOreVeins(byte[] blocks, int chunkX, int chunkZ, int size, int height) {
         for (int[] cfg : ORE_CFG) {
             int oreId   = cfg[0];
             int minY    = cfg[1], maxY = cfg[2];
@@ -509,10 +508,47 @@ public class WorldGen {
                 int cz = chunkRandInt(chunkX, chunkZ, seed+2,   size);
 
                 float radius = (minR10 + chunkRandInt(chunkX, chunkZ, seed+3, maxR10 - minR10)) / 10.0f;
-
                 carveOreBlob(blocks, cx, cy, cz, radius, (byte) oreId, size, height);
             }
+
+            int maxAttempts = veins / 2;
+            int bonusVeinsGenerated = 0;
+
+            for (int extra = 0; extra < maxAttempts * 3 && bonusVeinsGenerated < maxAttempts; extra++) {
+                int seed = oreId * 5000 + extra;
+
+                int cx = chunkRandInt(chunkX, chunkZ, seed, size);
+                int cy = minY + chunkRandInt(chunkX, chunkZ, seed + 1, maxY - minY);
+                int cz = chunkRandInt(chunkX, chunkZ, seed + 2, size);
+
+                if (!checkCaveProximityFast(blocks, cx, cy, cz, size, height)) {
+                    continue; 
+                }
+
+                float radius = (minR10 + chunkRandInt(chunkX, chunkZ, seed + 3, maxR10 - minR10)) / 10.0f;
+                carveOreBlob(blocks, cx, cy, cz, radius, (byte) oreId, size, height);
+                
+                bonusVeinsGenerated++;
+            }
         }
+    }
+
+    private boolean checkCaveProximityFast(byte[] blocks, int cx, int cy, int cz, int size, int height) {
+        int[] offset = {-2, -1, 1, 2};
+        
+        int centerIdx = cy * size * size + cz * size + cx;
+        if (blocks[centerIdx] == (byte)Block.AIR.id) return true;
+
+        for (int os : offset) {
+            int nx = cx + os;
+            int ny = cy + os;
+            int nz = cz + os;
+
+            if (nx >= 0 && nx < size && blocks[cy * size * size + cz * size + nx] == (byte)Block.AIR.id) return true;
+            if (ny > 0 && ny < height && blocks[ny * size * size + cz * size + cx] == (byte)Block.AIR.id) return true;
+            if (nz >= 0 && nz < size && blocks[cy * size * size + nz * size + cx] == (byte)Block.AIR.id) return true;
+        }
+        return false;
     }
 
     private void carveOreBlob(byte[] blocks, int cx, int cy, int cz, float radius, byte oreId, int size, int height) {
