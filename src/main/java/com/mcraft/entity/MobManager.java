@@ -33,6 +33,7 @@ public class MobManager {
             Mob m = it.next();
 
             m.update(dt, world, px, py, pz);
+            m.updateLightCache(world);
 
             if (m.isDead()) {
                 int[][] drops = m.getDrops();

@@ -43,6 +43,8 @@ public class Mob extends Entity {
     private float fleeTimer = 0f;
     private static final float FLEE_DURATION = 6.0f;
 
+    private int cachedSkyLight   = 15;
+    private int cachedBlockLight = 0;
 
     public Mob(Type type, float x, float y, float z) {
         super(x, y, z, type.w, type.h);
@@ -137,6 +139,14 @@ public class Mob extends Entity {
         float nx = -dx / dist, nz = -dz / dist;
         velX = nx * type.speed * 1.35f;
         velZ = nz * type.speed * 1.35f;
+    }
+
+    public void updateLightCache(World world) {
+        int bx = (int) Math.floor(x);
+        int by = (int) Math.floor(y + height * 0.5f);
+        int bz = (int) Math.floor(z);
+        cachedSkyLight   = world.getSkyLightAt  (bx, by, bz);
+        cachedBlockLight = world.getBlockLightAt(bx, by, bz);
     }
 
     private void pickNewWanderDir() {
@@ -257,6 +267,10 @@ public class Mob extends Entity {
 
     public Type   getType()  { return type; }
     public AIState getState() { return state; }
+
+
+    public int getCachedSkyLight()   { return cachedSkyLight; }
+    public int getCachedBlockLight() { return cachedBlockLight; }
 
     public int getHealth(){
         return this.health;

@@ -17,7 +17,7 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class MobRenderer {
 
-    private static final int VERT_FLOATS = 7; 
+    private static final int VERT_FLOATS = 9; 
     private static final int MAX_VERTS_PER_MOB = 300;
     private static final int MAX_VERTS = MobManager.MAX_MOBS * MAX_VERTS_PER_MOB;
 
@@ -31,6 +31,8 @@ public class MobRenderer {
     private final FloatBuffer vBuf = BufferUtils.createFloatBuffer(MAX_VERTS * VERT_FLOATS);
     private final IntBuffer   iBuf = BufferUtils.createIntBuffer(MAX_VERTS * 3 / 2);
     private int vCount, indexCount;
+
+    private float curSky, curBlock;
 
     private boolean overflowWarned = false;
 
@@ -64,9 +66,11 @@ public class MobRenderer {
 
     private void renderMob(Mob mob) {
         float x = mob.getX(), y = mob.getY(), z = mob.getZ();
-        float h = mob.isHurt()
-            ? mob.getHurtTimer() / mob.getHurtDuration()
-            : 0f;
+        float h = mob.isHurt() ? mob.getHurtTimer() / mob.getHurtDuration() : 0f;
+
+        curSky   = mob.getCachedSkyLight()   / 15f;
+        curBlock = mob.getCachedBlockLight() / 15f;
+        
 
         switch (mob.getType()) {
             case CHICKEN -> renderChicken(x, y, z, h);
@@ -164,22 +168,17 @@ public class MobRenderer {
         box(x+.05f, y, z+.01f, x+.25f, y+.55f, z+.15f, legs[0], legs[1], legs[2]);
     }
 
-    private void box(float x0, float y0, float z0,
-                     float x1, float y1, float z1,
-                     float r,  float g,  float b) {
-        face(x0,y1,z0, x0,y1,z1, x1,y1,z1, x1,y1,z0, r,g,b, L_TOP);   
-        face(x0,y0,z1, x0,y0,z0, x1,y0,z0, x1,y0,z1, r,g,b, L_BOT);   
-        face(x0,y0,z1, x1,y0,z1, x1,y1,z1, x0,y1,z1, r,g,b, L_FRONT); 
-        face(x1,y0,z0, x0,y0,z0, x0,y1,z0, x1,y1,z0, r,g,b, L_BACK);  
-        face(x0,y0,z0, x0,y0,z1, x0,y1,z1, x0,y1,z0, r,g,b, L_SIDE);  
-        face(x1,y0,z1, x1,y0,z0, x1,y1,z0, x1,y1,z1, r,g,b, L_SIDE); 
+    private void box(float x0, float y0, float z0, float x1, float y1, float z1, float r,  float g,  float b) {
+        
+        face(x0,y1,z0, x0,y1,z1, x1,y1,z1, x1,y1,z0, r,g,b, L_TOP);
+        face(x0,y0,z1, x0,y0,z0, x1,y0,z0, x1,y0,z1, r,g,b, L_BOT);
+        face(x0,y0,z1, x1,y0,z1, x1,y1,z1, x0,y1,z1, r,g,b, L_FRONT);
+        face(x1,y0,z0, x0,y0,z0, x0,y1,z0, x1,y1,z0, r,g,b, L_BACK);
+        face(x0,y0,z0, x0,y0,z1, x0,y1,z1, x0,y1,z0, r,g,b, L_SIDE);
+        face(x1,y0,z1, x1,y0,z0, x1,y1,z0, x1,y1,z1, r,g,b, L_SIDE);
     }
 
-    private void face(float x0, float y0, float z0,
-                      float x1, float y1, float z1,
-                      float x2, float y2, float z2,
-                      float x3, float y3, float z3,
-                      float r, float g, float b, float light) {
+    private void face(float x0, float y0, float z0, float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float r, float g, float b, float light) {
         if (vCount + 4 > MAX_VERTS) {
             if (!overflowWarned) {
                 System.err.println("[MobRenderer] Buffer de vertices excedido "
@@ -189,13 +188,13 @@ public class MobRenderer {
             }
             return;
         }
-        vBuf.put(x0); vBuf.put(y0); vBuf.put(z0); vBuf.put(light); vBuf.put(r); vBuf.put(g); vBuf.put(b);
-        vBuf.put(x1); vBuf.put(y1); vBuf.put(z1); vBuf.put(light); vBuf.put(r); vBuf.put(g); vBuf.put(b);
-        vBuf.put(x2); vBuf.put(y2); vBuf.put(z2); vBuf.put(light); vBuf.put(r); vBuf.put(g); vBuf.put(b);
-        vBuf.put(x3); vBuf.put(y3); vBuf.put(z3); vBuf.put(light); vBuf.put(r); vBuf.put(g); vBuf.put(b);
+        vBuf.put(x0).put(y0).put(z0).put(light).put(r).put(g).put(b).put(curSky).put(curBlock);
+        vBuf.put(x1).put(y1).put(z1).put(light).put(r).put(g).put(b).put(curSky).put(curBlock);
+        vBuf.put(x2).put(y2).put(z2).put(light).put(r).put(g).put(b).put(curSky).put(curBlock);
+        vBuf.put(x3).put(y3).put(z3).put(light).put(r).put(g).put(b).put(curSky).put(curBlock);
         int base = vCount;
-        iBuf.put(base); iBuf.put(base+1); iBuf.put(base+2);
-        iBuf.put(base+2); iBuf.put(base+3); iBuf.put(base);
+        iBuf.put(base).put(base+1).put(base+2);
+        iBuf.put(base+2).put(base+3).put(base);
         vCount += 4; indexCount += 6;
     }
 
@@ -214,13 +213,29 @@ public class MobRenderer {
         glBufferData(GL_ARRAY_BUFFER, (long)MAX_VERTS * VERT_FLOATS * Float.BYTES, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, (long)MAX_VERTS * 3 / 2 * Integer.BYTES, GL_DYNAMIC_DRAW);
+
         int stride = VERT_FLOATS * Float.BYTES; 
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);  
+
+         // pos
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 1, GL_FLOAT, false, stride, 12L); 
+
+         // lightDir
+        glVertexAttribPointer(1, 1, GL_FLOAT, false, stride, 12L);
         glEnableVertexAttribArray(1);
+
+        // rgb
         glVertexAttribPointer(2, 3, GL_FLOAT, false, stride, 16L); 
         glEnableVertexAttribArray(2);
+
+         // skyLight
+        glVertexAttribPointer(3, 1, GL_FLOAT, false, stride, 28L);
+        glEnableVertexAttribArray(3);
+        
+        // blockLight
+        glVertexAttribPointer(4, 1, GL_FLOAT, false, stride, 32L);
+        glEnableVertexAttribArray(4);
+
         glBindVertexArray(0);
     }
 
