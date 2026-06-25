@@ -1,6 +1,7 @@
 package com.mcraft.entity;
 
 import com.mcraft.render.Shader;
+import com.mcraft.world.Block;
 import com.mcraft.world.Chunk;
 import com.mcraft.world.World;
 import com.mcraft.world.DayNightCycle;
@@ -65,8 +66,14 @@ public class MobManager {
         float dist  = 16f + rng.nextFloat() * 24f;
         int sx = (int)(px + Math.cos(angle) * dist);
         int sz = (int)(pz + Math.sin(angle) * dist);
+        int  sy = world.getSurfaceY(sx, sz) + 1;
 
-        int sy = Chunk.HEIGHT - 1;
+        Block atSpawn  = world.getBlock(sx, sy,   sz);
+        Block headSpace = world.getBlock(sx, sy+1, sz);
+
+        if (atSpawn.solid || atSpawn == Block.WATER)   return;
+        if (headSpace == Block.WATER)                  return;
+
         while (sy > 1 && !world.getBlock(sx, sy, sz).solid) {
             sy--;
         }
@@ -85,7 +92,7 @@ public class MobManager {
         
         float effectiveLight = Math.max(skyContrib, blockContrib) * 15f;
 
-        boolean isDark = effectiveLight <= 7f;
+        boolean isDark = effectiveLight <= 6f;
         boolean isLit  = effectiveLight >= 9f;
 
         Mob.Type type;
