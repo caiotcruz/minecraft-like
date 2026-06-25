@@ -20,14 +20,17 @@ public class MobManager {
     private static final float SPAWN_INTERVAL = 10f; 
     private float spawnTimer = 0;
 
-    private final java.util.function.Consumer<int[][]> dropCallback;
+    private java.util.function.Consumer<int[][]> dropCallback;
 
     public MobManager(java.util.function.Consumer<int[][]> onDrop) {
         this.dropCallback = onDrop;
     }
 
-    public void update(float dt, World world, float px, float py, float pz, DayNightCycle dayNight) {
+    public void setDropCallback(java.util.function.Consumer<int[][]> callback) {
+        this.dropCallback = callback;
+    }
 
+    public void update(float dt, World world, float px, float py, float pz, DayNightCycle dayNight) {
         java.util.Iterator<Mob> it = mobs.iterator();
 
         while (it.hasNext()) {
@@ -66,7 +69,7 @@ public class MobManager {
         float dist  = 16f + rng.nextFloat() * 24f;
         int sx = (int)(px + Math.cos(angle) * dist);
         int sz = (int)(pz + Math.sin(angle) * dist);
-        int  sy = world.getSurfaceY(sx, sz) + 1;
+        int sy = world.getSurfaceY(sx, sz) + 1;
 
         Block atSpawn  = world.getBlock(sx, sy,   sz);
         Block headSpace = world.getBlock(sx, sy+1, sz);
@@ -124,5 +127,9 @@ public class MobManager {
     public void setMobs(List<Mob> loaded) {
         mobs.clear();
         mobs.addAll(loaded);
+    }
+
+    public void setMobsList(List<Mob> loadedMobs) {
+        setMobs(loadedMobs);
     }
 }

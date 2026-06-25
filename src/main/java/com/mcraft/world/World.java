@@ -30,8 +30,8 @@ import com.mcraft.ui.Inventory;
 
 public class World {
 
-    public static final int RENDER_DISTANCE = 4;
-    private static final int UNLOAD_DISTANCE = RENDER_DISTANCE + 3;
+    private final int renderDistance;
+    private final int unloadDistance;
 
     private final Frustum frustum = new Frustum();
     private final Frustum2D frustum2D = new Frustum2D();
@@ -63,7 +63,9 @@ public class World {
     }
 
     
-    public World(long seed, WorldIO worldIO) {
+    public World(long seed, int renderDistance, WorldIO worldIO) {
+        this.renderDistance = renderDistance;
+        this.unloadDistance = this.renderDistance + 3;
         this.seed = seed;
         this.worldIO = worldIO;
         this.gen = new WorldGen(seed);
@@ -182,8 +184,8 @@ public class World {
         int cx = Math.floorDiv((int) worldX, Chunk.SIZE);
         int cz = Math.floorDiv((int) worldZ, Chunk.SIZE);
 
-        for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
-            for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
+        for (int dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
+            for (int dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
 
                 int tcx = cx + dx;
                 int tcz = cz + dz;
@@ -216,8 +218,8 @@ public class World {
         int cx = Math.floorDiv((int) worldX, Chunk.SIZE);
         int cz = Math.floorDiv((int) worldZ, Chunk.SIZE);
 
-        for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
-            for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
+        for (int dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
+            for (int dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
                 int tcx = cx + dx, tcz = cz + dz;
                 long k  = key(tcx, tcz);
 
@@ -284,8 +286,8 @@ public class World {
         float yaw    = camera.getYaw();
         frustum2D.update(camX, camZ, yaw, 115f);
 
-        for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
-            for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
+        for (int dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
+            for (int dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
                 
                 int tcx = cx+dx; 
                 int tcz = cz+dz;
@@ -314,8 +316,8 @@ public class World {
 
         glDisable(GL_CULL_FACE);
 
-        for (int dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
-            for (int dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
+        for (int dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
+            for (int dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
 
                 int tcx = cx+dx;
                 int tcz = cz+dz;
@@ -366,7 +368,7 @@ public class World {
             int   dx = Math.abs(c.getChunkX() - pcx);
             int   dz = Math.abs(c.getChunkZ() - pcz);
 
-            if (dx > UNLOAD_DISTANCE || dz > UNLOAD_DISTANCE) {
+            if (dx > this.unloadDistance || dz > this.unloadDistance) {
                 toRemove.add(entry.getKey());
             }
         }
@@ -535,4 +537,7 @@ public class World {
     public WorldGen getWorldGen() { return gen; }
     private int localX(int wx) { return wx - Math.floorDiv(wx, Chunk.SIZE) * Chunk.SIZE; }
     private int localZ(int wz) { return wz - Math.floorDiv(wz, Chunk.SIZE) * Chunk.SIZE; }
+    public int getRenderDistance() {
+        return renderDistance;
+    }
 }

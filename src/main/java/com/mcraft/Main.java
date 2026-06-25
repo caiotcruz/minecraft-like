@@ -1,143 +1,55 @@
 package com.mcraft;
 
-import java.io.IOException;
+import com.mcraft.core.*;
+import com.mcraft.render.*;
+import com.mcraft.ui.MenuScreen;
 
-import com.mcraft.core.GameLoop;
-import com.mcraft.core.Window;
-import com.mcraft.world.SaveData;
-import com.mcraft.world.WorldIO;
+import static org.lwjgl.opengl.GL11.*;
 
 public class Main {
-
     public static void main(String[] args) {
-
-        String worldName = args.length > 0 ? args[0] : "mundo1";
-
-        WorldIO io = new WorldIO(worldName);
-
-        long seed;
-
-        float spawnX = 8;
-        float spawnY = 90;
-        float spawnZ = 8;
-
-        float yaw   = 0f;
-        float pitch = 0f;
-
-        float timeOfDay = 0.333f;
-        int day = 1;
-        SaveData saveData = null;
-
-        int currentOrdinal = 0;
-        float intensity = 0;
-        float changeTimer = 0;
-
-        if (io.hasSave()) {
-
-            try {
-
-                saveData = io.loadWorldMeta();
-
-                seed = saveData.seed;
-
-                spawnX = saveData.playerX;
-                spawnY = saveData.playerY;
-                spawnZ = saveData.playerZ;
-
-                yaw   = saveData.yaw;
-                pitch = saveData.pitch;
-
-                timeOfDay = saveData.timeOfDay;
-                day = saveData.day;
-
-                currentOrdinal = saveData.weatherType;
-                intensity = saveData.weatherIntensity;
-                changeTimer = saveData.weatherChangeTimer;
-
-                System.out.println("[Load] Mundo carregado: seed=" + seed);
-
-            } catch (IOException e) {
-
-                seed = System.currentTimeMillis();
-
-                System.err.println(
-                    "[Load] Falha ao carregar mundo: " + e.getMessage()
-                );
-            }
-
-        } else {
-
-            seed = System.currentTimeMillis();
-
-            System.out.println("[New] Novo mundo: seed=" + seed);
-        }
-
-        Window window = new Window(
-            1920,
-            1000,
-            "Minecraft Clássico — " + worldName
-        );
-
+        Window window = new Window(1920, 1000, "MCraft");
         window.init();
+        Input input = new Input(window.getHandle());
 
-        GameLoop loop = new GameLoop(
-            window,
-            io,
-            seed,
-            spawnX,
-            spawnY,
-            spawnZ
-        ); 
+        Shader      hudShader = new Shader("hud.vert", "hud.frag");
+        TextureAtlas atlas    = TextureAtlas.generateProcedural();
+        float[]     ortho2D   = Camera.ortho(window.getWidth(), window.getHeight());
 
-        if (saveData != null) {
+        GameSettings settings = GameSettings.loadOrDefault();
 
-            loop.getPlayer().getInventory().load(
-                saveData.inventoryItems,
-                saveData.inventoryCounts,
-                saveData.inventoryDurabilities,
-                saveData.selectedSlot,
-                saveData.armorItems,
-                saveData.armorDurabilities
-            );
+        MenuScreen menu = new MenuScreen(window.getWidth(), window.getHeight(), hudShader, atlas, ortho2D, settings);
 
-            loop.getPlayer().setHealth(saveData.playerHealth);
-            loop.getPlayer().setHunger(saveData.playerHunger);
-            loop.getPlayer().setAir(saveData.playerAir);
+        MenuScreen.PlayRequest request = null;
+        while (!window.shouldClose() && request == null) {
+            input.prepareFrame();
+            window.swapAndPoll();
+            menu.update(input);
+            double[] mx = new double[1];
+            double[] my = new double[1];
+            org.lwjgl.glfw.GLFW.glfwGetCursorPos(window.getHandle(), mx, my);
+            menu.updateMouse((int) mx[0], (int) my[0]); 
+            if (input.isMouseJustPressed(0)) { 
+                menu.onClick((int) mx[0], (int) my[0]);
+            }
+            input.endFrame();
+            input.updateKeyEdges();
 
-            loop.getDayNight().setTime(timeOfDay);
-            loop.getDayNight().setDay(day);
+            glClearColor(0.08f, 0.08f, 0.12f, 1f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            loop.getPlayer()
-                .getCamera()
-                .setRotation(yaw, pitch);
-            
-            loop.getWorld().setChestInventories(io.loadChests());
-            loop.getWorld().setFurnaceStates(io.loadFurnaces());
-            loop.setMobs(
-                io.loadMobs(loop.getWorld())
-            );  
+            menu.render();
 
-            loop.getWeatherSystem().restoreState(currentOrdinal, intensity, changeTimer);
+            request = menu.consumePlayRequest();
         }
 
-        loop.run();
+        menu.delete();
 
-        try {
-
-            io.save(
-                loop.getWorld(),
-                loop.getPlayer(),
-                loop.getDayNight(),
-                loop.getWeatherSystem()
-            );
-
-            System.out.println("[Save] Mundo salvo com sucesso.");
-
-        } catch (IOException e) {
-
-            System.err.println(
-                "[Save] Falha ao salvar: " + e.getMessage()
-            );
+        if (request != null && !window.shouldClose()) {
+            GameLoop game = new GameLoop(window, input, hudShader, atlas, ortho2D, settings, request.worldName(), request.seed(), request.isNewWorld());
+            game.run();
         }
+
+        window.destroy();
     }
 }

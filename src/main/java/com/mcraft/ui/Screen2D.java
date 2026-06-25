@@ -30,7 +30,7 @@ public abstract class Screen2D {
     protected int heldDur = -1;
     protected int mouseX, mouseY;
 
-    private static final int MAX_QUADS   = 512;
+    private static final int MAX_QUADS   = 8192;
     private static final int VERT_FLOATS = 8;
 
     private int vao, vbo, ebo;

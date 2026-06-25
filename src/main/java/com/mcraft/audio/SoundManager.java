@@ -29,6 +29,7 @@ public class SoundManager {
     private final int[] sources = new int[SOURCE_POOL];
     private int sourceIdx = 0;
 
+    private float masterVolume = 1.0f;
 
     public void init() {
         device = alcOpenDevice((ByteBuffer) null);
@@ -72,7 +73,7 @@ public class SoundManager {
         alSourceStop(src);
         alSourcei(src, AL_BUFFER, buf);
         alSource3f(src, AL_POSITION, x, y, z);
-        alSourcef(src, AL_GAIN, volume);
+        alSourcef(src, AL_GAIN, volume * masterVolume);
         alSourcef(src, AL_PITCH, pitch);
         alSourcei(src, AL_LOOPING, AL_FALSE);
         alSourcePlay(src);
@@ -193,7 +194,7 @@ public class SoundManager {
         int src = alGenSources();
 
         alSourcei(src, AL_BUFFER, buf);
-        alSourcef(src, AL_GAIN, volume);
+        alSourcef(src, AL_GAIN, volume * masterVolume);
         alSourcei(src, AL_LOOPING, AL_TRUE);
 
         alSourcei(src, AL_SOURCE_RELATIVE, AL_TRUE);
@@ -207,5 +208,15 @@ public class SoundManager {
     public void stop(int source) {
         alSourceStop(source);
         alDeleteSources(source);
+    }
+
+    public void setMasterVolume(float v) { 
+        this.masterVolume = Math.max(0f, Math.min(1f, v)); 
+        
+        for (int src : sources) {
+            if (alIsSource(src)) {
+                alSourcef(src, AL_GAIN, masterVolume);
+            }
+        }
     }
 }

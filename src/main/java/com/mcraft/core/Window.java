@@ -28,6 +28,8 @@ import static org.lwjgl.opengl.GL11.glCullFace;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.system.MemoryUtil.NULL;
+import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
+import static org.lwjgl.glfw.GLFW.glfwTerminate;
 
 public class Window {
 
@@ -79,6 +81,15 @@ public class Window {
     public void swapAndPoll() {
         glfwSwapBuffers(handle);  
         glfwPollEvents();          
+    }
+
+    public void destroy() {
+        if (handle != NULL) {
+            glfwDestroyWindow(handle);
+            handle = NULL;
+        }
+
+        glfwTerminate();
     }
 
     public boolean shouldClose() { return glfwWindowShouldClose(handle); }

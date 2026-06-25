@@ -10,12 +10,6 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_CONTROL;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F4;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F5;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F6;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F7;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
@@ -35,6 +29,7 @@ import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.mcraft.audio.SoundEvent;
@@ -125,7 +120,6 @@ public class GameLoop {
     private boolean         leftWasDown     = false;
     
     private boolean         rightWasDown    = false;
-    private float[]         ortho2D;
 
     private int   breakX = -1, breakY = -1, breakZ = -1;
     private float breakElapsed  = 0f;
@@ -147,92 +141,126 @@ public class GameLoop {
 
     private LightScheduler lightScheduler;
 
+    private final WorldIO worldIO;
+
     private long lastProfile = 0;
     private long lightTime = 0;
     private long renderTime = 0;
     private int  profileFrames = 0;
 
-    public GameLoop( Window window, WorldIO worldIO, long seed, float spawnX, float spawnY, float spawnZ) {
+    public GameLoop(Window window, Input input, Shader hudShader, TextureAtlas atlas,
+                    float[] ortho2D, GameSettings settings,
+                    String worldName, long seed, boolean isNewWorld) {
         this.window = window;
-        ortho2D = Camera.ortho(window.getWidth(), window.getHeight());
-
-        input = new Input(window.getHandle());
-
-        glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        this.input = input;
         
-        world  = new World(seed, worldIO);
-        if (spawnY == 90){
-            spawnY = world.getSurfaceY(spawnX, spawnZ);
+        this.worldIO = new WorldIO(worldName); 
+        this.world = new World(seed, settings.renderDistance, worldIO);
+        this.lightScheduler = new LightScheduler(world);
+
+        this.blockShader = new Shader("block.vert", "block.frag");
+        this.hudShader   = hudShader; 
+        this.skyShader   = new Shader("sky.vert", "sky.frag");
+        this.mobShader   = new Shader("mob.vert", "mob.frag");
+        this.skyRenderer = new SkyRenderer();
+        this.breakOverlay = new BreakOverlay();
+        this.atlas = atlas;
+        
+        this.mobs = new MobManager(null);
+
+        float spawnX = 8f;
+        float spawnZ = 8f;
+        float spawnY = 90f;
+        float yaw = 0f;
+        float pitch = 0f;
+
+        com.mcraft.world.SaveData saveData = null;
+
+        if (isNewWorld) {
+            world.generateInitialArea(spawnX, spawnZ);
+            spawnY = world.getSurfaceY((int) spawnX, (int) spawnZ) + 1.5f;
+        } else {
+            try {
+                saveData = worldIO.loadWorldMeta();
+                if (saveData != null) {
+                    spawnX = saveData.playerX;
+                    spawnY = saveData.playerY;
+                    spawnZ = saveData.playerZ;
+                    yaw    = saveData.yaw;
+                    pitch  = saveData.pitch;
+                    System.out.println("[Load] Mundo carregado: seed=" + world.getSeed());
+                }
+                world.generateInitialArea(spawnX, spawnZ);
+            } catch (Exception e) {
+                System.err.println("[Load] Falha ao ler metadados no spawn, usando padrão: " + e.getMessage());
+                spawnX = 8f; 
+                spawnZ = 8f;
+                world.generateInitialArea(spawnX, spawnZ);
+                spawnY = world.getSurfaceY((int)spawnX, (int)spawnZ) + 1.5f;
+            }
         }
 
-        lightScheduler = new LightScheduler(world);
+        this.player = new Player(spawnX, spawnY, spawnZ, world);
+        this.player.getCamera().setRotation(yaw, pitch);
+        this.camera = player.getCamera();
 
-        player = new Player(
-            spawnX,
-            spawnY +1,
-            spawnZ,
-            world
-        );
+        this.mobs.setDropCallback(drops -> {
+            for (int[] drop : drops) {
+                if (drop[1] > 0) this.player.getInventory().addItem(drop[0], drop[1]);
+            }
+        });
 
-        camera = player.getCamera();
+        if (saveData != null && !isNewWorld) {
+            this.player.getInventory().load(
+                saveData.inventoryItems,
+                saveData.inventoryCounts,
+                saveData.inventoryDurabilities,
+                saveData.selectedSlot,
+                saveData.armorItems,
+                saveData.armorDurabilities
+            );
+
+            this.player.setHealth(saveData.playerHealth);
+            this.player.setHunger(saveData.playerHunger);
+            this.player.setAir(saveData.playerAir);
+
+            this.dayNight.setTime(saveData.timeOfDay);
+            this.dayNight.setDay(saveData.day);
+
+            this.player.getCamera().setRotation(yaw, pitch);
+            
+            try {
+                this.world.setChestInventories(worldIO.loadChests());
+                this.world.setFurnaceStates(worldIO.loadFurnaces());
+            } catch (Exception e) {
+                System.err.println("[Load] Falha ao carregar blocos funcionais: " + e.getMessage());
+            }
+
+            try {
+                this.mobs.setMobs(worldIO.loadMobs(this.world));
+            } catch (Exception e) {
+                System.err.println("[Load] Falha ao carregar Mobs: " + e.getMessage());
+            }
+
+            this.weather.restoreState(saveData.weatherType, saveData.weatherIntensity, saveData.weatherChangeTimer);
+        }
+
+        this.hud = new com.mcraft.ui.HUD(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, player);
+        this.inventoryScreen = new InventoryScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
+        this.craftingScreen = new CraftingScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
+        this.chestScreen = new ChestScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
+        this.furnaceScreen = new FurnaceScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
+
+        glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
         glfwSetScrollCallback(window.getHandle(), (win, xOff, yOff) ->
             player.getInventory().scrollHotbar((int) -yOff)
         );
 
-        world.generateInitialArea(player.getX(), player.getZ());
-
-        blockShader = new Shader("block.vert", "block.frag");
-        hudShader   = new Shader("hud.vert",   "hud.frag");
-        skyShader   = new Shader("sky.vert", "sky.frag");
-        mobShader = new Shader("mob.vert", "mob.frag");
-        skyRenderer = new SkyRenderer();
-        breakOverlay = new BreakOverlay();
-
-        atlas = TextureAtlas.generateProcedural();
-
-        hud = new com.mcraft.ui.HUD(
-            window.getWidth(), window.getHeight(),
-            player.getInventory(), hudShader, atlas, player
-        );
-
-        mobs = new MobManager(drops -> {
-            for (int[] drop : drops) {
-                if (drop[1] > 0) {
-                    player.getInventory().addItem(drop[0], drop[1]);
-                }
-            }
-        });
-
-        inventoryScreen = new InventoryScreen(
-            window.getWidth(), window.getHeight(),
-            player.getInventory(),
-            hudShader,    
-            atlas,
-            ortho2D
-        );
-
-        craftingScreen = new CraftingScreen(
-            window.getWidth(), window.getHeight(),
-            player.getInventory(), hudShader, atlas, ortho2D
-        );
-
-        chestScreen = new ChestScreen(
-            window.getWidth(), window.getHeight(),
-            player.getInventory(), hudShader, atlas, ortho2D
-        );
-
-        furnaceScreen = new FurnaceScreen(
-            window.getWidth(), window.getHeight(),
-            player.getInventory(), hudShader, atlas, ortho2D
-        );        
-
         glfwSetMouseButtonCallback(window.getHandle(), (win, button, action, mods) -> {
-
             if (!inventoryOpen && !craftingOpen && !chestOpen && !furnaceOpen) return;
 
             if (action == GLFW_PRESS) {
-
                 boolean isRightClick = (button == GLFW_MOUSE_BUTTON_RIGHT);
                 boolean isLeftClick  = (button == GLFW_MOUSE_BUTTON_LEFT);
 
@@ -240,35 +268,18 @@ public class GameLoop {
 
                 double[] cx = new double[1];
                 double[] cy = new double[1];
-
                 glfwGetCursorPos(win, cx, cy);
 
                 boolean consumed = false;
 
                 if (craftingOpen) {
-                    consumed = craftingScreen.onClick(
-                        (int) cx[0],
-                        (int) cy[0],
-                        isRightClick
-                    );
+                    consumed = craftingScreen.onClick((int) cx[0], (int) cy[0], isRightClick);
                 } else if (inventoryOpen) {
-                    consumed = inventoryScreen.onClick(
-                        (int) cx[0],
-                        (int) cy[0],
-                        isRightClick
-                    );
+                    consumed = inventoryScreen.onClick((int) cx[0], (int) cy[0], isRightClick);
                 } else if (chestOpen) {
-                    consumed = chestScreen.onClick(
-                        (int) cx[0],
-                        (int) cy[0],
-                        isRightClick
-                    );
+                    consumed = chestScreen.onClick((int) cx[0], (int) cy[0], isRightClick);
                 } else if (furnaceOpen) {
-                    consumed = furnaceScreen.onClick(
-                        (int) cx[0],
-                        (int) cy[0],
-                        isRightClick
-                    );
+                    consumed = furnaceScreen.onClick((int) cx[0], (int) cy[0], isRightClick);
                 }
 
                 if (!consumed) {
@@ -279,9 +290,11 @@ public class GameLoop {
                 }
             }
         });
-        lastTime = glfwGetTime();
-        sound.init();
-        musicSource = sound.playLoop(SoundEvent.MUSIC_DAY, 0.75f);
+
+        this.lastTime = glfwGetTime();
+        this.sound.init();
+        this.sound.setMasterVolume(settings.masterVolumePct / 100f);
+        this.musicSource = sound.playLoop(SoundEvent.MUSIC_DAY, 0.75f);
     }
 
     private void openInventory() {
@@ -419,7 +432,20 @@ public class GameLoop {
             }
         }
 
+        try {
+            System.out.println("[Save] Gravando dados do mundo, blocos e inventários...");
+            
+            worldIO.save(world, player, dayNight, weather);
+            
+            worldIO.saveMobs(mobs.getMobs());
+            
+            System.out.println("[Save] Salvamento concluído perfeitamente.");
+        } catch (IOException e) {
+            System.err.println("[Save] Erro crítico ao persistir mundo no encerramento: " + e.getMessage());
+        }
+
         cleanup();
+
     }
 
     private void gameTick(float dt) {
@@ -476,7 +502,7 @@ public class GameLoop {
         float playerCZ = player.getZ() / Chunk.SIZE;
 
         int budget = 4;
-        int maxDistance = World.RENDER_DISTANCE + 2;
+        int maxDistance = world.getRenderDistance() + 2;
         float maxDistanceSq = maxDistance * maxDistance;
 
         List<Chunk> activeChunks = world.getLoadedChunksList();
@@ -656,68 +682,6 @@ public class GameLoop {
             jump = input.isKeyDown(GLFW_KEY_SPACE);
             dive = !inventoryOpen && input.isKeyDown(GLFW_KEY_LEFT_SHIFT) && player.isInWater();
 
-            //Colocar Noite
-            if (input.isKeyDown(GLFW_KEY_F2)) {
-                dayNight.setTime(0.8f);
-            }
-            //Colocar Dia
-            if (input.isKeyDown(GLFW_KEY_F7)) {
-                dayNight.setTime(0.4f);
-            }
-
-            //Spawnar Zumbi
-            if (input.isKeyDown(GLFW_KEY_F3)) {
-
-                float[] front = camera.getFront();
-
-                float spawnX = player.getX() + front[0] * 3f;
-                float spawnY = player.getY();
-                float spawnZ = player.getZ() + front[2] * 3f;
-
-                mobs.getMobs().add(
-                    new Mob(
-                        Mob.Type.ZOMBIE,
-                        spawnX,
-                        spawnY,
-                        spawnZ
-                    )
-                );
-            }
-
-            //spawn Cow
-            if (input.isKeyDown(GLFW_KEY_F6)) {
-
-                float[] front = camera.getFront();
-
-                float spawnX = player.getX() + front[0] * 3f;
-                float spawnY = player.getY();
-                float spawnZ = player.getZ() + front[2] * 3f;
-
-                mobs.getMobs().add(
-                    new Mob(
-                        Mob.Type.COW,
-                        spawnX,
-                        spawnY,
-                        spawnZ
-                    )
-                );
-            }
-
-            // Alterar Weather
-            if (input.isKeyDown(GLFW_KEY_F4)) {
-                WeatherType biomeWeather = WeatherType.forBiome(currentBiome);
-
-                if (weather.getCurrent() == biomeWeather) {
-                    weather.setCurrent(WeatherType.CLEAR);
-                } else {
-                    weather.setCurrent(biomeWeather);
-                }
-            }
-
-            //Diminuir a fome
-            if (input.isKeyDown(GLFW_KEY_F5)) {
-                player.setHunger(player.getMaxHunger()/4);
-            }
         }
 
         boolean ctrlDown   = input.isKeyDown(GLFW_KEY_LEFT_CONTROL) && !inventoryOpen;

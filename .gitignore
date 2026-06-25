@@ -104,3 +104,4 @@ cache/
 *.swp
 *.swo
 *~
+settings.properties

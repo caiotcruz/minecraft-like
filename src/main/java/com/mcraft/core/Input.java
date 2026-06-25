@@ -16,6 +16,8 @@ public class Input {
     private final boolean[] mouseJustPressed  = new boolean[8];
     private final boolean[] mousePrevPressed  = new boolean[8];
 
+    private final boolean[] prevKeys = new boolean[350];
+
     public Input(long window) {
         this.window = window;
 
@@ -73,5 +75,16 @@ public class Input {
         firstMouse = true;
         mouseDX    = 0f;
         mouseDY    = 0f;
+    }
+
+    public boolean isKeyJustPressed(int key) {
+        if (key < 0 || key >= prevKeys.length) return false;
+        boolean now = isKeyDown(key);
+        boolean was = prevKeys[key];
+        return now && !was;
+    }
+
+    public void updateKeyEdges() {
+        for (int k = 0; k < prevKeys.length; k++) prevKeys[k] = isKeyDown(k);
     }
 }

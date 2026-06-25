@@ -84,6 +84,11 @@ public final class PixelFont {
         return text.length() * (W + GAP) - GAP;
     }
 
+    public static int measureStringWidth(String s, int ps) {
+        if (s.isEmpty()) return 0;
+        return s.length() * (W + GAP) * ps - GAP * ps;
+    }
+
     public static void drawStringShadow( RectBatch batch, int x, int y, int ps, String text, float r, float g, float b ) {
         drawString(batch, x + ps, y + ps, ps, text, 0f, 0f, 0f, 0.85f);
         drawString(batch, x, y, ps, text, r, g, b, 1f);
