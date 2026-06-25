@@ -3,6 +3,7 @@ package com.mcraft.ui;
 import com.mcraft.core.GameSettings;
 import com.mcraft.core.Input;
 import com.mcraft.render.Shader;
+import com.mcraft.render.Texture2D;
 import com.mcraft.render.TextureAtlas;
 
 import java.io.File;
@@ -29,11 +30,19 @@ public class MenuScreen extends Screen2D {
 
     private static final int BTN_W = 260, BTN_H = 30, BTN_GAP = 10;
 
+    private Texture2D menuBg;
+
     public MenuScreen(int sw, int sh, Shader shader, TextureAtlas atlas,
                        float[] ortho, GameSettings settings) {
         super(sw, sh, shader, atlas, ortho);
         this.settings = settings;
         rebuildButtons();
+        try {
+            menuBg = new Texture2D("/menuBG.png");
+        } catch (Exception e) {
+            System.err.println("[Menu] Imagem de fundo nao encontrada ou invalida: " + e.getMessage());
+            menuBg = null;
+        }
     }
 
     public PlayRequest consumePlayRequest() {
@@ -180,10 +189,18 @@ public class MenuScreen extends Screen2D {
         beginRender();
         shader.use();
         shader.setMatrix4("uProjection", ortho);
+  
         beginBatch();
+        
+        addQuad(0, 0, sw, sh, 0f, 1f, 1f, 0f, 1.0f, 1.0f, 1.0f, 1.0f);
+        
+        if (menuBg != null) {
+            menuBg.bind(0); 
+        }
+        
+        flushBatch(true);
 
-        addRect(0, 0, sw, sh, 0.10f, 0.10f, 0.10f, 1.0f); 
-        addRect(0, 0, sw, sh, 0.0f, 0.0f, 0.0f, 0.35f);
+        beginBatch();
 
         String title = "MCRAFT";
         int titlePs = 7;
@@ -198,7 +215,8 @@ public class MenuScreen extends Screen2D {
         if (subState == SubState.SEED_INPUT) renderSeedInputBox();
         if (subState == SubState.SETTINGS)   renderSettingsValues();
 
-        flushBatch(false);
+        flushBatch(false); 
+        
         endRender();
     }
 
@@ -267,4 +285,10 @@ public class MenuScreen extends Screen2D {
 
     @Override
     public void onClose() {}
+
+    @Override
+    public void delete() {
+        if (menuBg != null) menuBg.delete();
+        super.delete();
+    }
 }

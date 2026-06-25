@@ -279,7 +279,7 @@ public abstract class Screen2D {
         glDisable(GL_BLEND);
     }
 
-    private void addQuad(float x0, float y0, float x1, float y1,
+    protected void addQuad(float x0, float y0, float x1, float y1,
                           float u0, float v0, float u1, float v1,
                           float r, float g, float b, float a) {
         if (quadCount >= MAX_QUADS) return;
@@ -292,6 +292,10 @@ public abstract class Screen2D {
         int base = quadCount * 4;
         iBuf.put(new int[]{ base, base+1, base+2, base+2, base+3, base });
         quadCount++;
+    }
+
+    protected void addTexturedRect(int x, int y, int w, int h, float u0, float v0, float u1, float v1) {
+        addQuad(x, y, x+w, y+h, u0, v0, u1, v1, 1f, 1f, 1f, 1f);
     }
 
     private void initGPU() {

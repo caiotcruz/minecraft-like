@@ -52,6 +52,7 @@ public final class PixelFont {
         Map.entry('.', new int[]{0,0,0,0,2}),
         Map.entry(':', new int[]{0,2,0,2,0}),
         Map.entry('-', new int[]{0,0,7,0,0}),
+        Map.entry('+', new int[]{2,2,7,2,2}),
         Map.entry('/', new int[]{1,1,2,4,4})
     );
 
