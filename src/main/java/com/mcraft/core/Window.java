@@ -18,6 +18,7 @@ import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
 import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
+import static org.lwjgl.glfw.GLFW.*;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import static org.lwjgl.opengl.GL11.GL_BACK;
@@ -34,8 +35,10 @@ import static org.lwjgl.glfw.GLFW.glfwTerminate;
 public class Window {
 
     private long handle;
-    private final int width, height;
+    private int width, height;
     private final String title;
+    private boolean fullscreen = false;
+    private int windowedX, windowedY, windowedW, windowedH;
 
     public Window(int width, int height, String title) {
         this.width = width;
@@ -83,6 +86,37 @@ public class Window {
         glfwPollEvents();          
     }
 
+    public void setFullscreen(boolean wantFullscreen) {
+        if (wantFullscreen == fullscreen) return;
+
+        if (wantFullscreen) {
+            int[] x = new int[1], y = new int[1], w = new int[1], h = new int[1];
+            glfwGetWindowPos (handle, x, y);
+            glfwGetWindowSize(handle, w, h);
+            windowedX = x[0]; windowedY = y[0];
+            windowedW = w[0]; windowedH = h[0];
+
+            long monitor = glfwGetPrimaryMonitor();
+            GLFWVidMode mode = glfwGetVideoMode(monitor);
+
+            glfwSetWindowMonitor(handle, monitor, 0, 0, mode.width(), mode.height(), mode.refreshRate());
+
+            width  = mode.width();
+            height = mode.height();
+        } else {
+            glfwSetWindowMonitor(handle, 0L, windowedX, windowedY, windowedW, windowedH, GLFW_DONT_CARE);
+            width  = windowedW;
+            height = windowedH;
+        }
+
+        fullscreen = wantFullscreen;
+        glViewport(0, 0, width, height);
+    }
+
+    public void toggleFullscreen() {
+        setFullscreen(!fullscreen);
+    }
+
     public void destroy() {
         if (handle != NULL) {
             glfwDestroyWindow(handle);
@@ -97,4 +131,5 @@ public class Window {
     public long getHandle()  { return handle; }
     public int  getWidth()   { return width;  }
     public int  getHeight()  { return height; }
+    public boolean isFullscreen() { return fullscreen; }
 }

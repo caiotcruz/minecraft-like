@@ -2,6 +2,8 @@ package com.mcraft.ui;
 
 import com.mcraft.core.GameSettings;
 import com.mcraft.core.Input;
+import com.mcraft.core.Window;
+import com.mcraft.render.Camera;
 import com.mcraft.render.Shader;
 import com.mcraft.render.Texture2D;
 import com.mcraft.render.TextureAtlas;
@@ -31,10 +33,12 @@ public class MenuScreen extends Screen2D {
     private static final int BTN_W = 260, BTN_H = 30, BTN_GAP = 10;
 
     private Texture2D menuBg;
+    private final Window window;
 
-    public MenuScreen(int sw, int sh, Shader shader, TextureAtlas atlas,
-                       float[] ortho, GameSettings settings) {
-        super(sw, sh, shader, atlas, ortho);
+    public MenuScreen(Window window, Shader shader, TextureAtlas atlas, GameSettings settings) {
+        super(window.getWidth(), window.getHeight(), shader, atlas,
+            Camera.ortho(window.getWidth(), window.getHeight()));
+        this.window   = window;
         this.settings = settings;
         rebuildButtons();
         try {
@@ -147,8 +151,13 @@ public class MenuScreen extends Screen2D {
         buttons.add(new MenuButton("MOUSE +", sw/2+20, y0+rowH*2, 240, BTN_H,
             () -> settings.mouseSensitivity = Math.min(3.0f, settings.mouseSensitivity + 0.1f)));
 
-        buttons.add(new MenuButton("TELA CHEIA", sw/2-280, y0+rowH*3, 240, BTN_H,
-            () -> settings.fullscreen = !settings.fullscreen));
+        buttons.add(new MenuButton("TELA CHEIA", sw/2-280, y0+rowH*3, 240, BTN_H, () -> {
+        window.toggleFullscreen();
+        settings.fullscreen = window.isFullscreen();
+
+        float[] newOrtho = Camera.ortho(window.getWidth(), window.getHeight());
+        resize(window.getWidth(), window.getHeight(), newOrtho);
+    }));
 
         buttons.add(new MenuButton("VOLTAR", (sw-BTN_W)/2, y0+rowH*5, BTN_W, BTN_H, () -> {
             settings.save();
@@ -269,6 +278,11 @@ public class MenuScreen extends Screen2D {
             ps, String.valueOf((int)(settings.mouseSensitivity * 10)), 1f, 1f, 1f);
         PixelFont.drawStringShadow(this::addRect, sw/2 - 20, y0 + rowH*3 + 10,
             ps, settings.fullscreen ? "ON" : "OFF", 1f, 1f, 1f);
+    }
+
+    @Override
+    protected void onResize() {
+        rebuildButtons();
     }
 
     @Override

@@ -8,7 +8,7 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class Main {
     public static void main(String[] args) {
-        Window window = new Window(1920, 1000, "MCraft");
+        Window window = new Window(1080, 640, "MCraft");
         window.init();
         Input input = new Input(window.getHandle());
 
@@ -18,7 +18,7 @@ public class Main {
 
         GameSettings settings = GameSettings.loadOrDefault();
 
-        MenuScreen menu = new MenuScreen(window.getWidth(), window.getHeight(), hudShader, atlas, ortho2D, settings);
+        MenuScreen menu = new MenuScreen(window, hudShader, atlas, settings);
 
         MenuScreen.PlayRequest request = null;
         while (!window.shouldClose() && request == null) {

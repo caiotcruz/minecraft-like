@@ -20,10 +20,10 @@ public abstract class Screen2D {
     protected static final int BORDER  = 10;
     protected static final int S       = SLOT_PX + PAD;
 
-    protected final int          sw, sh;
+    protected int          sw, sh;
     protected final Shader       shader;
     protected final TextureAtlas atlas;
-    protected final float[]      ortho;
+    protected float[]      ortho;
 
     protected int heldId  = 0;
     protected int heldQty = 0;
@@ -258,6 +258,14 @@ public abstract class Screen2D {
         }
     }
 
+    public void resize(int newW, int newH, float[] newOrtho) {
+        this.sw    = newW;
+        this.sh    = newH;
+        this.ortho = newOrtho;
+        onResize();
+    }
+
+
     protected static boolean hit(int mx, int my, int x, int y, int w, int h) {
         return mx >= x && mx < x+w && my >= y && my < y+h;
     }
@@ -326,4 +334,6 @@ public abstract class Screen2D {
         glDeleteBuffers(vbo);
         glDeleteBuffers(ebo);
     }
+
+    protected void onResize() {}
 }
