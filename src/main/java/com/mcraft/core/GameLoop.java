@@ -50,6 +50,7 @@ import com.mcraft.ui.FurnaceScreen;
 import com.mcraft.ui.Inventory;
 import com.mcraft.ui.InventoryScreen;
 import com.mcraft.ui.LoadingScreen;
+import com.mcraft.ui.PauseScreen;
 import com.mcraft.world.Biome;
 import com.mcraft.world.Block;
 import com.mcraft.world.Chunk;
@@ -122,6 +123,8 @@ public class GameLoop {
     
     private boolean         rightWasDown    = false;
 
+    private boolean escWasDown = false;
+
     private int   breakX = -1, breakY = -1, breakZ = -1;
     private float breakElapsed  = 0f;
     private float breakDuration = 0f;
@@ -148,6 +151,9 @@ public class GameLoop {
     private float[] ortho2D;
 
     private LoadingScreen loadingScreen;
+
+    private boolean     paused = false;
+    private PauseScreen  pauseScreen;
 
     private long lastProfile = 0;
     private long lightTime = 0;
@@ -258,6 +264,7 @@ public class GameLoop {
         this.craftingScreen = new CraftingScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
         this.chestScreen = new ChestScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
         this.furnaceScreen = new FurnaceScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
+        this.pauseScreen = new PauseScreen(window.getWidth(), window.getHeight(), hudShader, atlas, ortho2D);
 
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -266,7 +273,7 @@ public class GameLoop {
         );
 
         glfwSetMouseButtonCallback(window.getHandle(), (win, button, action, mods) -> {
-            if (!inventoryOpen && !craftingOpen && !chestOpen && !furnaceOpen) return;
+            if (!inventoryOpen && !craftingOpen && !chestOpen && !furnaceOpen && !paused) return;
 
             if (action == GLFW_PRESS) {
                 boolean isRightClick = (button == GLFW_MOUSE_BUTTON_RIGHT);
@@ -279,6 +286,11 @@ public class GameLoop {
                 glfwGetCursorPos(win, cx, cy);
 
                 boolean consumed = false;
+
+                if (paused) {
+                    pauseScreen.onClick((int) cx[0], (int) cy[0]);
+                    return;
+                }
 
                 if (craftingOpen) {
                     consumed = craftingScreen.onClick((int) cx[0], (int) cy[0], isRightClick);
@@ -403,17 +415,22 @@ public class GameLoop {
 
             handleCameraInput();
 
-            physicsAccumulator += dt;
-            while (physicsAccumulator >= PHYSICS_STEP) {
-                updatePhysics(PHYSICS_STEP);
-                physicsAccumulator -= PHYSICS_STEP;
+            if (!paused) {
+                physicsAccumulator += dt;
+                while (physicsAccumulator >= PHYSICS_STEP) {
+                    updatePhysics(PHYSICS_STEP);
+                    physicsAccumulator -= PHYSICS_STEP;
+                }
+
+                tickAccumulator += dt;
+                while (tickAccumulator >= TICK_STEP) {
+                    gameTick(TICK_STEP);
+                    tickAccumulator -= TICK_STEP;
+                }
             }
 
-            tickAccumulator += dt;
-            while (tickAccumulator >= TICK_STEP) {
-                gameTick(TICK_STEP);
-                tickAccumulator -= TICK_STEP;
-            }
+            input.updateKeyEdges();
+            lightScheduler.flushResults(4);
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             render3D();
@@ -426,34 +443,27 @@ public class GameLoop {
             player.setInWater(underwater);
             hud.render(dt);
 
-            if (craftingOpen){
+            if (paused) {
+                double[] mx = new double[1];
+                double[] my = new double[1];
+                glfwGetCursorPos(window.getHandle(), mx, my);
+
+                pauseScreen.updateMouse((int) mx[0], (int) my[0]);
+                pauseScreen.render();
+                handlePauseChoice();
+            } else if (furnaceOpen) {
+                furnaceScreen.render();
+            } else if (chestOpen) {
+                chestScreen.render();
+            } else if (craftingOpen) {
                 craftingScreen.render();
-            } 
-            if (inventoryOpen) {
+            } else if (inventoryOpen) {
                 inventoryScreen.render();
             }
-            if (chestOpen){
-                chestScreen.render();
-            }
-            if (furnaceOpen){
-                furnaceScreen.render();
-            }
-        }
 
-        try {
-            System.out.println("[Save] Gravando dados do mundo, blocos e inventários...");
-            
-            worldIO.save(world, player, dayNight, weather);
-            
-            worldIO.saveMobs(mobs.getMobs());
-            
-            System.out.println("[Save] Salvamento concluído perfeitamente.");
-        } catch (IOException e) {
-            System.err.println("[Save] Erro crítico ao persistir mundo no encerramento: " + e.getMessage());
         }
 
         cleanup();
-
     }
 
     private void gameTick(float dt) {
@@ -551,13 +561,14 @@ public class GameLoop {
             }
         }
 
-        if (input.isKeyDown(GLFW_KEY_ESCAPE)) {
-            if (furnaceOpen)   { closeFurnace();       return; }
-            if (chestOpen)     { closeChest();         return; }
-            if (craftingOpen)  { closeCrafting();      return; }
-            if (inventoryOpen) { closeInventory();     return; }
-            glfwSetWindowShouldClose(window.getHandle(), true);
+        boolean escDown = input.isKeyDown(GLFW_KEY_ESCAPE);
+        boolean escJustPressed = escDown && !escWasDown;
+
+        if (escJustPressed) {
+            handleEscKey();
         }
+
+        escWasDown = escDown;
     }
 
     private void render3D() {
@@ -742,7 +753,7 @@ public class GameLoop {
 
     private void handleCameraInput() {
 
-        if (inventoryOpen || craftingOpen || chestOpen || furnaceOpen) {
+        if (inventoryOpen || craftingOpen || chestOpen || furnaceOpen || paused) {
 
             double[] cx = new double[1];
             double[] cy = new double[1];
@@ -1205,6 +1216,44 @@ public class GameLoop {
         loadingScreen.delete();
     }
 
+    private void handleEscKey() {
+        System.out.println("HANDLEESCKEY");
+
+        if (furnaceOpen)   { closeFurnace();        return; }
+        if (chestOpen)     { closeChest();          return; }
+        if (craftingOpen)  { closeCrafting();       return; }
+        if (inventoryOpen) { closeInventory();      return; }
+
+        togglePause();
+    }
+
+    private void handlePauseChoice() {
+        PauseScreen.Choice choice = pauseScreen.consumeChoice();
+        switch (choice) {
+            case RESUME -> togglePause();
+            case QUIT   -> {
+                saveWorld();
+                glfwSetWindowShouldClose(window.getHandle(), true);
+            }
+            case NONE   -> {}
+        }
+    }
+
+    private void togglePause() {
+        paused = !paused;
+        System.out.println(paused);
+        System.out.println("TOGGLEPAUSE");
+        if (paused) {
+            glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            int cx = window.getWidth()/2, cy = window.getHeight()/2;
+            glfwSetCursorPos(window.getHandle(), cx, cy);
+            pauseScreen.updateMouse(cx, cy);
+        } else {
+            glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            input.resetFirstMouse();
+        }
+    }
+
     private void doRespawn() {
         player.respawn();
         deathTimer = 0f;
@@ -1261,6 +1310,20 @@ public class GameLoop {
             } else {
                 player.getInventory().addItem(id, qty);
             }
+        }
+    }
+
+    private void saveWorld(){
+        try {
+            System.out.println("[Save] Gravando dados do mundo, blocos e inventários...");
+            
+            worldIO.save(world, player, dayNight, weather);
+            
+            worldIO.saveMobs(mobs.getMobs());
+            
+            System.out.println("[Save] Salvamento concluído perfeitamente.");
+        } catch (IOException e) {
+            System.err.println("[Save] Erro crítico ao persistir mundo no encerramento: " + e.getMessage());
         }
     }
 
