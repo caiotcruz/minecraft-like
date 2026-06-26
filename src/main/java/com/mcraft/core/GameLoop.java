@@ -49,6 +49,7 @@ import com.mcraft.ui.CraftingScreen;
 import com.mcraft.ui.FurnaceScreen;
 import com.mcraft.ui.Inventory;
 import com.mcraft.ui.InventoryScreen;
+import com.mcraft.ui.LoadingScreen;
 import com.mcraft.world.Biome;
 import com.mcraft.world.Block;
 import com.mcraft.world.Chunk;
@@ -143,6 +144,11 @@ public class GameLoop {
 
     private final WorldIO worldIO;
 
+    private GameSettings settings;
+    private float[] ortho2D;
+
+    private LoadingScreen loadingScreen;
+
     private long lastProfile = 0;
     private long lightTime = 0;
     private long renderTime = 0;
@@ -153,7 +159,9 @@ public class GameLoop {
                     String worldName, long seed, boolean isNewWorld) {
         this.window = window;
         this.input = input;
-        
+        this.settings = settings;
+        this.ortho2D = ortho2D;
+
         this.worldIO = new WorldIO(worldName); 
         this.world = new World(seed, settings.renderDistance, worldIO);
         this.lightScheduler = new LightScheduler(world);
@@ -175,7 +183,7 @@ public class GameLoop {
         float pitch = 0f;
 
         com.mcraft.world.SaveData saveData = null;
-
+        runLoadingScreen(spawnX, spawnZ);
         if (isNewWorld) {
             world.generateInitialArea(spawnX, spawnZ);
             spawnY = world.getSurfaceY((int) spawnX, (int) spawnZ) + 1.5f;
@@ -496,12 +504,12 @@ public class GameLoop {
             world.generateAround(player.getX(), player.getZ());
         }
 
-        world.integrateReady();
+        int budget = 4;
+        world.integrateReady(budget);
 
         float playerCX = player.getX() / Chunk.SIZE;
         float playerCZ = player.getZ() / Chunk.SIZE;
 
-        int budget = 4;
         int maxDistance = world.getRenderDistance() + 2;
         float maxDistanceSq = maxDistance * maxDistance;
 
@@ -1143,6 +1151,58 @@ public class GameLoop {
 
         world.setBlock(hit.prevX, hit.prevY, hit.prevZ, blockId);
         player.getInventory().consumeSelected(1);
+    }
+
+    private void runLoadingScreen(float spawnX, float spawnZ) {
+        int rd = settings.renderDistance;
+        int spawnCX = Math.floorDiv((int) spawnX, Chunk.SIZE);
+        int spawnCZ = Math.floorDiv((int) spawnZ, Chunk.SIZE);
+        int total = (2*rd + 1) * (2*rd + 1);
+
+        world.generateAround(spawnX, spawnZ);
+
+        loadingScreen = new LoadingScreen(window.getWidth(), window.getHeight(), hudShader, atlas, ortho2D);
+
+        long startTime = System.nanoTime();
+        final long MAX_LOADING_NANOS = 30_000_000_000L;
+
+        boolean ready = false;
+        while (!ready && !window.shouldClose()) {
+            window.swapAndPoll();
+
+            world.integrateReady(16);
+            lightScheduler.flushResults(16);
+
+            for (Chunk c : world.getLoadedChunksList()) {
+                if (c.isLightDirty() && !c.isLightPending()) {
+                    c.setLightDirty(false);
+                    lightScheduler.submit(c);
+                }
+            }
+
+            int doneCount = 0;
+            for (int dx = -rd; dx <= rd; dx++) {
+                for (int dz = -rd; dz <= rd; dz++) {
+                    Chunk c = world.getChunkIfLoaded(spawnCX+dx, spawnCZ+dz);
+                    if (c != null && !c.isLightDirty() && !c.isLightPending()) doneCount++;
+                }
+            }
+
+            float progress = (float) doneCount / total;
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            loadingScreen.setProgress(progress);
+            loadingScreen.render();
+
+            ready = (doneCount >= total);
+
+            if (System.nanoTime() - startTime > MAX_LOADING_NANOS) {
+                System.err.println("[Loading] Timeout de 30s atingido - iniciando com chunks parciais.");
+                break;
+            }
+        }
+
+        loadingScreen.delete();
     }
 
     private void doRespawn() {

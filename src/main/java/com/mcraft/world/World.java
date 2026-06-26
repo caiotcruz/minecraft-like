@@ -245,15 +245,15 @@ public class World {
         }
     }
 
-    public void integrateReady() {
+    public void integrateReady(int maxPerFrame) {
         Chunk c;
-        int max = 4;
+        int max = maxPerFrame;
         while (max-- > 0 && (c = readyChunks.poll()) != null) {
             long k = key(c.getChunkX(), c.getChunkZ());
             chunks.put(k, c);
             pendingGeneration.remove(k);
 
-            LightEngine.calculateChunkLight(c, this);
+            c.setLightDirty(true);
 
             markDirty(c.getChunkX()-1, c.getChunkZ());
             markDirty(c.getChunkX()+1, c.getChunkZ());
@@ -454,6 +454,10 @@ public class World {
     public List<Chunk> getLoadedChunksList() {
         return List.copyOf(chunks.values());
     }
+
+    public int getLoadedChunkCount()       { return chunks.size(); }
+    public int getPendingGenerationCount() { return pendingGeneration.size(); }
+    public int getReadyQueueSize()         { return readyChunks.size(); }
 
     public Map<Long, Inventory> getChestInventories() {
         return chestInventories;
