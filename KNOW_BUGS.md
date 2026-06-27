@@ -23,5 +23,3 @@
 - Textura do cacto menor que o bloco em sí
 
 ## WINDOW
-
-- Problema no resize das UI em fullscreen

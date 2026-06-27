@@ -47,7 +47,7 @@ public class HUD {
     private boolean underwater    = false;
     private float   underwaterWave = 0f;
 
-    private final int     screenW, screenH;
+    private int     screenW, screenH;
     private final Inventory inventory;
     private final Shader    hudShader;
     private final TextureAtlas atlas;
@@ -623,6 +623,11 @@ public class HUD {
     public void showNotification(String msg, float duration) {
         this.notifMessage = msg;
         this.notifTimer   = duration;
+    }
+
+    public void resize(int w, int h) {
+        this.screenW = w;
+        this.screenH = h;
     }
 
     private void beginBatch() {

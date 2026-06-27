@@ -161,12 +161,12 @@ public class GameLoop {
     private int  profileFrames = 0;
 
     public GameLoop(Window window, Input input, Shader hudShader, TextureAtlas atlas,
-                    float[] ortho2D, GameSettings settings,
-                    String worldName, long seed, boolean isNewWorld) {
+                    GameSettings settings, String worldName, long seed, boolean isNewWorld) {
         this.window = window;
         this.input = input;
         this.settings = settings;
-        this.ortho2D = ortho2D;
+        float[] currentOrtho = Camera.ortho(window.getWidth(), window.getHeight());
+        this.ortho2D = currentOrtho;
 
         this.worldIO = new WorldIO(worldName); 
         this.world = new World(seed, settings.renderDistance, worldIO);
@@ -260,11 +260,11 @@ public class GameLoop {
         }
 
         this.hud = new com.mcraft.ui.HUD(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, player);
-        this.inventoryScreen = new InventoryScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
-        this.craftingScreen = new CraftingScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
-        this.chestScreen = new ChestScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
-        this.furnaceScreen = new FurnaceScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, ortho2D);
-        this.pauseScreen = new PauseScreen(window.getWidth(), window.getHeight(), hudShader, atlas, ortho2D);
+        this.inventoryScreen = new InventoryScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, currentOrtho);
+        this.craftingScreen = new CraftingScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, currentOrtho);
+        this.chestScreen = new ChestScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, currentOrtho);
+        this.furnaceScreen = new FurnaceScreen(window.getWidth(), window.getHeight(), player.getInventory(), hudShader, atlas, currentOrtho);
+        this.pauseScreen = new PauseScreen(window.getWidth(), window.getHeight(), hudShader, atlas, currentOrtho);
 
         glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -411,6 +411,12 @@ public class GameLoop {
 
             input.prepareFrame();
             window.swapAndPoll();
+
+            if (window.consumeResizeFlag()) {
+                onWindowResized();
+            }
+
+
             input.endFrame();
 
             handleCameraInput();
@@ -1180,7 +1186,7 @@ public class GameLoop {
         boolean ready = false;
         while (!ready && !window.shouldClose()) {
             window.swapAndPoll();
-
+            
             world.integrateReady(16);
             lightScheduler.flushResults(16);
 
@@ -1311,6 +1317,19 @@ public class GameLoop {
                 player.getInventory().addItem(id, qty);
             }
         }
+    }
+
+    private void onWindowResized() {
+        int w = window.getWidth(), h = window.getHeight();
+        float[] newOrtho = Camera.ortho(w, h);
+
+        inventoryScreen.resize(w, h, newOrtho);
+        chestScreen.resize    (w, h, newOrtho);
+        craftingScreen.resize (w, h, newOrtho);
+        furnaceScreen.resize  (w, h, newOrtho);
+        pauseScreen.resize    (w, h, newOrtho);
+
+        hud.resize(w, h);
     }
 
     private void saveWorld(){

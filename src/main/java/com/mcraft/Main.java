@@ -14,7 +14,6 @@ public class Main {
 
         Shader      hudShader = new Shader("hud.vert", "hud.frag");
         TextureAtlas atlas    = TextureAtlas.generateProcedural();
-        float[]     ortho2D   = Camera.ortho(window.getWidth(), window.getHeight());
 
         GameSettings settings = GameSettings.loadOrDefault();
 
@@ -46,7 +45,7 @@ public class Main {
         menu.delete();
 
         if (request != null && !window.shouldClose()) {
-            GameLoop game = new GameLoop(window, input, hudShader, atlas, ortho2D, settings, request.worldName(), request.seed(), request.isNewWorld());
+            GameLoop game = new GameLoop(window, input, hudShader, atlas, settings, request.worldName(), request.seed(), request.isNewWorld());
             game.run();
         }
 
