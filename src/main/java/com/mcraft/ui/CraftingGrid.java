@@ -40,6 +40,14 @@ public class CraftingGrid {
             {Block.PLANKS.id, Block.PLANKS.id},
             {Block.PLANKS.id, Block.PLANKS.id}
         }, Block.CRAFTING_TABLE.id, 1);
+        reg2(new int[][]{
+            {Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id},
+            {Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id}
+        }, Block.CRAFTING_TABLE.id, 1);
+        reg2(new int[][]{
+            {Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id},
+            {Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id}
+        }, Block.CRAFTING_TABLE.id, 1);
 
         //Stick
         reg2(new int[][]{
@@ -47,15 +55,144 @@ public class CraftingGrid {
             {Block.PLANKS.id,0}
         }, Block.STICK.id , 4);
         reg2(new int[][]{
+            {Block.SPRUCE_PLANKS.id,0},
+            {Block.SPRUCE_PLANKS.id,0}
+        }, Block.STICK.id , 4);
+        reg2(new int[][]{
+            {Block.JUNGLE_PLANKS.id,0},
+            {Block.JUNGLE_PLANKS.id,0}
+        }, Block.STICK.id , 4);
+        reg2(new int[][]{
             {0,Block.PLANKS.id},
             {0,Block.PLANKS.id}
         }, Block.STICK.id , 4);
+        reg2(new int[][]{
+            {0,Block.SPRUCE_PLANKS.id},
+            {0,Block.SPRUCE_PLANKS.id}
+        }, Block.STICK.id , 4);
+        reg2(new int[][]{
+            {0,Block.JUNGLE_PLANKS.id},
+            {0,Block.JUNGLE_PLANKS.id}
+        }, Block.STICK.id , 4);
+
+        // Tocha
+        reg2(new int[][]{
+            {Block.COAL_ORE.id,0},
+            {Block.STICK.id,0}
+        }, Block.TORCH.id , 4);
+        reg2(new int[][]{
+            {0, Block.COAL_ORE.id},
+            {0, Block.STICK.id}
+        }, Block.TORCH.id , 4);
 
         // Receitas 3×3 (bancada)
+
+        // Stick
+
+        reg3(new int[][]{
+            {Block.PLANKS.id, 0 , 0},
+            {Block.PLANKS.id , 0 , 0},
+            {0 , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, Block.PLANKS.id , 0},
+            {0 , Block.PLANKS.id , 0},
+            {0 , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , Block.PLANKS.id},
+            {0 , 0 , Block.PLANKS.id},
+            {0 , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , 0},
+            {Block.PLANKS.id , 0 , 0},
+            {Block.PLANKS.id , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , 0},
+            {0 , Block.PLANKS.id , 0},
+            {0 , Block.PLANKS.id, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , 0},
+            {0 , 0 , Block.PLANKS.id},
+            {0 , 0, Block.PLANKS.id}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {Block.SPRUCE_PLANKS.id, 0 , 0},
+            {Block.SPRUCE_PLANKS.id , 0 , 0},
+            {0 , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, Block.SPRUCE_PLANKS.id , 0},
+            {0 , Block.SPRUCE_PLANKS.id , 0},
+            {0 , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , Block.SPRUCE_PLANKS.id},
+            {0 , 0 , Block.SPRUCE_PLANKS.id},
+            {0 , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , 0},
+            {Block.SPRUCE_PLANKS.id , 0 , 0},
+            {Block.SPRUCE_PLANKS.id , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , 0},
+            {0 , Block.SPRUCE_PLANKS.id , 0},
+            {0 , Block.SPRUCE_PLANKS.id, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , 0},
+            {0 , 0 , Block.SPRUCE_PLANKS.id},
+            {0 , 0, Block.SPRUCE_PLANKS.id}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {Block.JUNGLE_PLANKS.id, 0 , 0},
+            {Block.JUNGLE_PLANKS.id , 0 , 0},
+            {0 , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, Block.JUNGLE_PLANKS.id , 0},
+            {0 , Block.JUNGLE_PLANKS.id , 0},
+            {0 , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , Block.JUNGLE_PLANKS.id},
+            {0 , 0 , Block.JUNGLE_PLANKS.id},
+            {0 , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , 0},
+            {Block.JUNGLE_PLANKS.id , 0 , 0},
+            {Block.JUNGLE_PLANKS.id , 0, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , 0},
+            {0 , Block.JUNGLE_PLANKS.id , 0},
+            {0 , Block.JUNGLE_PLANKS.id, 0}
+        }, Block.STICK.id, 4);
+        reg3(new int[][]{
+            {0, 0 , 0},
+            {0 , 0 , Block.JUNGLE_PLANKS.id},
+            {0 , 0, Block.JUNGLE_PLANKS.id}
+        }, Block.STICK.id, 4);
 
         // Picareta de madeira
         reg3(new int[][]{
             {Block.PLANKS.id, Block.PLANKS.id, Block.PLANKS.id},
+            {     0,          Block.STICK.id,      0          },
+            {     0,          Block.STICK.id,      0          }
+        }, Block.WOODEN_PICKAXE.id, 1);
+        reg3(new int[][]{
+            {Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id},
+            {     0,          Block.STICK.id,      0          },
+            {     0,          Block.STICK.id,      0          }
+        }, Block.WOODEN_PICKAXE.id, 1);
+        reg3(new int[][]{
+            {Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id},
             {     0,          Block.STICK.id,      0          },
             {     0,          Block.STICK.id,      0          }
         }, Block.WOODEN_PICKAXE.id, 1);
@@ -71,6 +208,26 @@ public class CraftingGrid {
             {0, Block.STICK.id,  Block.PLANKS.id},
             {0, Block.STICK.id,        0        }
         }, Block.WOODEN_AXE.id, 1);
+        reg3(new int[][]{
+            {Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id, 0},
+            {Block.SPRUCE_PLANKS.id, Block.STICK.id,  0},
+            {0,               Block.STICK.id,  0}
+        }, Block.WOODEN_AXE.id, 1);
+        reg3(new int[][]{
+            {0, Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id},
+            {0, Block.STICK.id,  Block.SPRUCE_PLANKS.id},
+            {0, Block.STICK.id,        0        }
+        }, Block.WOODEN_AXE.id, 1);
+        reg3(new int[][]{
+            {Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id, 0},
+            {Block.JUNGLE_PLANKS.id, Block.STICK.id,  0},
+            {0,               Block.STICK.id,  0}
+        }, Block.WOODEN_AXE.id, 1);
+        reg3(new int[][]{
+            {0, Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id},
+            {0, Block.STICK.id,  Block.JUNGLE_PLANKS.id},
+            {0, Block.STICK.id,        0        }
+        }, Block.WOODEN_AXE.id, 1);
 
         // Pá de madeira
         reg3(new int[][]{
@@ -78,12 +235,92 @@ public class CraftingGrid {
             {0, Block.STICK.id, 0},
             {0, Block.STICK.id, 0}
         }, Block.WOODEN_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {Block.PLANKS.id, 0, 0},
+            {Block.STICK.id, 0, 0},
+            {Block.STICK.id, 0, 0}
+        }, Block.WOODEN_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {0, 0, Block.PLANKS.id},
+            {0, 0, Block.STICK.id},
+            {0, 0, Block.STICK.id}
+        }, Block.WOODEN_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {0, Block.SPRUCE_PLANKS.id, 0},
+            {0, Block.STICK.id, 0},
+            {0, Block.STICK.id, 0}
+        }, Block.WOODEN_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {Block.SPRUCE_PLANKS.id, 0, 0},
+            {Block.STICK.id, 0, 0},
+            {Block.STICK.id, 0, 0}
+        }, Block.WOODEN_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {0, 0, Block.SPRUCE_PLANKS.id},
+            {0, 0, Block.STICK.id},
+            {0, 0, Block.STICK.id}
+        }, Block.WOODEN_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {0, Block.JUNGLE_PLANKS.id, 0},
+            {0, Block.STICK.id, 0},
+            {0, Block.STICK.id, 0}
+        }, Block.WOODEN_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {Block.JUNGLE_PLANKS.id, 0, 0},
+            {Block.STICK.id, 0, 0},
+            {Block.STICK.id, 0, 0}
+        }, Block.WOODEN_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {0, 0, Block.JUNGLE_PLANKS.id},
+            {0, 0, Block.STICK.id},
+            {0, 0, Block.STICK.id}
+        }, Block.WOODEN_SHOVEL.id, 1);
 
         // Espada de madeira
         reg3(new int[][]{
             {0, Block.PLANKS.id, 0},
             {0, Block.PLANKS.id, 0},
             {0, Block.STICK.id,  0} 
+        }, Block.WOODEN_SWORD.id, 1);
+        reg3(new int[][]{
+            {Block.PLANKS.id, 0, 0},
+            {Block.PLANKS.id, 0, 0},
+            {Block.STICK.id,  0, 0} 
+        }, Block.WOODEN_SWORD.id, 1);
+        reg3(new int[][]{
+            {0, 0, Block.PLANKS.id},
+            {0, 0, Block.PLANKS.id},
+            {0, 0, Block.STICK.id} 
+        }, Block.WOODEN_SWORD.id, 1);
+        reg3(new int[][]{
+            {0, Block.SPRUCE_PLANKS.id, 0},
+            {0, Block.SPRUCE_PLANKS.id, 0},
+            {0, Block.STICK.id,  0} 
+        }, Block.WOODEN_SWORD.id, 1);
+        reg3(new int[][]{
+            {Block.SPRUCE_PLANKS.id, 0, 0},
+            {Block.SPRUCE_PLANKS.id, 0, 0},
+            {Block.STICK.id,  0, 0} 
+        }, Block.WOODEN_SWORD.id, 1);
+        reg3(new int[][]{
+            {0, 0, Block.SPRUCE_PLANKS.id},
+            {0, 0, Block.SPRUCE_PLANKS.id},
+            {0, 0, Block.STICK.id} 
+        }, Block.WOODEN_SWORD.id, 1);
+        reg3(new int[][]{
+            {0, Block.JUNGLE_PLANKS.id, 0},
+            {0, Block.JUNGLE_PLANKS.id, 0},
+            {0, Block.STICK.id,  0} 
+        }, Block.WOODEN_SWORD.id, 1);
+        reg3(new int[][]{
+            {Block.JUNGLE_PLANKS.id, 0, 0},
+            {Block.JUNGLE_PLANKS.id, 0, 0},
+            {Block.STICK.id,  0, 0} 
+        }, Block.WOODEN_SWORD.id, 1);
+        reg3(new int[][]{
+            {0, 0, Block.JUNGLE_PLANKS.id},
+            {0, 0, Block.JUNGLE_PLANKS.id},
+            {0, 0, Block.STICK.id} 
         }, Block.WOODEN_SWORD.id, 1);
 
         // Picareta de Pedra
@@ -111,12 +348,36 @@ public class CraftingGrid {
             {0, Block.STICK.id, 0},
             {0, Block.STICK.id, 0}
         }, Block.STONE_SHOVEL.id, 1);
+        // Pá de Pedra
+        reg3(new int[][]{
+            {Block.STONE.id, 0, 0},
+            {Block.STICK.id, 0, 0},
+            {Block.STICK.id, 0, 0}
+        }, Block.STONE_SHOVEL.id, 1);
+        // Pá de Pedra
+        reg3(new int[][]{
+            {0, 0, Block.STONE.id},
+            {0, 0, Block.STICK.id},
+            {0, 0, Block.STICK.id}
+        }, Block.STONE_SHOVEL.id, 1);
 
         // Espada de Pedra
         reg3(new int[][]{
             {0, Block.STONE.id, 0},
             {0, Block.STONE.id, 0},
             {0, Block.STICK.id,  0} 
+        }, Block.STONE_SWORD.id, 1);
+        // Espada de Pedra
+        reg3(new int[][]{
+            {Block.STONE.id, 0, 0},
+            {Block.STONE.id, 0, 0},
+            {Block.STICK.id,  0, 0} 
+        }, Block.STONE_SWORD.id, 1);
+        // Espada de Pedra
+        reg3(new int[][]{
+            {0, 0, Block.STONE.id},
+            {0, 0, Block.STONE.id},
+            {0, 0, Block.STICK.id} 
         }, Block.STONE_SWORD.id, 1);
 
         // Picareta de Ferro
@@ -144,12 +405,32 @@ public class CraftingGrid {
             {0, Block.STICK.id, 0},
             {0, Block.STICK.id, 0}
         }, Block.IRON_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {Block.IRON_INGOT.id, 0, 0},
+            {Block.STICK.id, 0, 0},
+            {Block.STICK.id, 0, 0}
+        }, Block.IRON_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {0, 0, Block.IRON_INGOT.id},
+            {0, 0, Block.STICK.id},
+            {0, 0, Block.STICK.id}
+        }, Block.IRON_SHOVEL.id, 1);
 
         // Espada de Ferro
         reg3(new int[][]{
             {0, Block.IRON_INGOT.id, 0},
             {0, Block.IRON_INGOT.id, 0},
             {0, Block.STICK.id,  0} 
+        }, Block.IRON_SWORD.id, 1);
+        reg3(new int[][]{
+            {Block.IRON_INGOT.id, 0, 0},
+            {Block.IRON_INGOT.id, 0, 0},
+            {Block.STICK.id,  0, 0} 
+        }, Block.IRON_SWORD.id, 1);
+        reg3(new int[][]{
+            {0, 0, Block.IRON_INGOT.id},
+            {0, 0, Block.IRON_INGOT.id},
+            {0, 0, Block.STICK.id} 
         }, Block.IRON_SWORD.id, 1);
 
         // Picareta de Diamante
@@ -177,12 +458,32 @@ public class CraftingGrid {
             {0, Block.STICK.id, 0},
             {0, Block.STICK.id, 0}
         }, Block.DIAMOND_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {Block.DIAMOND.id, 0, 0},
+            {Block.STICK.id, 0, 0},
+            {Block.STICK.id, 0, 0}
+        }, Block.DIAMOND_SHOVEL.id, 1);
+        reg3(new int[][]{
+            {0, 0, Block.DIAMOND.id},
+            {0, 0,Block.STICK.id},
+            {0, 0, Block.STICK.id}
+        }, Block.DIAMOND_SHOVEL.id, 1);
 
         // Espada de Diamante
         reg3(new int[][]{
             {0, Block.DIAMOND.id, 0},
             {0, Block.DIAMOND.id, 0},
             {0, Block.STICK.id,  0} 
+        }, Block.DIAMOND_SWORD.id, 1);
+        reg3(new int[][]{
+            {Block.DIAMOND.id, 0, 0},
+            {Block.DIAMOND.id, 0, 0},
+            {Block.STICK.id,  0, 0} 
+        }, Block.DIAMOND_SWORD.id, 1);
+        reg3(new int[][]{
+            {0, 0, Block.DIAMOND.id},
+            {0, 0, Block.DIAMOND.id},
+            {0, 0, Block.STICK.id} 
         }, Block.DIAMOND_SWORD.id, 1);
 
         // Baú
@@ -191,11 +492,31 @@ public class CraftingGrid {
             {Block.PLANKS.id,         0,       Block.PLANKS.id},
             {Block.PLANKS.id, Block.PLANKS.id, Block.PLANKS.id}
         }, 31, 1); 
+        reg3(new int[][]{
+            {Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id},
+            {Block.SPRUCE_PLANKS.id,         0,       Block.SPRUCE_PLANKS.id},
+            {Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id}
+        }, 31, 1); 
+        reg3(new int[][]{
+            {Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id},
+            {Block.JUNGLE_PLANKS.id,         0,       Block.JUNGLE_PLANKS.id},
+            {Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id}
+        }, 31, 1); 
 
         // Cama
         reg3(new int[][]{
             {Block.WOOL.id, Block.WOOL.id, Block.WOOL.id},
             {Block.PLANKS.id, Block.PLANKS.id, Block.PLANKS.id},
+            {      0,              0,              0}
+        }, Block.BED.id, 1);
+        reg3(new int[][]{
+            {Block.WOOL.id, Block.WOOL.id, Block.WOOL.id},
+            {Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id},
+            {      0,              0,              0}
+        }, Block.BED.id, 1);
+        reg3(new int[][]{
+            {Block.WOOL.id, Block.WOOL.id, Block.WOOL.id},
+            {Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id},
             {      0,              0,              0}
         }, Block.BED.id, 1);
 
@@ -206,10 +527,16 @@ public class CraftingGrid {
             {Block.STONE.id, Block.STONE.id, Block.STONE.id}
         }, Block.FURNACE.id, 1);
 
+        // Capacete de couro
         reg3(new int[][]{
             {Block.LEATHER.id, Block.LEATHER.id, Block.LEATHER.id},
             {Block.LEATHER.id,        0,         Block.LEATHER.id},
             {       0,                0,                0       }
+        }, Block.LEATHER_HELMET.id, 1);
+        reg3(new int[][]{
+            {       0,                0,                0       },
+            {Block.LEATHER.id, Block.LEATHER.id, Block.LEATHER.id},
+            {Block.LEATHER.id,        0,         Block.LEATHER.id}
         }, Block.LEATHER_HELMET.id, 1);
 
         // Peitoral de Couro
@@ -232,12 +559,22 @@ public class CraftingGrid {
             {Block.LEATHER.id,        0,         Block.LEATHER.id},
             {       0,                0,                0       }
         }, Block.LEATHER_BOOTS.id, 1);
+         reg3(new int[][]{
+            {       0,                0,                0       },
+            {Block.LEATHER.id,        0,         Block.LEATHER.id},
+            {Block.LEATHER.id,        0,         Block.LEATHER.id}
+        }, Block.LEATHER_BOOTS.id, 1);
 
         // Elmo de Ferro
         reg3(new int[][]{
             {Block.IRON_INGOT.id, Block.IRON_INGOT.id, Block.IRON_INGOT.id},
             {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id},
             {          0,                  0,                   0         }
+        }, Block.IRON_HELMET.id, 1);
+        reg3(new int[][]{
+            {          0,                  0,                   0         },
+            {Block.IRON_INGOT.id, Block.IRON_INGOT.id, Block.IRON_INGOT.id},
+            {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id}
         }, Block.IRON_HELMET.id, 1);
 
         // Peitoral de Ferro
@@ -260,12 +597,22 @@ public class CraftingGrid {
             {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id},
             {          0,                  0,                   0         }
         }, Block.IRON_BOOTS.id, 1);
+        reg3(new int[][]{
+            {          0,                  0,                   0         },
+            {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id},
+            {Block.IRON_INGOT.id,          0,          Block.IRON_INGOT.id}
+        }, Block.IRON_BOOTS.id, 1);
 
         // Elmo de Ouro
         reg3(new int[][]{
             {Block.GOLD_INGOT.id, Block.GOLD_INGOT.id, Block.GOLD_INGOT.id},
             {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id},
             {          0,                  0,                   0         }
+        }, Block.GOLD_HELMET.id, 1);
+        reg3(new int[][]{
+            {          0,                  0,                   0         },
+            {Block.GOLD_INGOT.id, Block.GOLD_INGOT.id, Block.GOLD_INGOT.id},
+            {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id}
         }, Block.GOLD_HELMET.id, 1);
 
         // Peitoral de Ouro
@@ -288,12 +635,22 @@ public class CraftingGrid {
             {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id},
             {          0,                  0,                   0         }
         }, Block.GOLD_BOOTS.id, 1);
+        reg3(new int[][]{
+            {          0,                  0,                   0         },
+            {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id},
+            {Block.GOLD_INGOT.id,          0,          Block.GOLD_INGOT.id}
+        }, Block.GOLD_BOOTS.id, 1);
 
         // Elmo de Diamante
         reg3(new int[][]{
             {Block.DIAMOND.id, Block.DIAMOND.id, Block.DIAMOND.id},
             {Block.DIAMOND.id,        0,         Block.DIAMOND.id},
             {       0,                0,                0       }
+        }, Block.DIAMOND_HELMET.id, 1);
+        reg3(new int[][]{
+            {       0,                0,                0       },
+            {Block.DIAMOND.id, Block.DIAMOND.id, Block.DIAMOND.id},
+            {Block.DIAMOND.id,        0,         Block.DIAMOND.id}
         }, Block.DIAMOND_HELMET.id, 1);
 
         // Peitoral de Diamante
@@ -316,6 +673,11 @@ public class CraftingGrid {
             {Block.DIAMOND.id,        0,         Block.DIAMOND.id},
             {       0,                0,                0       }
         }, Block.DIAMOND_BOOTS.id, 1);
+        reg3(new int[][]{
+            {       0,                0,                0       },
+            {Block.DIAMOND.id,        0,         Block.DIAMOND.id},
+            {Block.DIAMOND.id,        0,         Block.DIAMOND.id}
+        }, Block.DIAMOND_BOOTS.id, 1);
 
         //Porta
         reg3(new int[][]{
@@ -323,6 +685,49 @@ public class CraftingGrid {
             {Block.PLANKS.id, Block.PLANKS.id, 0},
             {Block.PLANKS.id, Block.PLANKS.id, 0}
         }, Block.DOOR_CLOSED.id, 2);
+        reg3(new int[][]{
+            {Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id, 0},
+            {Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id, 0},
+            {Block.SPRUCE_PLANKS.id, Block.SPRUCE_PLANKS.id, 0}
+        }, Block.DOOR_CLOSED.id, 2);
+        reg3(new int[][]{
+            {Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id, 0},
+            {Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id, 0},
+            {Block.JUNGLE_PLANKS.id, Block.JUNGLE_PLANKS.id, 0}
+        }, Block.DOOR_CLOSED.id, 2);
+
+        // Tocha
+
+        reg3(new int[][]{
+            {Block.COAL_ORE.id , 0 , 0 },
+            {Block.STICK.id , 0 , 0 },
+            {0 , 0 , 0 }
+        }, Block.TORCH.id, 4);
+        reg3(new int[][]{
+            {0 , Block.COAL_ORE.id , 0 },
+            {0 , Block.STICK.id , 0 },
+            {0 , 0 , 0 }
+        }, Block.TORCH.id, 4);
+        reg3(new int[][]{
+            {0 , 0 , Block.COAL_ORE.id },
+            {0 , 0 , Block.STICK.id },
+            {0 , 0 , 0 }
+        }, Block.TORCH.id, 4);
+        reg3(new int[][]{
+            {0 , 0 , 0 },
+            {Block.COAL_ORE.id , 0 , 0 },
+            {Block.STICK.id , 0 , 0 }
+        }, Block.TORCH.id, 4);
+        reg3(new int[][]{
+            {0 , 0 , 0 },
+            {0 , Block.COAL_ORE.id , 0 },
+            {0 , Block.STICK.id , 0 }
+        }, Block.TORCH.id, 4);
+        reg3(new int[][]{
+            {0 , 0 , 0 },
+            {0 , 0 , Block.COAL_ORE.id },
+            {0 , 0 , Block.STICK.id }
+        }, Block.TORCH.id, 4);
     }
 
     public CraftingGrid(int size) {
