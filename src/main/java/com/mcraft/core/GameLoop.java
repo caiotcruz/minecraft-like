@@ -1168,6 +1168,7 @@ public class GameLoop {
 
         world.setBlock(hit.prevX, hit.prevY, hit.prevZ, blockId);
         player.getInventory().consumeSelected(1);
+        sound.playRandom(sound.placeSound(toPlace), player.getX(), player.getY(), player.getZ(), 0.35f);
     }
 
     private void runLoadingScreen(float spawnX, float spawnZ) {
@@ -1223,8 +1224,6 @@ public class GameLoop {
     }
 
     private void handleEscKey() {
-        System.out.println("HANDLEESCKEY");
-
         if (furnaceOpen)   { closeFurnace();        return; }
         if (chestOpen)     { closeChest();          return; }
         if (craftingOpen)  { closeCrafting();       return; }
@@ -1247,8 +1246,7 @@ public class GameLoop {
 
     private void togglePause() {
         paused = !paused;
-        System.out.println(paused);
-        System.out.println("TOGGLEPAUSE");
+
         if (paused) {
             glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             int cx = window.getWidth()/2, cy = window.getHeight()/2;
