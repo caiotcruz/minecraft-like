@@ -92,13 +92,6 @@ public class Player {
         this.camera = new Camera(x, y + EYE_HEIGHT, z);
 
         this.inventory = new com.mcraft.ui.Inventory();
-        inventory.addItem(com.mcraft.world.Block.STONE.id, 64);
-        inventory.addItem(com.mcraft.world.Block.DIRT.id,  64);
-        inventory.addItem(com.mcraft.world.Block.BED.id,  1);
-        inventory.addItem(com.mcraft.world.Block.PLANKS.id, 64);
-        inventory.addItem(com.mcraft.world.Block.DIAMOND_PICKAXE.id,  1);
-        inventory.addItem(com.mcraft.world.Block.TORCH.id,  64);
-        inventory.addItem(com.mcraft.world.Block.COOKED_BEEF.id, 64);
     }
 
     public void update(float dx, float dz, boolean jump, boolean dive, float dt) {

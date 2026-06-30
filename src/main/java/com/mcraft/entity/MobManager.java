@@ -90,12 +90,12 @@ public class MobManager {
         int blockLvl = world.getBlockLightAt(sx, sy + 1, sz);
         float ambient = dayNight.getAmbientLight();
 
-        float skyContrib   = skyLvl * ambient;
+        float skyContrib   = (skyLvl/15) * ambient;
         float blockContrib = blockLvl / 15.0f;
         
         float effectiveLight = Math.max(skyContrib, blockContrib) * 15f;
 
-        boolean isDark = effectiveLight <= 6f;
+        boolean isDark = effectiveLight <= 7f;
         boolean isLit  = effectiveLight >= 9f;
 
         Mob.Type type;
