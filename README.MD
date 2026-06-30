@@ -396,7 +396,7 @@ Toda a infraestrutura de renderizacao 2D (VAO/VBO de batch, primitivas de retang
 - **Fornalha**: slots de entrada (minerio), combustivel e saida (lingote), com barra de progresso de fundicao e icone de chama proporcional ao combustivel restante
 
 <p align="center">
-  <img src="docs/craftingFurnaceChestBed.gif" alt="Crafting, Fornalha, Baú e Cama" width="900"/>
+  <img src="docs/CraftingFurnaceChestBed.gif" alt="Ciclo Dia/Noite" width="900"/>
 </p>
 
 ### Crafting com Stacks
