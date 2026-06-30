@@ -3,7 +3,7 @@
 > Um clone funcional do Minecraft (estilo Alpha/Beta classico) construido do zero em **Java puro**, usando **LWJGL 3** (OpenGL 3.3 Core Profile) para renderizacao, sem nenhuma engine externa. Geracao procedural de mundo, iluminacao dinamica por propagacao de luz, sistema de sobrevivencia completo, mobs com IA simples e persistencia em disco.
 
 <p align="center">
-  <img src="hero.png" alt="MCraft" width="900"/>
+  <img src="docs/hero.png" alt="MCraft" width="900"/>
 </p>
 
 ---
@@ -99,7 +99,7 @@ java -jar target/mcraft-<versao>.jar
 Ao iniciar, o jogo abre direto no **Menu Principal** (ver secao a seguir) — nenhum mundo e gerado ou carregado automaticamente. O jogador escolhe explicitamente entre criar um mundo novo (com seed aleatoria ou customizada), carregar um save existente, ajustar configuracoes ou sair. Os saves ficam em `saves/{worldName}/` e as preferencias de configuracao em `settings.properties`, na raiz do projeto.
 
 <p align="center">
-  <img src="newWorld.gif" alt="Criando um novo mundo" width="900"/>
+  <img src="docs/newWorld.gif" alt="Criando um novo mundo" width="900"/>
 </p>
 
 ---
@@ -109,7 +109,7 @@ Ao iniciar, o jogo abre direto no **Menu Principal** (ver secao a seguir) — ne
 Antes de qualquer mundo ser gerado ou carregado, o jogo exibe um menu principal completo, renderizado pela mesma infraestrutura 2D (`Screen2D`) usada pelas telas de inventario, bau e fornalha — reaproveitando primitivas de retangulo, deteccao de clique e a fonte bitmap propria (`PixelFont`), sem nenhuma dependencia de UI externa.
 
 <p align="center">
-  <img src="Menu.png" alt="Menu Principal" width="900"/>
+  <img src="docs/Menu.png" alt="Menu Principal" width="900"/>
 </p>
 
 ### Estrutura
@@ -126,7 +126,7 @@ O menu opera com 4 sub-estados internos:
 O menu roda em **seu proprio loop**, totalmente independente do `GameLoop` da partida: nenhum mundo, chunk, player ou mob e instanciado enquanto o jogador esta navegando pelo menu. Somente quando uma opcao de jogo e efetivamente escolhida (`PlayRequest`, contendo nome do mundo, seed e se e um mundo novo) o `GameLoop` e construido e seu `run()` e chamado — mantendo a inicializacao do menu instantanea, independente do custo de geracao de mundo.
 
 <p align="center">
-  <img src="Menu.gif" alt="Navegação pelo menu" width="900"/>
+  <img src="docs/Menu.gif" alt="Navegação pelo menu" width="900"/>
 </p>
 
 ### Texto no Menu — Extensao do `PixelFont`
@@ -168,7 +168,7 @@ As preferencias do jogador (`GameSettings`) sao salvas em um arquivo de texto si
 ### Ruido e Biomas
 
 <p align="center">
-  <img src="Biomes.png" alt="Biomas" width="900"/>
+  <img src="docs/Biomes.png" alt="Biomas" width="900"/>
 </p>
 
 O terreno e gerado com **Perlin noise 2D e 3D multi-oitava (fBm)** implementado manualmente (sem bibliotecas de ruido). Dois sinais independentes determinam o bioma de cada coluna `(x, z)`:
@@ -191,7 +191,7 @@ Para **montanhas** especificamente, foi desenvolvida uma formula de rampa dedica
 ### Cavernas 3D
 
 <p align="center">
-  <img src="caveTorch.gif" alt="Exploração de caverna" width="900"/>
+  <img src="docs/caveTorch.gif" alt="Exploração de caverna" width="900"/>
 </p>
 
 As cavernas usam **dois campos de ruido 3D perpendiculares**; onde ambos os campos estao simultaneamente proximos de zero, forma-se um tunel. A multiplicacao dos dois campos cria naturalmente a forma sinuosa de "verme" (worm) tipica de cavernas proceduralis. Um terceiro campo de baixa frequencia, mais raro, cria **camaras maiores** ocasionais. O threshold de escavacao diminui gradualmente perto da superficie, criando **entradas naturais** de caverna em vez de um teto solido contínuo.
@@ -246,7 +246,7 @@ A geometria **opaca** e a **agua** sao mantidas em VAOs/VBOs separados por chunk
 - **Chunk unloading**: chunks fora do raio de visibilidade (render distance + margem) sao salvos em disco, tem seus buffers de GPU liberados (`glDeleteBuffers`) e removidos do mapa em memoria, controlando o uso de RAM em sessoes longas de jogo.
 
 <p align="center">
-  <img src="frustumCulling.gif" alt="Frustum Culling" width="900"/>
+  <img src="docs/frustumCulling.gif" alt="Frustum Culling" width="900"/>
 </p>
 
 ---
@@ -271,7 +271,7 @@ Pontos-chave da implementacao atual:
 Essa transicao trocou simplicidade/auto-suficiencia por fidelidade visual e velocidade de iteracao artistica (qualquer texture pack no estilo Minecraft pode, em princípio, ser adaptado ao projeto apenas nomeando os arquivos PNG de acordo com a convencao usada).
 
 <p align="center">
-  <img src="Blocks.png" alt="Texturas dos blocos" width="900"/>
+  <img src="docs/Blocks.png" alt="Texturas dos blocos" width="900"/>
 </p>
 
 ---
@@ -302,7 +302,7 @@ O calculo de iluminacao roda em uma thread de background (`LightScheduler`), esc
 O vertex shader dos blocos recebe `skyLight` e `blockLight` normalizados (0.0-1.0) por vertice, alem de um fator de sombreamento direcional por face. A luz final aplicada e `max(skyLight * ambienteDoCeu, blockLight)`, com um piso minimo para que cavernas nunca fiquem completamente pretas.
 
 <p align="center">
-  <img src="TorchPlace.gif" alt="Iluminação dinâmica" width="900"/>
+  <img src="docs/TorchPlace.gif" alt="Iluminação dinâmica" width="900"/>
 </p>
 
 ### Spawn de Mobs Ligado a Iluminacao
@@ -332,7 +332,7 @@ Mobs detectam obstaculos na direcao de movimento e saltam automaticamente quando
 Ataques do jogador usam **raycast contra a AABB de cada mob** (metodo das placas/slab method), priorizando o alvo mais proximo na linha de mira em vez de depender apenas da ausencia de blocos no caminho — permitindo atacar mobs mesmo com terreno irregular nas proximidades. Mobs atingidos recebem um flash vermelho temporario e sao empurrados (knockback) na direcao oposta ao golpe; o mesmo sistema de knockback se aplica ao jogador ao ser atingido.
 
 <p align="center">
-  <img src="HostilMob.gif" alt="Combate contra Creeper" width="900"/>
+  <img src="docs/HostilMob.gif" alt="Combate contra Creeper" width="900"/>
 </p>
 
 ### Drops e Persistencia
@@ -373,7 +373,7 @@ Sol, lua, estrelas e nuvens sao desenhados como geometria simples (quads/billboa
 
 A animacao abaixo acelera significativamente o tempo do jogo para demonstrar a transicao completa entre dia e noite, incluindo a movimentacao do sol, da lua, das estrelas e a variacao gradual da iluminacao ambiente.
 <p align="center">
-  <img src="dayNightCycle.gif" alt="Ciclo Dia/Noite" width="900"/>
+  <img src="docs/dayNightCycle.gif" alt="Ciclo Dia/Noite" width="900"/>
 </p>
 
 ### Clima
@@ -396,7 +396,7 @@ Toda a infraestrutura de renderizacao 2D (VAO/VBO de batch, primitivas de retang
 - **Fornalha**: slots de entrada (minerio), combustivel e saida (lingote), com barra de progresso de fundicao e icone de chama proporcional ao combustivel restante
 
 <p align="center">
-  <img src="craftingFurnaceChestBed.gif" alt="Crafting, Fornalha, Baú e Cama" width="900"/>
+  <img src="docs/craftingFurnaceChestBed.gif" alt="Crafting, Fornalha, Baú e Cama" width="900"/>
 </p>
 
 ### Crafting com Stacks
